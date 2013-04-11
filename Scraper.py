@@ -16,9 +16,9 @@ class ScrapeThread(threading.Thread):
 
   def run(self):
     for i in range(1): #amount of pages to scan
-      self.pull_urls_for_category(self.category)
+      self.eat_urls_for_category(self.category)
 
-  def pull_urls_for_category(self,category):
+  def eat_urls_for_category(self,category):
     html = self.get_urls_for_category_html(category)
     for url in self.parse_urls_for_category_html(html):
       self.out_queue.put(url)

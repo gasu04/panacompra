@@ -14,7 +14,7 @@ class WorkThread(threading.Thread):
     while True:
       try:
         url = self.compra_urls.get_nowait()
-        self.pull_compra(url)
+        self.eat_compra(url)
         self.compra_urls.task_done()
       except:
         if any([scraper.is_alive() for scraper in self.scrapers]):
@@ -23,7 +23,7 @@ class WorkThread(threading.Thread):
           return
 
 
-  def pull_compra(self,url):
+  def eat_compra(self,url):
     html = self.get_compra_html(url)
     self.compras.put(Compra(url,html,self.parse_compra_html(html)))
 

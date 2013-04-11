@@ -19,7 +19,7 @@ class PanaCrawler():
     self.categories = []
     self.compras = Queue()
 
-  def pull_categories(self):
+  def eat_categories(self):
     html = self.get_categories_html() 
     self.categories.extend(self.parse_categories_html(html))
     print "Categories loaded: " + str(len(self.categories))
@@ -64,7 +64,7 @@ class PanaCrawler():
     sys.stdout.flush()
 
   def run(self):
-    self.pull_categories()
+    self.eat_categories()
     self.spawn_scrapers()
     print "Started " + str(len(self.scrapers)) + " scrapers"
     #self.join_scrapers()
