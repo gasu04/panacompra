@@ -38,7 +38,7 @@ class PanaCrawler():
     return data
 
   def spawn_scrapers(self):
-    for i in self.categories[:2]: 
+    for i in self.categories[:5]: 
       t = ScrapeThread(self.compra_urls,i,self.har_path)
       t.setDaemon(True)
       t.start()
@@ -49,30 +49,36 @@ class PanaCrawler():
       thread.join()
 
   def spawn_workers(self):
-    t = WorkThread(self.compra_urls,self.compras,self.scrapers)
-    t.setDaemon(True)
-    t.start()
-    self.workers.append(t)
+    for i in range(5):
+      t = WorkThread(self.compra_urls,self.compras,self.scrapers)
+      t.setDaemon(True)
+      t.start()
+      self.workers.append(t)
 
   def join_workers(self):
     for thread in self.workers:
       thread.join()
 
   def update_status(self):
-    sys.stdout.write("\rCompras: %d" % (self.compras.qsize()))
+    sys.stdout.write("\rPending: %d | Compras: %d" % (self.compra_urls.qsize(),self.compras.qsize()))
     sys.stdout.flush()
 
   def run(self):
     self.pull_categories()
     self.spawn_scrapers()
     print "Started " + str(len(self.scrapers)) + " scrapers"
-    sleep(5)
+    #self.join_scrapers()
     self.spawn_workers()
     print "Started " + str(len(self.workers)) + " workers"
 
-    while any([worker.is_alive for worker in self.workers]):
+    while any([worker.is_alive() for worker in self.workers]):
       self.update_status()
       sleep(0.5)
+    sys.stdout.write("\r                                            ")
+    sys.stdout.flush()
+    sys.stdout.write("\r\n")
+    sys.stdout.flush()
+
 
     ########################
     #### db worker here ####

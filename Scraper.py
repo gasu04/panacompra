@@ -15,13 +15,13 @@ class ScrapeThread(threading.Thread):
     self.reset_har()
 
   def run(self):
-    for i in range(1):
+    for i in range(1): #amount of pages to scan
       self.pull_urls_for_category(self.category)
 
   def pull_urls_for_category(self,category):
     html = self.get_urls_for_category_html(category)
     for url in self.parse_urls_for_category_html(html):
-      self.out_queue.put_nowait(url)
+      self.out_queue.put(url)
 
   def get_urls_for_category_html(self,category):
     headers = {"Content-type": "application/x-www-form-urlencoded", "Automated": "true"}

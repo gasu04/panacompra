@@ -12,16 +12,15 @@ class WorkThread(threading.Thread):
 
   def run(self):
     while True:
-      if self.compra_urls.empty():
-        sleep(2)
-        if not any([thread.is_alive() for thread in self.scrapers]):
-          return
-        else:
-          continue
-      else:
+      try:
         url = self.compra_urls.get_nowait()
         self.pull_compra(url)
         self.compra_urls.task_done()
+      except:
+        if any([scraper.is_alive() for scraper in self.scrapers]):
+          continue
+        else:
+          return
 
 
   def pull_compra(self,url):
