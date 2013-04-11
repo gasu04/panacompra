@@ -3,6 +3,7 @@ import re
 import json
 import threading
 from time import sleep
+from bs4 import BeautifulSoup, SoupStrainer
 
 class ScrapeThread(threading.Thread):
   def __init__(self, out_queue, category, har_path):
@@ -11,7 +12,7 @@ class ScrapeThread(threading.Thread):
     self.out_queue = out_queue
     self.category = category
     self.strainer = SoupStrainer('a')
-    self.clear_har()
+    self.reset_har()
 
   def run(self):
     for i in range(1):
@@ -20,13 +21,15 @@ class ScrapeThread(threading.Thread):
   def pull_urls_for_category(self,category):
     html = self.get_urls_for_category_html(category)
     for url in self.parse_urls_for_category_html(html):
-      self.out_queue.put(url)
-    print len(self.compra_urls)
+      self.out_queue.put_nowait(url)
 
   def get_urls_for_category_html(self,category):
     headers = {"Content-type": "application/x-www-form-urlencoded", "Automated": "true"}
     connection = httplib.HTTPConnection("www.panamacompra.gob.pa", "80")
-    connection.request("POST", "/AmbientePublico/AP_Busquedaavanzada.aspx?BusquedaRubros=true&IdRubro=" + category, urllib.urlencode({"file": self.har}), headers)
+    try:
+      connection.request("POST", "/AmbientePublico/AP_Busquedaavanzada.aspx?BusquedaRubros=true&IdRubro=" + str(category), urllib.urlencode({"file": self.har}), headers)
+    except:
+      print category
     response = connection.getresponse()
     data = response.read()
     connection.close()

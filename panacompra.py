@@ -3,8 +3,10 @@ from bs4 import BeautifulSoup, SoupStrainer
 import httplib, urllib
 import re
 import json
+import sys
 from Queue import Queue
 from Scraper import ScrapeThread
+from time import sleep
 from Worker import WorkThread
 
 class PanaCrawler():
@@ -36,8 +38,8 @@ class PanaCrawler():
     return data
 
   def spawn_scrapers(self):
-    for i in categories[:1]:  #change this for production 
-      t = ScrapeThread(self.compra_urls,50,self.har_path)
+    for i in self.categories[:2]: 
+      t = ScrapeThread(self.compra_urls,i,self.har_path)
       t.setDaemon(True)
       t.start()
       self.scrapers.append(t)
@@ -47,7 +49,7 @@ class PanaCrawler():
       thread.join()
 
   def spawn_workers(self):
-    t = WorkThread(self.compra_urls,self.compras)
+    t = WorkThread(self.compra_urls,self.compras,self.scrapers)
     t.setDaemon(True)
     t.start()
     self.workers.append(t)
@@ -56,12 +58,22 @@ class PanaCrawler():
     for thread in self.workers:
       thread.join()
 
+  def update_status(self):
+    sys.stdout.write("\rCompras: %d" % (self.compras.qsize()))
+    sys.stdout.flush()
+
   def run(self):
     self.pull_categories()
     self.spawn_scrapers()
+    print "Started " + str(len(self.scrapers)) + " scrapers"
+    sleep(5)
     self.spawn_workers()
-    self.join_scrapers()
-    self.join_workers()
+    print "Started " + str(len(self.workers)) + " workers"
+
+    while any([worker.is_alive for worker in self.workers]):
+      self.update_status()
+      sleep(0.5)
+
     ########################
     #### db worker here ####
     ########################
