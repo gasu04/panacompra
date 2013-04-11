@@ -1,4 +1,8 @@
 panacompra
 ==========
 
-scraper and parser
+putting the rape in scrape!
+
+usage
+------
+    python panacompra.py
