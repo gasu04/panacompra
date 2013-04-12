@@ -47,7 +47,7 @@ class PanaCrawler():
 
   def spawn_scrapers(self):
     for i in self.categories[:5]: 
-      t = ScrapeThread(self.compra_urls,i,self.har_path)
+      t = ScrapeThread(self.compra_urls,i,1,self.har_path)
       t.setDaemon(True)
       t.start()
       self.scrapers.append(t)

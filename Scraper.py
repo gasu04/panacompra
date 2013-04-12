@@ -15,16 +15,17 @@ class ScrapeThread(threading.Thread):
 
   """
 
-  def __init__(self, compra_url, category, har_path):
+  def __init__(self, compra_url, category, pages, har_path):
     threading.Thread.__init__(self)
     self.har = open(har_path,'rb').read()
     self.compra_url = compra_url
     self.category = category
+    self.pages = pages
     self.strainer = SoupStrainer('a')
     self.reset_har()
 
   def run(self):
-    for i in range(1): #amount of pages to scan
+    for i in range(self.pages): #amount of pages to scan
       self.eat_urls_for_category(self.category)
 
   def eat_urls_for_category(self,category):
