@@ -18,14 +18,14 @@ class WorkThread(threading.Thread):
         self.compra_urls.task_done()
       except:
         if any([scraper.is_alive() for scraper in self.scrapers]):
+          sleep(1)
           continue
         else:
           return
 
-
   def eat_compra(self,url):
     html = self.get_compra_html(url)
-    self.compras.put(Compra(url,html,self.parse_compra_html(html)))
+    self.compras.put(Compra(url,html,self.parse_compra_html(html))) #create and store Compra object
 
   def parse_compra_html(self,html):
     return [1]
@@ -38,5 +38,4 @@ class WorkThread(threading.Thread):
     data = response.read()
     connection.close()
     return data
-
 
