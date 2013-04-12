@@ -4,4 +4,6 @@ class Compra():
     self.html = html
     self.data = data
 
+  def __str__(self):
+    return str(self.data)
 
