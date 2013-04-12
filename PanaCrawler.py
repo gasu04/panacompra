@@ -8,6 +8,14 @@ from time import sleep
 from Worker import WorkThread
 
 class PanaCrawler():
+  """
+  Main Crawler class
+
+  Scrapes Category Ids
+  Spawns all threads ( WorkerThread, ScraperThread )
+  Print Output
+
+  """
   def __init__(self,har_path):
     self.har_path = har_path
     self.scrapers = []
@@ -17,16 +25,19 @@ class PanaCrawler():
     self.compras = Queue()
 
   def eat_categories(self):
+    """Build a list of categories by scraping site"""
     html = self.get_categories_html() 
     self.categories.extend(self.parse_categories_html(html))
     print "Categories loaded: " + str(len(self.categories))
 
   def parse_categories_html(self,html):
+    """returns an array of ints (category ids) from html"""
     soup = BeautifulSoup(html, parse_only=SoupStrainer('a'))
     links = soup.find_all(href=re.compile("VerDetalleRubro"))
     return [re.match(r"(?:.*Rubro\()([0-9]*)",link.get('href')).group(1) for link in links]
 
   def get_categories_html(self):
+    """returns html from category listing page"""
     connection = httplib.HTTPConnection("www.panamacompra.gob.pa", "80")
     connection.request("GET", "/Portal/OportunidadesDeNegocio.aspx")
     response = connection.getresponse()
@@ -61,7 +72,6 @@ class PanaCrawler():
   def spawn_db_worker(self):
     # spawn a db worker
     return 1
-
 
   def update_status(self):
     sys.stdout.write("\rPending: %d | Compras: %d" % (self.compra_urls.qsize(),self.compras.qsize()))

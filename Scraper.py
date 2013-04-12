@@ -6,10 +6,19 @@ from time import sleep
 from bs4 import BeautifulSoup, SoupStrainer
 
 class ScrapeThread(threading.Thread):
-  def __init__(self, out_queue, category, har_path):
+  """
+  Scrapes pages for a category
+  Parses compra_urls from scraped html and adds them to the Queue
+
+  Maintains a copy of the har to keep track of pages
+  Increments har file to increment pagination
+
+  """
+
+  def __init__(self, compra_url, category, har_path):
     threading.Thread.__init__(self)
     self.har = open(har_path,'rb').read()
-    self.out_queue = out_queue
+    self.compra_url = compra_url
     self.category = category
     self.strainer = SoupStrainer('a')
     self.reset_har()
@@ -21,7 +30,7 @@ class ScrapeThread(threading.Thread):
   def eat_urls_for_category(self,category):
     html = self.get_urls_for_category_html(category)
     for url in self.parse_urls_for_category_html(html):
-      self.out_queue.put(url)
+      self.compra_url.put(url)
 
   def get_urls_for_category_html(self,category):
     headers = {"Content-type": "application/x-www-form-urlencoded", "Automated": "true"}

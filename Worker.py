@@ -4,6 +4,11 @@ from Compra import Compra
 from time import sleep
 
 class WorkThread(threading.Thread):
+  """
+  Scrapes pages using urls from compra_url Queue
+  Parses html, creates Compra objects , adds them to compras Queue
+
+  """
   def __init__(self, queue, out_queue, scrapers):
     threading.Thread.__init__(self)
     self.compra_urls = queue
