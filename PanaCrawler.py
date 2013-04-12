@@ -89,8 +89,12 @@ class PanaCrawler():
       sleep(0.5)
     self.clear_status()
 
-  def print_output(self):
+
+  def print_compras(self):
     print "Compras loaded: %d" % self.compras.qsize()
+    while not self.compras.empty():
+      print self.compras.get()
+      self.compras.task_done()
 
   def run(self):
     self.eat_categories() #scrape and store list of categories
@@ -99,6 +103,5 @@ class PanaCrawler():
     dbw = self.spawn_db_worker()
     self.begin_status_reports()
     #dbw.join()
-    self.print_output()
 
 
