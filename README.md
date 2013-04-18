@@ -1,13 +1,14 @@
 panacompra
 ==========
 
-putting the rape in scrape!
+herramienta para recolectar data de panacompra
 
 
 To-Do
 -------
 * better handling of HAR file (hardcode array)
-* figure out how to concurrently scan all 56 categories
+* add a class for processing stats and outputting reports
+
 
 usage
 ------
