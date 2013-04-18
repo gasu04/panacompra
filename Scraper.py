@@ -25,8 +25,11 @@ class ScrapeThread(threading.Thread):
     self.reset_har()
 
   def run(self):
-    for i in range(self.pages): #amount of pages to scan
+    for i in range(3):
       self.eat_urls_for_category(self.category)
+      self.compra_url.join()
+    print "scraper dying"
+    return
 
   def eat_urls_for_category(self,category):
     html = self.get_urls_for_category_html(category)

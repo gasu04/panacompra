@@ -7,3 +7,5 @@ class Compra():
   def __str__(self):
     return str(self.data)
 
+  def to_json(self):
+    return {'url': self.url, 'data': self.data}

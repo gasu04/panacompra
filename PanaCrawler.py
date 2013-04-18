@@ -6,6 +6,7 @@ from Queue import Queue
 from Scraper import ScrapeThread
 from time import sleep
 from Worker import WorkThread
+from DBWorker import DBWorker
 
 class PanaCrawler():
   """
@@ -70,8 +71,10 @@ class PanaCrawler():
       thread.join()
 
   def spawn_db_worker(self):
-    # spawn a db worker
-    return 1
+    t = DBWorker(self.compras,self.workers)
+    t.setDaemon(True)
+    t.start()
+    return t
 
   def update_status(self):
     sys.stdout.write("\rPending: %d | Compras: %d" % (self.compra_urls.qsize(),self.compras.qsize()))
@@ -89,19 +92,12 @@ class PanaCrawler():
       sleep(0.5)
     self.clear_status()
 
-
-  def print_compras(self):
-    print "Compras loaded: %d" % self.compras.qsize()
-    while not self.compras.empty():
-      print self.compras.get()
-      self.compras.task_done()
-
   def run(self):
     self.eat_categories() #scrape and store list of categories
     self.spawn_scrapers()
     self.spawn_workers()
     dbw = self.spawn_db_worker()
-    self.begin_status_reports()
-    #dbw.join()
+    #self.begin_status_reports()
+    dbw.join()
 
 

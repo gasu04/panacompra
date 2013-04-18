@@ -4,6 +4,7 @@ import re
 from Compra import Compra
 from time import sleep
 from bs4 import BeautifulSoup
+from Queue import Empty
 
 class WorkThread(threading.Thread):
   """
@@ -25,29 +26,42 @@ class WorkThread(threading.Thread):
     while True:
       try:
         url = self.compra_urls.get_nowait()
-        self.eat_compra(url)
         self.compra_urls.task_done()
-      except:
+        self.eat_compra(url)
+      except Empty:
         if any([scraper.is_alive() for scraper in self.scrapers]):
           sleep(1)
           continue
         else:
+          print 'worker dying'
           return
 
   def eat_compra(self,url):
+    url = "/AmbientePublico/" + url #append path
     html = self.get_compra_html(url)
     self.compras.put(Compra(url,html,self.parse_compra_html(html))) #create and store Compra object
 
   def parse_compra_html(self,html):
-    precio = self.precio_regex.findall(html)
-    acto = self.acto_regex.findall(html)
-    entidad = self.entidad_regex.findall(html)
-    proponente = self.proponente_regex.findall(html)
+    try:
+      acto = self.acto_regex.findall(html)[0].encode('ascii', 'ignore')
+    except:
+      acto = "empty"
+    try:
+      entidad = self.entidad_regex.findall(html)[0].encode('ascii', 'ignore')
+    except:
+      entidad = "empty"
+    try:
+      precio = self.precio_regex.findall(html)[0].encode('ascii', 'ignore')
+    except:
+      precio = "empty"
+    try:
+      proponente = self.proponente_regex.findall(html)[0].encode('ascii', 'ignore')
+    except:
+      proponente = "empty"
     return { 'entidad' : entidad, 'acto': acto, 'precio' : precio, 'proponente' : proponente}
 
   def get_compra_html(self,url):
     connection = httplib.HTTPConnection("www.panamacompra.gob.pa", "80")
-    url = "/AmbientePublico/" + url #append path
     connection.request("GET", url)
     response = connection.getresponse()
     data = response.read()
