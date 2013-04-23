@@ -12,8 +12,11 @@ Dependencies
 
 To-Do
 -------
-* better handling of HAR file (hardcode array)
+* include category in compra data (pass it from scraper to worker)
+* collect more data (more regex)
 * add a class for processing stats and outputting reports
+
+
 
 
 usage

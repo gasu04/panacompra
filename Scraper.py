@@ -15,20 +15,19 @@ class ScrapeThread(threading.Thread):
 
   """
 
-  def __init__(self, compra_url, category, pages, har_path):
+  def __init__(self, compra_url, category, har_path):
     threading.Thread.__init__(self)
     self.har = open(har_path,'rb').read()
     self.compra_url = compra_url
     self.category = category
-    self.pages = pages
     self.strainer = SoupStrainer('a')
     self.reset_har()
+    self.pages_regex = re.compile("(?:TotalPaginas\"\>)([0-9]*)")
 
   def run(self):
-    for i in range(3):
+    pages = self.parse_max_pages(self.get_urls_for_category_html(self.category))
+    for i in range(pages):
       self.eat_urls_for_category(self.category)
-      self.compra_url.join()
-    print "scraper dying"
     return
 
   def eat_urls_for_category(self,category):
@@ -37,12 +36,9 @@ class ScrapeThread(threading.Thread):
       self.compra_url.put(url)
 
   def get_urls_for_category_html(self,category):
-    headers = {"Content-type": "application/x-www-form-urlencoded", "Automated": "true"}
-    connection = httplib.HTTPConnection("www.panamacompra.gob.pa", "80")
-    try:
-      connection.request("POST", "/AmbientePublico/AP_Busquedaavanzada.aspx?BusquedaRubros=true&IdRubro=" + str(category), urllib.urlencode({"file": self.har}), headers)
-    except:
-      print category
+    headers = {"Content-type": "application/x-www-form-urlencoded"}
+    connection = httplib.HTTPConnection("201.227.172.42", "80")
+    connection.request("POST", "/AmbientePublico/AP_Busquedaavanzada.aspx?BusquedaRubros=true&IdRubro=" + str(category), urllib.urlencode({"file": self.har}), headers)
     response = connection.getresponse()
     data = response.read()
     connection.close()
@@ -53,6 +49,10 @@ class ScrapeThread(threading.Thread):
     soup = BeautifulSoup(html, parse_only=self.strainer)
     links = soup.find_all(href=re.compile("VistaPrevia"))
     return [link.get('href') for link in links]
+
+  def parse_max_pages(self,html):
+    pages = self.pages_regex.findall(html)[0].decode('utf-8', 'ignore')
+    return int(pages)
 
   def reset_har(self):
     skip = 3 if '\xef\xbb\xbf' == self.har[:3] else 0 #skip over binary header if present

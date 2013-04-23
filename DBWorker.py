@@ -18,14 +18,13 @@ class DBWorker(threading.Thread):
   def run(self):
     while True:
       try:
-        compra = self.compras_queue.get_nowait()
-        self.compras_queue.task_done()
+        compra = self.compras_queue.get()
         self.compras.insert(compra.to_json())
+        self.compras_queue.task_done()
       except Empty:
         sleep (1)
         if any([worker.is_alive() for worker in self.workers]):
           continue
         else:
           return
-
 

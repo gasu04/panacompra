@@ -6,4 +6,4 @@ p = PanaCrawler('data.har')
 p.run()
 
 client = MongoClient()
-print client.panacompras.compras.count()
+print "Compras in DB: " + str(client.panacompras.compras.count())
