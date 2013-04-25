@@ -57,7 +57,7 @@ class PanaCrawler():
 
   def spawn_scrapers(self):
     if self.categories: 
-      amount = 10 - self.live_scrapers() 
+      amount = 9 - self.live_scrapers() 
       for i in range(amount):
         category = self.categories.pop()
         t = ScrapeThread(self.compra_urls,category)
@@ -112,7 +112,7 @@ class PanaCrawler():
   def run(self):
     self.eat_categories() #scrape and store list of categories
     while self.categories:
-      if threading.active_count() < 32:
+      if threading.active_count() < 31:
         self.spawn_scrapers()
         self.spawn_workers()
         self.spawn_db_worker()
