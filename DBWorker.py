@@ -37,7 +37,8 @@ class DBWorker(threading.Thread):
       except Empty:
         self.logger.debug("compra queue empty")
         if any([worker.is_alive() for worker in self.workers]):
-          sleep (10)
+          self.logger.debug("db worker going to sleep 60 seconds")
+          sleep(60)
           continue
         else:
           return
