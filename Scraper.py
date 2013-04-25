@@ -67,6 +67,9 @@ class ScrapeThread(threading.Thread):
     return [link.get('href') for link in links]
 
   def parse_max_pages(self,html):
-    pages = self.pages_regex.findall(html)[0].decode('utf-8', 'ignore')
-    return int(pages)
+    try:
+      pages = self.pages_regex.findall(html)[0].decode('utf-8', 'ignore')
+      return int(pages)
+    except:
+      return 0
 
