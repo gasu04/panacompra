@@ -1,9 +1,7 @@
+import logging
 import threading
 import httplib, urllib
-import re
-from Compra import Compra
 from time import sleep
-from bs4 import BeautifulSoup
 from Queue import Empty
 
 class WorkThread(threading.Thread):
@@ -17,49 +15,27 @@ class WorkThread(threading.Thread):
     self.compra_urls = queue
     self.compras = out_queue
     self.scrapers = scrapers
-    self.precio_regex = re.compile("(?:Precio.*?>.*?>[^0-9]*)([0-9,]*\.[0-9][0-9]*)") 
-    self.acto_regex = re.compile("(?:ero de Acto:</td><td class=\"formEjemplos\">)([^<]*)")
-    self.entidad_regex = re.compile("(?:Entidad:</td><td class=\"formEjemplos\">)([^<]*)") 
-    self.proponente_regex = re.compile("(?:Proponente.*\n.*\n.*?Ejemplos\">)([^<]*)",re.MULTILINE)
+    self.logger = logging.getLogger('Worker')
 
   def run(self):
     while True:
       try:
-        url = self.compra_urls.get()
+        url,category = self.compra_urls.get_nowait()
+        self.eat_compra(url,category)
         self.compra_urls.task_done()
-        self.eat_compra(url)
       except Empty:
-        print "url queue empty"
+        self.logger.debug('url queue is empty from %s', str(self))
         if any([scraper.is_alive() for scraper in self.scrapers]):
           sleep(5)
           continue
         else:
-          print 'worker dying'
+          self.logger.debug('worker dying %s', str(self))
           return
 
-  def eat_compra(self,url):
+  def eat_compra(self,url,category):
     url = "/AmbientePublico/" + url #append path
     html = self.get_compra_html(url)
-    self.compras.put(Compra(url,html,self.parse_compra_html(html))) #create and store Compra object
-
-  def parse_compra_html(self,html):
-    try:
-      acto = self.acto_regex.findall(html)[0].decode('utf-8', 'ignore')
-    except (IndexError,UnicodeDecodeError):
-      acto = "empty"
-    try:
-      entidad = self.entidad_regex.findall(html)[0].decode('utf-8', 'ignore')
-    except (IndexError,UnicodeDecodeError):
-      entidad = self.entidad_regex.findall(html)[0].split()[0].decode('utf-8', 'ignore')
-    try:
-      precio = self.precio_regex.findall(html)[0].decode('utf-8', 'ignore')
-    except (IndexError,UnicodeDecodeError):
-      precio = "empty"
-    try:
-      proponente = self.proponente_regex.findall(html)[0].decode('utf-8', 'ignore')
-    except (IndexError,UnicodeDecodeError):
-      proponente = "empty"
-    return { 'entidad' : entidad, 'acto': acto, 'precio' : precio, 'proponente' : proponente}
+    self.compras.put([html,url,category])
 
   def get_compra_html(self,url):
     connection = httplib.HTTPConnection("201.227.172.42", "80")

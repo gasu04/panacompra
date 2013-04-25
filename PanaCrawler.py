@@ -1,7 +1,10 @@
 from bs4 import BeautifulSoup, SoupStrainer
+
 import httplib, urllib
 import re
 import sys
+import logging
+import threading
 from Queue import Queue
 from Scraper import ScrapeThread
 from time import sleep
@@ -19,15 +22,15 @@ class PanaCrawler():
   Print Output
 
   """
-  def __init__(self,har_path):
-    self.har_path = har_path
+  def __init__(self, client):
     self.scrapers = []
     self.workers = []
     self.dbworker = False
     self.categories = []
     self.compra_urls = Queue()
     self.compras = Queue()
-    self.client = MongoClient()
+    self.client = client
+    self.logger = logging.getLogger('PanaCrawler')
 
   def eat_categories(self):
     """Build a list of categories by scraping site"""
@@ -49,59 +52,72 @@ class PanaCrawler():
     connection.close()
     return data
 
-  def spawn_scrapers(self,begin,end):
-    for i in self.categories[begin:end]: 
-      t = ScrapeThread(self.compra_urls,i,self.har_path)
-      t.setDaemon(True)
-      t.start()
-      self.scrapers.append(t)
+  def live_scrapers(self):
+    return len([scraper for scraper in self.scrapers if scraper.is_alive()]) 
+
+  def spawn_scrapers(self):
+    if self.categories: 
+      amount = 10 - self.live_scrapers() 
+      for i in range(amount):
+        category = self.categories.pop()
+        t = ScrapeThread(self.compra_urls,category)
+        t.setDaemon(True)
+        t.start()
+        self.scrapers.append(t)
+        self.logger.debug('scraper thread started on category %s', category)
+      self.logger.debug('started %i scrapers', amount)
+      
 
   def join_scrapers(self):
-    for thread in self.scrapers:
-      thread.join()
-      self.scrapers.remove(thread)
+    self.logger.info('waiting on scrapers')
+    while any([scraper.is_alive() for scraper in self.scrapers]):
+      sleep(0.3)
+    self.scrapers = []
+    self.logger.info('finished waiting on scrapers')
+
+
+  def live_workers(self):
+    return len([worker for worker in self.workers if worker.is_alive()]) 
 
   def spawn_workers(self):
-    for i in range(15 - len(self.workers)):
-      t = WorkThread(self.compra_urls,self.compras,self.scrapers)
-      t.setDaemon(True)
-      t.start()
-      self.workers.append(t)
+    amount = 20 - self.live_workers()
+    if amount > 0:
+      for i in range(amount):
+        t = WorkThread(self.compra_urls,self.compras,self.scrapers)
+        t.setDaemon(True)
+        t.start()
+        self.workers.append(t)
+      self.logger.debug('started %i workers', amount)
 
   def join_workers(self):
-    for thread in self.workers:
-      thread.join()
-      self.workers.remove(thread)
+    self.logger.info('waiting on workers')
+    while any([worker.is_alive() for worker in self.workers]):
+      sleep(0.3)
+    self.workers = []
+    self.logger.info('finished waiting on workers')
 
   def spawn_db_worker(self):
-    if not self.dbworker:
-      self.dbworker = DBWorker(self.compras,self.workers)
+    if not self.dbworker or not self.dbworker.is_alive():
+      self.dbworker = DBWorker(self.compras,self.workers,self.client)
       self.dbworker.setDaemon(True)
       self.dbworker.start()
-
-  def clear_status(self):
-    sys.stdout.write("\r                                                                                                            ")
-    sys.stdout.flush()
-
-  def begin_status_reports(self,status):
-    last_count = self.client.panacompras.compras.count()
-    while any([scraper.is_alive() for scraper in self.scrapers]):
-      this_count = self.client.panacompras.compras.count()
-      sys.stdout.write("\rtotal: %d compras | speed: %d c/s | status: %s          " % (this_count,((this_count-last_count)/2),status))
-      last_count = self.client.panacompras.compras.count()
-      sys.stdout.flush()
-      sleep(2)
-    self.clear_status()
+      self.logger.info('db thread started')
+  
+  def join_db_worker(self):
+    self.logger.info('waiting on db')
+    while self.dbworker.is_alive():
+      sleep(1)
+    self.logger.info('finished waiting on db')
 
   def run(self):
-    self.client.panacompras.compras.drop() #clear table
     self.eat_categories() #scrape and store list of categories
-    for i in range(len(self.categories)):
-      self.spawn_scrapers(i,i+1)
-      self.spawn_workers()
-      self.spawn_db_worker()
-      self.begin_status_reports(str(i/56 * 100) + "%")
-      self.join_scrapers()
-    self.begin_status_reports("waiting on worker threads")
-    self.dbworker.join()
+    while self.categories:
+      if threading.active_count() < 32:
+        self.spawn_scrapers()
+        self.spawn_workers()
+        self.spawn_db_worker()
+      sleep(0.5)
+    self.join_scrapers()
+    self.join_workers()
+    self.join_db_worker()
 
