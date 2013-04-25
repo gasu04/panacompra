@@ -12,7 +12,7 @@ last = client.panacompras.compras.count()
 
 while True:
   now = int(client.panacompras.compras.count())
-  sys.stdout.write('\r %i compras/sec                    ' % ((now-last)/int(sys.argv[1])))
+  sys.stdout.write('\r %i compras/sec | total: %i                ' % ((now-last)/int(sys.argv[1]),now))
   sys.stdout.flush()
   last = now
   sleep(int(sys.argv[1]))
