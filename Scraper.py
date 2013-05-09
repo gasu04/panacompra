@@ -40,7 +40,7 @@ class ScrapeThread(threading.Thread):
     self.reset_page()
     self.pages = self.parse_max_pages(self.get_category_page())
     self.logger.info('starting category %s [%s pages]',self.category,self.pages)
-    for i in range(self.pages-1):
+    for i in range(1):
       self.eat_urls_for_category(self.category)
       self.increment_page()
     self.logger.info('collected [%i/%i] pages from category %s', i+1, self.pages, str(self.category))
@@ -54,7 +54,7 @@ class ScrapeThread(threading.Thread):
 
   def get_category_page(self):
     headers = {"Content-type": "application/x-www-form-urlencoded"}
-    connection = httplib.HTTPConnection("201.227.172.42", "80")
+    connection = httplib.HTTPConnection("201.227.172.42", "80",timeout=5)
     connection.request("POST", "/AmbientePublico/AP_Busquedaavanzada.aspx?BusquedaRubros=true&IdRubro=" + str(self.category), urllib.urlencode(self.data), headers)
     response = connection.getresponse()
     data = response.read()
