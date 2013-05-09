@@ -37,8 +37,8 @@ class DBWorker(threading.Thread):
       except Empty:
         self.logger.debug("compra queue empty")
         if any([worker.is_alive() for worker in self.workers]):
-          self.logger.debug("db worker going to sleep 60 seconds")
-          sleep(60)
+          self.logger.debug("db worker going to sleep 5 seconds")
+          sleep(5)
           continue
         else:
           return
@@ -74,6 +74,12 @@ class DBWorker(threading.Thread):
         except:
           self.logger.debug('could not get fecha in %s', url)
           val = 'empty'
+      if key == 'precio':
+        val = re.sub(r'[^\d.]', '',val) #remove non digits
+        if not val == "":
+          val = float(val)
+      if key == 'description':
+        val = self.sanitize(val)
 
-      data[key] = self.sanitize(val)
+      data[key] = val
     return Compra(url,category,html,data)
