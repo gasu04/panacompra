@@ -56,8 +56,8 @@ class PanaCrawler():
     return len([scraper for scraper in self.scrapers if scraper.is_alive()]) 
 
   def spawn_scrapers(self):
-    if self.categories: 
-      amount = 9 - self.live_scrapers() 
+    if len(self.categories) > 0: 
+      amount = 5 - self.live_scrapers() 
       for i in range(amount):
         category = self.categories.pop()
         t = ScrapeThread(self.compra_urls,category)
@@ -72,7 +72,6 @@ class PanaCrawler():
     self.logger.info('waiting on scrapers')
     while any([scraper.is_alive() for scraper in self.scrapers]):
       sleep(0.3)
-    self.scrapers = []
     self.logger.info('finished waiting on scrapers')
 
 
@@ -93,7 +92,6 @@ class PanaCrawler():
     self.logger.info('waiting on workers')
     while any([worker.is_alive() for worker in self.workers]):
       sleep(0.3)
-    self.workers = []
     self.logger.info('finished waiting on workers')
 
   def spawn_db_worker(self):
@@ -112,7 +110,7 @@ class PanaCrawler():
   def run(self):
     self.eat_categories() #scrape and store list of categories
     while self.categories:
-      if threading.active_count() < 31:
+      if threading.active_count() < 27:
         self.spawn_scrapers()
         self.spawn_workers()
         self.spawn_db_worker()
