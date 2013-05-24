@@ -28,4 +28,10 @@ if args.drop:
 # 'application' code
 p = PanaCrawler(client)
 p.run()
+
+# process db
+#client.panacompras.compras.aggregate({ $group : { _id : "$data.proponente", total : { $sum : "$data.precio" }}})["result"].forEach(function(x){db.results.insert(x);})
+#client.panacompras.compras.aggregate({ $group : { _id : "$category", total : { $sum : "$data.precio" }}})["result"].forEach(function(x){db.category.insert(x);})
+#client.panacompras.compras.aggregate({ $group : { _id : "$data.fecha", total : { $sum : "$data.precio" }}})["result"].forEach(function(x){db.fecha.insert(x);})
+
 logger.info("panacompra FINISHED!!!! - compras in DB: %s", str(client.panacompras.compras.count()))

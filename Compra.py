@@ -4,7 +4,7 @@ class Compra():
     self.category = category
     self.html = html
     self.data = data
-    self.categories = {50: "Alimentos, Bebidas y Tabaco",15:"Combustibles, Aditivos para combustibles, Lubricantes y Materiales Anticorrosivos",31:'Componentes y Suministros de Fabricación', 30:'Componentes y Suministros de Fabricación, Estructuras, Obras y Construcciones',25:'Componentes y Suministros Electrónicos',35:'Vehículos Comerciales, Militares y Particulares, Accesorios y Componentes'  }
+    self.categories = {50: "Alimentos, Bebidas y Tabaco",15:"Combustibles, Aditivos para combustibles, Lubricantes y Materiales Anticorrosivos",31:'Componentes y Suministros de Fabricacion', 30:'Componentes y Suministros de Fabricacion, Estructuras, Obras y Construcciones',25:'Componentes y Suministros Electronicos',35:'Vehiculos Comerciales, Militares y Particulares, Accesorios y Componentes'}
 
   def translate_category(self,category_number):
     if category_number in self.categories:
