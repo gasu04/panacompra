@@ -7,9 +7,11 @@ class Compra(Base):
   __tablename__ = 'compras'
   
   id = Column(Integer, Sequence('compra_id_seq'), primary_key=True)
-  url = Column(String(100))
+  url = Column(String(200))
   category = Column(String(50))
-  html = Column(BLOB)
+  entidad = Column(String(250))
+  precio = Column(Float(50))
+  proponente = Column(String(250))
 
   def __init__(self,url,category,html,data):
     self.url = url
@@ -17,6 +19,9 @@ class Compra(Base):
     self.html = html
     self.data = data
     self.categories = {50: "Alimentos, Bebidas y Tabaco",15:"Combustibles, Aditivos para combustibles, Lubricantes y Materiales Anticorrosivos",31:'Componentes y Suministros de Fabricacion', 30:'Componentes y Suministros de Fabricacion, Estructuras, Obras y Construcciones',25:'Componentes y Suministros Electronicos',35:'Vehiculos Comerciales, Militares y Particulares, Accesorios y Componentes'}
+    self.precio = data['precio']
+    self.entidad = data['entidad']
+    self.proponente = data['proponente']
 
   def translate_category(self,category_number):
     if category_number in self.categories:
@@ -31,3 +36,6 @@ class Compra(Base):
 
   def to_insert(self):
     return [self.data['entidad'],self.translate_category(self.category),self.data['proponente'],self.data['precio'],self.data['fecha'],self.data['acto'],self.data['descripcion']]
+
+  def __repr__(self):
+    return "<Compra('%s', '%s', '%s')>" % (self.entidad, self.precio, self.proponente)

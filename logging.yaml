@@ -39,6 +39,11 @@ loggers:
     level: DEBUG
     handlers: [file]
     propagate: no
+  mrclean:
+    level: DEBUG
+    handlers: [file]
+    propagate: no
+
 
 
 

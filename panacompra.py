@@ -19,19 +19,8 @@ logging.config.dictConfig(yaml.load(open('logging.yaml','r').read()))
 logger = logging.getLogger('panacompra')
 logger.info('panacompra started')
 
-#start db client
-client = MongoClient()
-if args.drop:
-  client.panacompras.compras.drop()
-  logger.info("panacompras.compras dropped!")
-
 # 'application' code
-p = PanaCrawler(client)
+p = PanaCrawler()
 p.run()
-
-# process db
-#client.panacompras.compras.aggregate({ $group : { _id : "$data.proponente", total : { $sum : "$data.precio" }}})["result"].forEach(function(x){db.results.insert(x);})
-#client.panacompras.compras.aggregate({ $group : { _id : "$category", total : { $sum : "$data.precio" }}})["result"].forEach(function(x){db.category.insert(x);})
-#client.panacompras.compras.aggregate({ $group : { _id : "$data.fecha", total : { $sum : "$data.precio" }}})["result"].forEach(function(x){db.fecha.insert(x);})
 
 logger.info("panacompra FINISHED!!!! - compras in DB: %s", str(client.panacompras.compras.count()))

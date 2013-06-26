@@ -22,14 +22,13 @@ class PanaCrawler():
   Print Output
 
   """
-  def __init__(self, client):
+  def __init__(self):
     self.scrapers = []
     self.workers = []
     self.dbworker = False
     self.categories = []
     self.compra_urls = Queue()
     self.compras = Queue()
-    self.client = client
     self.logger = logging.getLogger('PanaCrawler')
 
   def eat_categories(self):
@@ -86,7 +85,7 @@ class PanaCrawler():
         t.setDaemon(True)
         t.start()
         self.workers.append(t)
-      self.logger.debug('started %i workers', amount)
+      self.logger.info('started %i workers', amount)
 
   def join_workers(self):
     self.logger.info('waiting on workers')
@@ -96,7 +95,7 @@ class PanaCrawler():
 
   def spawn_db_worker(self):
     if not self.dbworker or not self.dbworker.is_alive():
-      self.dbworker = DBWorker(self.compras,self.workers,self.client)
+      self.dbworker = DBWorker(self.compras,self.workers)
       self.dbworker.setDaemon(True)
       self.dbworker.start()
       self.logger.info('db thread started')
