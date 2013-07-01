@@ -43,6 +43,11 @@ loggers:
     level: DEBUG
     handlers: [file]
     propagate: no
+  rails:
+    level: INFO 
+    handlers: [file]
+    propagate: no
+
 
 
 

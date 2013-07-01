@@ -9,9 +9,11 @@ class Compra(Base):
   id = Column(Integer, Sequence('compra_id_seq'), primary_key=True)
   url = Column(String(200))
   category = Column(String(50))
-  entidad = Column(String(250))
+  entidad = Column(Unicode(50))
   precio = Column(Float(50))
-  proponente = Column(String(250))
+  proponente = Column(Unicode(50))
+  description = Column(UnicodeText)
+  fecha = Column(Date)
 
   def __init__(self,url,category,html,data):
     self.url = url
@@ -37,5 +39,3 @@ class Compra(Base):
   def to_insert(self):
     return [self.data['entidad'],self.translate_category(self.category),self.data['proponente'],self.data['precio'],self.data['fecha'],self.data['acto'],self.data['descripcion']]
 
-  def __repr__(self):
-    return "<Compra('%s', '%s', '%s')>" % (self.entidad, self.precio, self.proponente)

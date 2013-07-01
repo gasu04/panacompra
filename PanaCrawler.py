@@ -117,4 +117,3 @@ class PanaCrawler():
     self.join_scrapers()
     self.join_workers()
     self.join_db_worker()
-

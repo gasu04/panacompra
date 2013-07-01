@@ -18,7 +18,7 @@ class DBWorker(threading.Thread):
   """
   def __init__(self,compras_queue,workers):
     threading.Thread.__init__(self)
-    self.engine = create_engine('postgresql+psycopg2://panacompra:elpana@localhost/panacompra', client_encoding='latin1')
+    self.engine = create_engine('postgresql+psycopg2://panacompra:elpana@localhost/panacompra', encoding='latin-1',echo=True,convert_unicode=True)
     self.session_maker = sessionmaker(bind=self.engine)
     self.compras_queue = compras_queue
     self.workers = workers
