@@ -5,4 +5,4 @@ if [[ $# -lt 1 ]]; then
   exit 1
 fi
 
-mongoexport --db panacompras --collection compras --csv --fields data.entidad,data.precio,data.proponente,data.descripcion,category,data.fecha,data.acto,url, --out $1
+mongoexport --db panacompras --collection compras --csv --fields data.entidad,data.precio,data.proponente,category,data.fecha,data.acto,url --out $1

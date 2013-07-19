@@ -1,5 +1,6 @@
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import *
+from sqlalchemy.types import Unicode, UnicodeText
 
 Base = declarative_base()
 
@@ -8,11 +9,11 @@ class Compra(Base):
   
   id = Column(Integer, Sequence('compra_id_seq'), primary_key=True)
   url = Column(String(200))
-  category = Column(String(50))
-  entidad = Column(Unicode(50))
+  category = Column(Integer(3))
+  entidad = Column(Unicode(150))
   precio = Column(Float(50))
-  proponente = Column(Unicode(50))
-  description = Column(UnicodeText)
+  proponente = Column(Unicode(150))
+  description = Column(Unicode(500))
   fecha = Column(Date)
 
   def __init__(self,url,category,html,data):
@@ -24,18 +25,10 @@ class Compra(Base):
     self.precio = data['precio']
     self.entidad = data['entidad']
     self.proponente = data['proponente']
+    self.description= data['descripcion']
 
   def translate_category(self,category_number):
     if category_number in self.categories:
       return self.categories[category_number]
     return category_number
-
-  def __str__(self):
-    return str(self.data)
-
-  def to_json(self):
-    return {'url': self.url, 'category': self.translate_category(self.category), 'data': self.data}
-
-  def to_insert(self):
-    return [self.data['entidad'],self.translate_category(self.category),self.data['proponente'],self.data['precio'],self.data['fecha'],self.data['acto'],self.data['descripcion']]
 

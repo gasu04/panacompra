@@ -26,15 +26,16 @@ logger.info('panacompra started')
 
 if args.send:
   #send to db
-  engine = create_engine('postgresql+psycopg2://panacompra:elpana@localhost/panacompra',  encoding='utf-8', echo=True)
+  engine = create_engine('postgresql+psycopg2://panacompra:elpana@localhost/panacompra',  encoding='latin-1', echo=True)
   session_maker = sessionmaker(bind=engine)
   session = session_maker()
   compra = {'compra_id': 1,'categoria':44 ,'entidad': 'MEF', 'proponente':'Super 99', 'precio':10.10, 'url':'asdasdasdasd.com','acto':'123aaa','description':'asd122dasd1f1g', 'fecha':'07/02/1990'}
   arr = []
   for i in session.query(Compra):
-    arr.append({ 'precio':i.precio, 'categoria':i.category, 'entidad':i.entidad})
-    print i.entidad
-  rails.create_many('http://localhost:3000','compras',arr)
+    arr.append({'precio':i.precio, 'categoria':i.category, 'entidad':i.entidad})
+    print i.description
+    rails.create('http://localhost:3000','compras', { 'compra[precio]':i.precio, 'compra[category_id]':i.category, 'compra[entidad]':i.entidad, 'compra[proponente]':i.proponente, 'compra[description]':i.description})
+  #rails.create_many('http://localhost:3000','compras',arr)
 
 else:
   # 'application' code

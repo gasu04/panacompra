@@ -24,6 +24,7 @@ def parse_precio(precio):
 
 def sanitize(string):
   no_quotes_or_newlines = string.replace('"', '').replace("'","").replace('\n',' ').replace('\r',' ').strip() 
+  no_quotes_or_newlines = no_quotes_or_newlines.decode('latin-1')
   return re.sub(' +',' ', no_quotes_or_newlines) #no repeated spaces
 
 

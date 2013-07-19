@@ -18,7 +18,7 @@ class DBWorker(threading.Thread):
   """
   def __init__(self,compras_queue,workers):
     threading.Thread.__init__(self)
-    self.engine = create_engine('postgresql+psycopg2://panacompra:elpana@localhost/panacompra', encoding='latin-1',echo=True,convert_unicode=True)
+    self.engine = create_engine('postgresql+psycopg2://panacompra:elpana@localhost/panacompra', echo=True,convert_unicode=False)
     self.session_maker = sessionmaker(bind=self.engine)
     self.compras_queue = compras_queue
     self.workers = workers
@@ -67,7 +67,7 @@ class DBWorker(threading.Thread):
         val = mrclean.parse_date(val)
       if key == 'precio':
         val = mrclean.parse_precio(val)
-      if key == 'description':
+      else:
         val = mrclean.sanitize(val)
       data[key] = val
 

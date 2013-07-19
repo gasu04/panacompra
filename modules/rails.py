@@ -4,20 +4,20 @@ import json
 import logging
 
 logger = logging.getLogger('rails')
-def create(url,resource_name,obj,token):
+def create(url,resource_name,obj):
     '''creates objects of a resource'''
-    url = '/'.join([url, resource_name+'.json']) + '?auth_token=' + token
-    response = requests.post(url, data=json.dumps(obj), headers={'content-type': 'application/json'})
+    url = '/'.join([url, resource_name+'.json'])
+    response = requests.post(url, data=obj)
     if response.status_code == 201:
       logger.debug('created %s from %s', resource_name, str(obj))
     else:
       logger.error('error creating %s from %s', resource_name, str(obj))
-    return response.json()
+    return response
 
 def create_many(url,resource_name,objs):
     '''creates many objects of a resource using bulk upload'''
     url = '/'.join([url, resource_name, 'create_many.json'])
-    response = requests.post(url, data=json.dumps(objs, ensure_ascii=False), headers={'content-type': 'application/json'})
+    response = requests.post(url, data=objs)
     if response.status_code == 201:
       logger.debug('created %i objects of %s', len(objs), resource_name)
     else:
