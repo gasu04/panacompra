@@ -4,7 +4,7 @@ import json
 import logging
 
 logger = logging.getLogger('rails')
-def create(url,resource_name,obj):
+def create(url,resource_name,obj,token=False):
     '''creates objects of a resource'''
     url = '/'.join([url, resource_name+'.json'])
     response = requests.post(url, data=obj)
@@ -24,9 +24,9 @@ def create_many(url,resource_name,objs):
       logger.error('error creating %i objects of %s',len(objs), resource_name)
     return response.json()
 
-def index(url,resource_name,token):
+def index(url,resource_name,token=False):
     '''returns json document with all objects of resource'''
-    url = '/'.join([url, resource_name+'.json']) + '?auth_token=' + token
+    url = '/'.join([url, resource_name, 'all.json'])
     response = requests.get(url)
     if response.status_code == 200:
       logger.debug('indexed %s ', resource_name)
@@ -55,3 +55,12 @@ def update(url,resource_name,resource_id,obj,token):
     else:
       logger.error('error updating %s with id %i to %s', resource_name, int(resource_id), str(obj))
     return response.json()
+
+def compare_resource(a,b,key):
+  return a[key] == b[key]  
+
+def filter_new_objects_for_resource_by_key(url,objects,resource,key,token=False):
+  '''returns only new objects from a provider'''
+  old = index(url,resource,token)
+  remove_dupes = lambda x: not any([compare_resource(x,b,key) for b in old])
+  return filter(remove_dupes,objects)

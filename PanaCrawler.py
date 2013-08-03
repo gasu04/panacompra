@@ -10,7 +10,7 @@ from Scraper import ScrapeThread
 from time import sleep
 from Worker import WorkThread
 from DBWorker import DBWorker
-from pymongo import MongoClient
+from modules import rails
 
 
 class PanaCrawler():
@@ -105,6 +105,9 @@ class PanaCrawler():
     while self.dbworker.is_alive():
       sleep(1)
     self.logger.info('finished waiting on db')
+
+  def update(self, url):
+    old = rails.index(url,'compras')
 
   def run(self):
     self.eat_categories() #scrape and store list of categories

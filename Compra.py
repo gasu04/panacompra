@@ -10,10 +10,11 @@ class Compra(Base):
   id = Column(Integer, Sequence('compra_id_seq'), primary_key=True)
   url = Column(String(200))
   category = Column(Integer(3))
-  entidad = Column(Unicode(150))
+  entidad = Column(Unicode(200))
   precio = Column(Float(50))
-  proponente = Column(Unicode(150))
+  proponente = Column(Unicode(200))
   description = Column(Unicode(500))
+  acto = Column(Unicode(200))
   fecha = Column(Date)
 
   def __init__(self,url,category,html,data):
@@ -26,9 +27,14 @@ class Compra(Base):
     self.entidad = data['entidad']
     self.proponente = data['proponente']
     self.description= data['descripcion']
+    self.acto = data['acto']
 
   def translate_category(self,category_number):
     if category_number in self.categories:
       return self.categories[category_number]
     return category_number
+
+  def __getitem__(self,key):
+    return getattr(self, key)
+
 

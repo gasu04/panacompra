@@ -15,9 +15,11 @@ def parse_args():
   parser = argparse.ArgumentParser(description='Dataminer for Panacompra')
   parser.add_argument('--drop', dest='drop', action='store_const',const="True", default=False, help="drop db")
   parser.add_argument('--send', dest='send', action='store_const',const="True", default=False, help="send db")
+  parser.add_argument('--update', dest='update', action='store_const',const="True", default=False, help="update db")
   return parser.parse_args()
 
 args = parse_args()
+url = 'http://localhost:3000'
 
 # create logger
 logging.config.dictConfig(yaml.load(open('logging.yaml','r').read()))
@@ -29,13 +31,14 @@ if args.send:
   engine = create_engine('postgresql+psycopg2://panacompra:elpana@localhost/panacompra',  encoding='latin-1', echo=True)
   session_maker = sessionmaker(bind=engine)
   session = session_maker()
-  compra = {'compra_id': 1,'categoria':44 ,'entidad': 'MEF', 'proponente':'Super 99', 'precio':10.10, 'url':'asdasdasdasd.com','acto':'123aaa','description':'asd122dasd1f1g', 'fecha':'07/02/1990'}
-  arr = []
-  for i in session.query(Compra):
-    arr.append({'precio':i.precio, 'categoria':i.category, 'entidad':i.entidad})
-    print i.description
-    rails.create('http://localhost:3000','compras', { 'compra[precio]':i.precio, 'compra[category_id]':i.category, 'compra[entidad]':i.entidad, 'compra[proponente]':i.proponente, 'compra[description]':i.description})
-  #rails.create_many('http://localhost:3000','compras',arr)
+  compras = session.query(Compra)
+  for i in rails.filter_new_objects_for_resource_by_key(url,compras,'compras','acto'):
+    rails.create(url,'compras', { 'compra[precio]':i.precio, 'compra[fecha]':i.fecha ,'compra[acto]': i.acto , 'compra[url]': i.url , 'compra[category_id]':i.category, 'compra[entidad]':i.entidad, 'compra[proponente]':i.proponente, 'compra[description]':i.description})
+
+elif args.update:
+  p = PanaCrawler()
+  p.update('http://localhost:3000')
+  
 
 else:
   # 'application' code

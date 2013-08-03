@@ -8,6 +8,7 @@ from Queue import Empty
 from pymongo import MongoClient
 import Compra
 from sqlalchemy import create_engine
+from sqlalchemy.sql import exists
 from sqlalchemy.orm import sessionmaker
 from modules import mrclean 
 
@@ -37,9 +38,9 @@ class DBWorker(threading.Thread):
       try:
         html,url,category = self.compras_queue.get_nowait()
         compra = self.parse_compra_html(html,url,category)
- #       self.compras.insert(compra.to_json())
-        session.add(compra)
-        session.commit()
+        if not session.query(exists().where(Compra.Compra.acto==compra.acto)).scalar():
+          session.add(compra)
+          session.commit()
         self.compras_queue.task_done()
       except Empty:
         self.logger.debug("compra queue empty")
@@ -52,7 +53,6 @@ class DBWorker(threading.Thread):
 
   def get_regexes(self):
     return [variable for variable in self.__dict__.keys() if "_regex" in variable]
-
 
   def parse_compra_html(self,html,url,category):
     data = {}
