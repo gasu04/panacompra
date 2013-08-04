@@ -36,8 +36,8 @@ loggers:
     handlers: [file,console]
     propagate: no
   DB:
-    level: DEBUG
-    handlers: [file]
+    level: INFO 
+    handlers: [file,console]
     propagate: no
   mrclean:
     level: DEBUG

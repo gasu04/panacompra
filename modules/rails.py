@@ -17,12 +17,13 @@ def create(url,resource_name,obj,token=False):
 def create_many(url,resource_name,objs):
     '''creates many objects of a resource using bulk upload'''
     url = '/'.join([url, resource_name, 'create_many.json'])
-    response = requests.post(url, data=objs)
+    headers = {'content-type': 'application/json', 'charset':'latin-1'}
+    response = requests.post(url, data=json.dumps(objs, encoding='latin-1'), headers=headers)
     if response.status_code == 201:
       logger.debug('created %i objects of %s', len(objs), resource_name)
     else:
       logger.error('error creating %i objects of %s',len(objs), resource_name)
-    return response.json()
+    return response
 
 def index(url,resource_name,token=False):
     '''returns json document with all objects of resource'''
@@ -56,11 +57,12 @@ def update(url,resource_name,resource_id,obj,token):
       logger.error('error updating %s with id %i to %s', resource_name, int(resource_id), str(obj))
     return response.json()
 
-def compare_resource(a,b,key):
-  return a[key] == b[key]  
-
 def filter_new_objects_for_resource_by_key(url,objects,resource,key,token=False):
-  '''returns only new objects from a provider'''
-  old = index(url,resource,token)
-  remove_dupes = lambda x: not any([compare_resource(x,b,key) for b in old])
-  return filter(remove_dupes,objects)
+  '''returns only new objects'''
+  filtered_objects = []
+  old_objects = {el[key]:0 for el in index(url,resource,token)}
+  for new_object in objects:
+    if not old_objects.has_key(new_object[key].decode('latin-1', 'ignore')):
+      filter_objects.append(new_object)
+  return filtered_objects
+

@@ -54,12 +54,12 @@ class PanaCrawler():
   def live_scrapers(self):
     return len([scraper for scraper in self.scrapers if scraper.is_alive()]) 
 
-  def spawn_scrapers(self):
+  def spawn_scrapers(self,update=False):
     if len(self.categories) > 0: 
       amount = 5 - self.live_scrapers() 
       for i in range(amount):
         category = self.categories.pop()
-        t = ScrapeThread(self.compra_urls,category)
+        t = ScrapeThread(self.compra_urls,category,update)
         t.setDaemon(True)
         t.start()
         self.scrapers.append(t)
@@ -109,11 +109,11 @@ class PanaCrawler():
   def update(self, url):
     old = rails.index(url,'compras')
 
-  def run(self):
+  def run(self,update=False):
     self.eat_categories() #scrape and store list of categories
     while self.categories:
       if threading.active_count() < 27:
-        self.spawn_scrapers()
+        self.spawn_scrapers(update)
         self.spawn_workers()
         self.spawn_db_worker()
       sleep(0.5)

@@ -19,7 +19,8 @@ class DBWorker(threading.Thread):
   """
   def __init__(self,compras_queue,workers):
     threading.Thread.__init__(self)
-    self.engine = create_engine('postgresql+psycopg2://panacompra:elpana@localhost/panacompra', echo=True,convert_unicode=False)
+    self.count = 0
+    self.engine = create_engine('postgresql+psycopg2://panacompra:elpana@localhost/panacompra', echo=False,convert_unicode=False)
     self.session_maker = sessionmaker(bind=self.engine)
     self.compras_queue = compras_queue
     self.workers = workers
@@ -41,6 +42,7 @@ class DBWorker(threading.Thread):
         if not session.query(exists().where(Compra.Compra.acto==compra.acto)).scalar():
           session.add(compra)
           session.commit()
+          self.count += 1
         self.compras_queue.task_done()
       except Empty:
         self.logger.debug("compra queue empty")
@@ -49,7 +51,11 @@ class DBWorker(threading.Thread):
           sleep(5)
           continue
         else:
+          self.logger.info("%i compras added to db", self.count)
           return
+      except:
+        self.logger.info("error adding %s to db", str(compra))
+
 
   def get_regexes(self):
     return [variable for variable in self.__dict__.keys() if "_regex" in variable]
@@ -65,8 +71,10 @@ class DBWorker(threading.Thread):
         val = 'empty'
       if key == "fecha":
         val = mrclean.parse_date(val)
-      if key == 'precio':
+      elif key == 'precio':
         val = mrclean.parse_precio(val)
+      elif key == 'proponente':
+        val = mrclean.sanitize(val[:199])
       else:
         val = mrclean.sanitize(val)
       data[key] = val

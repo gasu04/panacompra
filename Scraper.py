@@ -17,8 +17,9 @@ class ScrapeThread(threading.Thread):
 
   """
 
-  def __init__(self, compra_url, category):
+  def __init__(self, compra_url, category, update=False):
     threading.Thread.__init__(self)
+    self.update = update
     self.data = dict(urlparse.parse_qsl(open('form.data').read()))
     self.compra_url = compra_url
     self.category = category
@@ -38,9 +39,12 @@ class ScrapeThread(threading.Thread):
 
   def run(self):
     self.reset_page()
-    self.pages = self.parse_max_pages(self.get_category_page())
+    if self.update:
+      self.pages = 1
+    else:
+      self.pages = self.parse_max_pages(self.get_category_page()) - 1
     self.logger.info('starting category %s [%s pages]',self.category,self.pages)
-    for i in range(2):
+    for i in range(self.pages):
       self.eat_urls_for_category(self.category)
       self.increment_page()
 #    self.logger.info('collected [%i/%i] pages from category %s', i+1, self.pages, str(self.category))
