@@ -58,12 +58,15 @@ class PanaCrawler():
     if len(self.categories) > 0: 
       amount = 5 - self.live_scrapers() 
       for i in range(amount):
-        category = self.categories.pop()
-        t = ScrapeThread(self.compra_urls,category,update)
-        t.setDaemon(True)
-        t.start()
-        self.scrapers.append(t)
-        self.logger.debug('scraper thread started on category %s', category)
+        try:
+          category = self.categories.pop()
+          t = ScrapeThread(self.compra_urls,category,update)
+          t.setDaemon(True)
+          t.start()
+          self.scrapers.append(t)
+          self.logger.debug('scraper thread started on category %s', category)
+        except IndexError:
+          self.logger.debug('pop on empty category list')
       self.logger.debug('started %i scrapers', amount)
       
 

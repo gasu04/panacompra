@@ -63,6 +63,6 @@ def filter_new_objects_for_resource_by_key(url,objects,resource,key,token=False)
   old_objects = {el[key]:0 for el in index(url,resource,token)}
   for new_object in objects:
     if not old_objects.has_key(new_object[key].decode('latin-1', 'ignore')):
-      filter_objects.append(new_object)
+      filtered_objects.append(new_object)
   return filtered_objects
 
