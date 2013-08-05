@@ -12,6 +12,12 @@ from itertools import izip_longest
 
 from PanaCrawler import PanaCrawler
 
+import os
+
+abspath = os.path.abspath(__file__)
+dname = os.path.dirname(abspath)
+os.chdir(dname)
+
 # create logger
 logging.config.dictConfig(yaml.load(open('logging.yaml','r').read()))
 logger = logging.getLogger('panacompra')
