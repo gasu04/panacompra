@@ -40,9 +40,9 @@ class ScrapeThread(threading.Thread):
   def run(self):
     self.reset_page()
     if self.update:
-      self.pages = 1
+      self.pages = 1 
     else:
-      self.pages = self.parse_max_pages(self.get_category_page()) - 1
+      self.pages = self.parse_max_pages(self.get_category_page())
     self.logger.info('starting category %s [%s pages]',self.category,self.pages)
     for i in range(self.pages):
       self.eat_urls_for_category(self.category)

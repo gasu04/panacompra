@@ -53,9 +53,6 @@ class DBWorker(threading.Thread):
         else:
           self.logger.info("%i compras added to db", self.count)
           return
-      except:
-        self.logger.info("error adding %s to db", str(compra))
-
 
   def get_regexes(self):
     return [variable for variable in self.__dict__.keys() if "_regex" in variable]

@@ -5,6 +5,7 @@ import re
 import sys
 import logging
 import threading
+import sys,os,signal
 from Queue import Queue
 from Scraper import ScrapeThread
 from time import sleep
@@ -47,6 +48,7 @@ class PanaCrawler():
     connection = httplib.HTTPConnection("201.227.172.42", "80")
     connection.request("GET", "/Portal/OportunidadesDeNegocio.aspx")
     response = connection.getresponse()
+    print response
     data = response.read()
     connection.close()
     return data
@@ -56,7 +58,7 @@ class PanaCrawler():
 
   def spawn_scrapers(self,update=False):
     if len(self.categories) > 0: 
-      amount = 5 - self.live_scrapers() 
+      amount = 10 - self.live_scrapers() 
       for i in range(amount):
         try:
           category = self.categories.pop()
@@ -81,7 +83,7 @@ class PanaCrawler():
     return len([worker for worker in self.workers if worker.is_alive()]) 
 
   def spawn_workers(self):
-    amount = 20 - self.live_workers()
+    amount = 15 - self.live_workers()
     if amount > 0:
       for i in range(amount):
         t = WorkThread(self.compra_urls,self.compras,self.scrapers)
@@ -112,6 +114,14 @@ class PanaCrawler():
   def update(self, url):
     old = rails.index(url,'compras')
 
+  def handler(self,signum, frame):
+    print 'Signal handler called with signal', signum
+    print 'waiting for threads to finish'
+    self.join_scrapers()
+    self.join_workers()
+    self.join_db_worker()
+    exit(0)
+
   def run(self,update=False):
     self.eat_categories() #scrape and store list of categories
     while self.categories:
@@ -119,7 +129,7 @@ class PanaCrawler():
         self.spawn_scrapers(update)
         self.spawn_workers()
         self.spawn_db_worker()
-      sleep(0.5)
+      sleep(1)
     self.join_scrapers()
     self.join_workers()
     self.join_db_worker()

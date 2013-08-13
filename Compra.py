@@ -15,7 +15,7 @@ class Compra(Base):
   proponente = Column(Unicode(200))
   description = Column(Unicode(500))
   acto = Column(Unicode(200))
-  fecha = Column(Date)
+  fecha = Column(DateTime)
 
   def __init__(self,url,category,html,data):
     self.url = url
@@ -28,6 +28,7 @@ class Compra(Base):
     self.proponente = data['proponente']
     self.description= data['descripcion']
     self.acto = data['acto']
+    self.fecha = data['fecha']
 
   def translate_category(self,category_number):
     if category_number in self.categories:
@@ -37,4 +38,7 @@ class Compra(Base):
   def __getitem__(self,key):
     return getattr(self, key)
 
+
+  def __str__(self):
+    return "Compra(%s)" % (self.url)
 

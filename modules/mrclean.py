@@ -1,17 +1,15 @@
 import re
 import logging
+from datetime import datetime
 
 logger = logging.getLogger('mrclean')
 
 def parse_date(date):
   try:
-    date = date.replace('.','')
-    time = strptime(date,"%d-%m-%Y %I:%M %p") 
-    data['time'] = strftime("%H:%M",time)
-    date = strftime("%d/%m/%Y",time)
+    date = date.replace('.','').upper()
+    date = datetime.strptime(date,"%d-%m-%Y %I:%M %p") 
   except:
-    logger.debug('could not get fecha')
-    date = 'empty'
+    logger.debug('could not parse date')
   return date
 
 def parse_precio(precio):

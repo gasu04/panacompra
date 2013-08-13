@@ -26,7 +26,7 @@ class WorkThread(threading.Thread):
       except Empty:
         self.logger.debug('url queue is empty from %s', str(self))
         if any([scraper.is_alive() for scraper in self.scrapers]):
-          sleep(5)
+          sleep(15)
           continue
         else:
           self.logger.debug('worker dying %s', str(self))
@@ -38,7 +38,7 @@ class WorkThread(threading.Thread):
     self.compras.put([html,url,category])
 
   def get_compra_html(self,url):
-    connection = httplib.HTTPConnection("201.227.172.42", "80")
+    connection = httplib.HTTPConnection("201.227.172.42", "80",timeout=20)
     connection.request("GET", url)
     response = connection.getresponse()
     data = response.read()
