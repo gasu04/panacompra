@@ -51,7 +51,9 @@ class ScrapeThread(threading.Thread):
         self.eat_urls_for_category(self.category)
         self.increment_page()
       except timeout:
-        self.logger.debug('HTTP timeout from %s', str(self))
+        self.connection.close()
+        self.connection = httplib.HTTPConnection("201.227.172.42", "80",timeout=60)
+        self.logger.info('HTTP timeout from %s', str(self))
         self.increment_page()
         continue
     self.connection.close()

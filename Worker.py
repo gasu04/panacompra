@@ -32,9 +32,11 @@ class WorkThread(threading.Thread):
           continue
         else:
           self.connection.close()
-          self.logger.debug('worker dying %s', str(self))
+          self.logger.info('worker dying %s', str(self))
           return
       except timeout:
+        self.connection.close()
+        self.connection = httplib.HTTPConnection("201.227.172.42", "80",timeout=60)
         self.compra_urls.task_done()
         self.logger.info('HTTP timeout from %s', str(self))
         continue
