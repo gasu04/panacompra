@@ -35,9 +35,15 @@ class PanaCrawler():
 
   def eat_categories(self):
     """Build a list of categories by scraping site"""
-    html = self.get_categories_html() 
-    self.categories.extend(self.parse_categories_html(html))
-    shuffle(self.categories)
+    success = False
+    while not success:
+      try:
+        html = self.get_categories_html() 
+        self.categories.extend(self.parse_categories_html(html))
+        shuffle(self.categories)
+        success = True
+      except:
+        continue
 
   def parse_categories_html(self,html):
     """returns an array of ints (category ids) from html"""
