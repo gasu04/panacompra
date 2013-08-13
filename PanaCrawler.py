@@ -48,7 +48,6 @@ class PanaCrawler():
     connection = httplib.HTTPConnection("201.227.172.42", "80")
     connection.request("GET", "/Portal/OportunidadesDeNegocio.aspx")
     response = connection.getresponse()
-    print response
     data = response.read()
     connection.close()
     return data
@@ -83,7 +82,7 @@ class PanaCrawler():
     return len([worker for worker in self.workers if worker.is_alive()]) 
 
   def spawn_workers(self):
-    amount = 10 - self.live_workers()
+    amount = 15 - self.live_workers()
     if amount > 0:
       for i in range(amount):
         t = WorkThread(self.compra_urls,self.compras,self.scrapers)
@@ -96,7 +95,7 @@ class PanaCrawler():
     self.logger.info('waiting on workers')
     while any([worker.is_alive() for worker in self.workers]):
       self.logger.info('%i compras remaining', self.compra_urls.qsize())
-      sleep(1)
+      sleep(5)
     self.logger.info('finished waiting on workers')
 
   def spawn_db_worker(self):
@@ -126,7 +125,7 @@ class PanaCrawler():
   def run(self,update=False):
     self.eat_categories() #scrape and store list of categories
     while self.categories:
-      if threading.active_count() < 17:
+      if threading.active_count() < 22:
         self.spawn_scrapers(update)
         self.spawn_workers()
         self.spawn_db_worker()
