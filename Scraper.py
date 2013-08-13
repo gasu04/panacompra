@@ -4,6 +4,7 @@ import logging
 import json
 import urlparse
 import threading
+from socket import timeout
 from time import sleep
 from bs4 import BeautifulSoup, SoupStrainer
 
@@ -46,9 +47,13 @@ class ScrapeThread(threading.Thread):
       self.pages = self.parse_max_pages(self.get_category_page())
     self.logger.info('starting category %s [%s pages]',self.category,self.pages)
     for i in range(self.pages):
-      self.eat_urls_for_category(self.category)
-      self.increment_page()
-#    self.logger.info('collected [%i/%i] pages from category %s', i+1, self.pages, str(self.category))
+      try:
+        self.eat_urls_for_category(self.category)
+        self.increment_page()
+      except timeout:
+        self.logger.debug('HTTP timeout from %s', str(self))
+        self.increment_page()
+        continue
     self.connection.close()
     self.logger.debug('%s dying', str(self))
     return

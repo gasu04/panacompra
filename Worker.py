@@ -1,6 +1,7 @@
 import logging
 import threading
 import httplib, urllib
+from socket import timeout
 from time import sleep
 from Queue import Empty
 
@@ -33,6 +34,11 @@ class WorkThread(threading.Thread):
           self.connection.close()
           self.logger.debug('worker dying %s', str(self))
           return
+      except timeout:
+        self.compra_urls.task_done()
+        self.logger.info('HTTP timeout from %s', str(self))
+        continue
+
 
   def eat_compra(self,url,category):
     url = "/AmbientePublico/" + url #append path
