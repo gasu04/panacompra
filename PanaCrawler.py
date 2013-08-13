@@ -125,7 +125,7 @@ class PanaCrawler():
   def run(self,update=False):
     self.eat_categories() #scrape and store list of categories
     while self.categories:
-      if threading.active_count() < 20:
+      if threading.active_count() < 16:
         self.spawn_scrapers(update)
         self.spawn_workers()
         self.spawn_db_worker()
