@@ -16,6 +16,7 @@ class WorkThread(threading.Thread):
     self.compras = out_queue
     self.scrapers = scrapers
     self.logger = logging.getLogger('Worker')
+    self.connection = httplib.HTTPConnection("201.227.172.42", "80",timeout=60)
 
   def run(self):
     while True:
@@ -29,6 +30,7 @@ class WorkThread(threading.Thread):
           sleep(15)
           continue
         else:
+          self.connection.close()
           self.logger.debug('worker dying %s', str(self))
           return
 
@@ -38,10 +40,8 @@ class WorkThread(threading.Thread):
     self.compras.put([html,url,category])
 
   def get_compra_html(self,url):
-    connection = httplib.HTTPConnection("201.227.172.42", "80",timeout=20)
-    connection.request("GET", url)
-    response = connection.getresponse()
+    self.connection.request("GET", url)
+    response = self.connection.getresponse()
     data = response.read()
-    connection.close()
     return data
 
