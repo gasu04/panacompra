@@ -2,6 +2,7 @@ import requests
 import inflect
 import json
 import logging
+import urllib2
 
 logger = logging.getLogger('rails')
 def create(url,resource_name,obj,token=False):
@@ -28,12 +29,8 @@ def create_many(url,resource_name,objs):
 def index(url,resource_name,token=False):
     '''returns json document with all objects of resource'''
     url = '/'.join([url, resource_name, 'all.json'])
-    response = requests.get(url)
-    if response.status_code == 200:
-      logger.debug('indexed %s ', resource_name)
-    else:
-      logger.error('error indexing %s - %s', resource_name)
-    return response.json()
+    response = urllib2.urlopen(url)
+    return json.loads(response.read())
 
 def show(url,resource_name,resource_id,token):
     '''returns json document with a specific object from a resource'''
