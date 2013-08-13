@@ -45,7 +45,7 @@ class PanaCrawler():
 
   def get_categories_html(self):
     """returns html from category listing page"""
-    connection = httplib.HTTPConnection("201.227.172.42", "80")
+    connection = httplib.HTTPConnection("201.227.172.42", "80", timeout=40)
     connection.request("GET", "/Portal/OportunidadesDeNegocio.aspx")
     response = connection.getresponse()
     data = response.read()
@@ -95,7 +95,7 @@ class PanaCrawler():
     self.logger.info('waiting on workers')
     while any([worker.is_alive() for worker in self.workers]):
       self.logger.info('%i compras remaining', self.compra_urls.qsize())
-      sleep(5)
+      sleep(15)
     self.logger.info('finished waiting on workers')
 
   def spawn_db_worker(self):
