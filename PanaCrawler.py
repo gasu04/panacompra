@@ -77,7 +77,7 @@ class PanaCrawler():
     while any([scraper.is_alive() for scraper in self.scrapers]):
       sleep(0.3)
     self.logger.info('finished waiting on scrapers')
-
+    self.logger.info('%i compras on queue', self.compra_urls.qsize())
 
   def live_workers(self):
     return len([worker for worker in self.workers if worker.is_alive()]) 
@@ -95,7 +95,8 @@ class PanaCrawler():
   def join_workers(self):
     self.logger.info('waiting on workers')
     while any([worker.is_alive() for worker in self.workers]):
-      sleep(0.3)
+      self.logger.info('%i compras remaining', self.compra_urls.qsize())
+      sleep(1)
     self.logger.info('finished waiting on workers')
 
   def spawn_db_worker(self):
