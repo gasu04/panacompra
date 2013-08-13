@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup, SoupStrainer
 
 import httplib, urllib
+from random import shuffle
 import re
 import sys
 import logging
@@ -36,6 +37,7 @@ class PanaCrawler():
     """Build a list of categories by scraping site"""
     html = self.get_categories_html() 
     self.categories.extend(self.parse_categories_html(html))
+    shuffle(self.categories)
 
   def parse_categories_html(self,html):
     """returns an array of ints (category ids) from html"""
