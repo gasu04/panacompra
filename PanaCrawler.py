@@ -65,7 +65,7 @@ class PanaCrawler():
 
   def spawn_scrapers(self,update=False):
     if len(self.categories) > 0: 
-      amount = 5 - self.live_scrapers() 
+      amount = 7 - self.live_scrapers() 
       for i in range(amount):
         try:
           category = self.categories.pop()
@@ -90,7 +90,7 @@ class PanaCrawler():
     return len([worker for worker in self.workers if worker.is_alive()]) 
 
   def spawn_workers(self):
-    amount = 15 - self.live_workers()
+    amount = 23 - self.live_workers()
     if amount > 0:
       for i in range(amount):
         t = WorkThread(self.compra_urls,self.compras,self.scrapers)
@@ -133,7 +133,7 @@ class PanaCrawler():
   def run(self,update=False):
     self.eat_categories() #scrape and store list of categories
     while self.categories:
-      if threading.active_count() < 22:
+      if threading.active_count() < 32:
         self.spawn_scrapers(update)
         self.spawn_workers()
         self.spawn_db_worker()
