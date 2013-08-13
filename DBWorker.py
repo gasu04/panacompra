@@ -5,7 +5,6 @@ from time import sleep
 from time import strptime
 from time import strftime 
 from Queue import Empty
-from pymongo import MongoClient
 import Compra
 from sqlalchemy import create_engine
 from sqlalchemy.sql import exists
