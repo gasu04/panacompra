@@ -28,8 +28,9 @@ class WorkThread(threading.Thread):
   def open_connection(self):
     while not self.connection:
       try:
-        self.connection = httplib.HTTPConnection("201.227.172.42", "80",timeout=5)
+        self.connection = httplib.HTTPConnection("201.227.172.42", "80",timeout=10)
       except:
+        self.logger.info('HTTP timeout in %s', str(self))
         continue
 
   def reset_connection(self):
@@ -37,8 +38,9 @@ class WorkThread(threading.Thread):
     self.connection = False
     while not self.connection:
       try:
-        self.connection = httplib.HTTPConnection("201.227.172.42", "80",timeout=10)
+        self.connection = httplib.HTTPConnection("201.227.172.42", "80",timeout=15)
       except:
+        self.logger.info('HTTP timeout in %s', str(self))
         continue
 
   def run(self):

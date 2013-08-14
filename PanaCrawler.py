@@ -65,7 +65,7 @@ class PanaCrawler():
 
   def spawn_scrapers(self,update=False):
     while len(self.categories) > 0:
-      amount = 7 - self.live_scrapers()
+      amount = 10 - self.live_scrapers()
       for i in range(amount):
         if len(self.categories) > 0:
           category = self.categories.pop()

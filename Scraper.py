@@ -42,7 +42,7 @@ class ScrapeThread(threading.Thread):
   def open_connection(self):
     while not self.connection:
       try:
-        self.connection = httplib.HTTPConnection("201.227.172.42", "80",timeout=10)
+        self.connection = httplib.HTTPConnection("201.227.172.42", "80",timeout=15)
       except:
         continue
 
@@ -51,7 +51,7 @@ class ScrapeThread(threading.Thread):
     self.connection = False
     while not self.connection:
       try:
-        self.connection = httplib.HTTPConnection("201.227.172.42", "80",timeout=10)
+        self.connection = httplib.HTTPConnection("201.227.172.42", "80",timeout=15)
       except:
         continue
 
@@ -87,6 +87,7 @@ class ScrapeThread(threading.Thread):
         success = True
       except Exception as e:
         sleep(1)
+        self.logger.info('RESPONSE timeout from %s', str(self))
         self.reset_connection()
         sleep(1)
         continue
@@ -104,3 +105,6 @@ class ScrapeThread(threading.Thread):
       html = self.get_category_page()
       pages = self.pages_regex.findall(html)[0].decode('latin-1', 'ignore')
       self.pages = int(pages)
+  
+  def __str__(self):
+    return "<(Scraper: category[%i], page[%i])>" % (int(self.category), int(self.get_page()))
