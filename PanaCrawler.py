@@ -86,7 +86,7 @@ class PanaCrawler():
     return len([worker for worker in self.workers if worker.is_alive()]) 
 
   def spawn_workers(self):
-    for i in range(5):
+    for i in range(10):
       t = WorkThread(self.compra_urls,self.compras,self.scrapers)
       t.setDaemon(True)
       self.workers.append(t)
