@@ -53,7 +53,7 @@ class PanaCrawler():
 
   def get_categories_html(self):
     """returns html from category listing page"""
-    connection = httplib.HTTPConnection("201.227.172.42", "80", timeout=40)
+    connection = httplib.HTTPConnection("201.227.172.42", "80", timeout=10)
     connection.request("GET", "/Portal/OportunidadesDeNegocio.aspx")
     response = connection.getresponse()
     data = response.read()
@@ -64,46 +64,40 @@ class PanaCrawler():
     return len([scraper for scraper in self.scrapers if scraper.is_alive()]) 
 
   def spawn_scrapers(self,update=False):
-    if len(self.categories) > 0: 
-      amount = 7 - self.live_scrapers() 
+    while len(self.categories) > 0:
+      amount = 7 - self.live_scrapers()
       for i in range(amount):
-        try:
+        if len(self.categories) > 0:
           category = self.categories.pop()
           t = ScrapeThread(self.compra_urls,category,update)
           t.setDaemon(True)
-          t.start()
           self.scrapers.append(t)
-          self.logger.debug('scraper thread started on category %s', category)
-        except IndexError:
-          self.logger.debug('pop on empty category list')
-      self.logger.debug('started %i scrapers', amount)
-      
+          t.start()
+        else:
+          return 0  
+      sleep(5)
 
   def join_scrapers(self):
-    self.logger.info('waiting on scrapers')
     while any([scraper.is_alive() for scraper in self.scrapers]):
-      sleep(0.3)
-    self.logger.info('finished waiting on scrapers')
+      sleep(1)
     self.logger.info('%i compras on queue', self.compra_urls.qsize())
 
   def live_workers(self):
     return len([worker for worker in self.workers if worker.is_alive()]) 
 
   def spawn_workers(self):
-    amount = 23 - self.live_workers()
-    if amount > 0:
-      for i in range(amount):
-        t = WorkThread(self.compra_urls,self.compras,self.scrapers)
-        t.setDaemon(True)
-        t.start()
-        self.workers.append(t)
-      self.logger.info('started %i workers', amount)
+    for i in range(5):
+      t = WorkThread(self.compra_urls,self.compras,self.scrapers)
+      t.setDaemon(True)
+      self.workers.append(t)
+      t.start()
+    self.logger.info('workers running')
 
   def join_workers(self):
     self.logger.info('waiting on workers')
     while any([worker.is_alive() for worker in self.workers]):
       self.logger.info('%i compras remaining', self.compra_urls.qsize())
-      sleep(15)
+      sleep(5)
     self.logger.info('finished waiting on workers')
 
   def spawn_db_worker(self):
@@ -119,9 +113,6 @@ class PanaCrawler():
       sleep(1)
     self.logger.info('finished waiting on db')
 
-  def update(self, url):
-    old = rails.index(url,'compras')
-
   def handler(self,signum, frame):
     print 'Signal handler called with signal', signum
     print 'waiting for threads to finish'
@@ -132,12 +123,11 @@ class PanaCrawler():
 
   def run(self,update=False):
     self.eat_categories() #scrape and store list of categories
-    while self.categories:
-      if threading.active_count() < 32:
-        self.spawn_scrapers(update)
-        self.spawn_workers()
-        self.spawn_db_worker()
-      sleep(1)
+    #phase 1
+    self.spawn_scrapers(update)
     self.join_scrapers()
+    #phase 2
+    self.spawn_workers()
+    self.spawn_db_worker()
     self.join_workers()
     self.join_db_worker()

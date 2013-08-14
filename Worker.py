@@ -23,11 +23,28 @@ class WorkThread(threading.Thread):
     self.logger = logging.getLogger('Worker')
     self.engine = create_engine('postgresql+psycopg2://panacompra:elpana@localhost/panacompra', echo=False,convert_unicode=False)
     self.session_maker = sessionmaker(bind=self.engine)
-    self.connection = httplib.HTTPConnection("201.227.172.42", "80",timeout=60)
+    self.connection = False
+
+  def open_connection(self):
+    while not self.connection:
+      try:
+        self.connection = httplib.HTTPConnection("201.227.172.42", "80",timeout=5)
+      except:
+        continue
+
+  def reset_connection(self):
+    self.connection.close()
+    self.connection = False
+    while not self.connection:
+      try:
+        self.connection = httplib.HTTPConnection("201.227.172.42", "80",timeout=10)
+      except:
+        continue
 
   def run(self):
     session = self.session_maker()
     Compra.Base.metadata.create_all(self.engine)
+    self.open_connection()
     while True:
       try:
         url,category = self.compra_urls.get_nowait()
@@ -41,15 +58,13 @@ class WorkThread(threading.Thread):
           continue
         else:
           self.connection.close()
+          session.close()
           self.logger.info('worker dying %s', str(self))
           return
       except timeout:
-        self.connection.close()
-        self.connection = httplib.HTTPConnection("201.227.172.42", "80",timeout=60)
-        self.compra_urls.task_done()
+        self.reset_connection()
         self.logger.info('HTTP timeout from %s', str(self))
         continue
-
 
   def eat_compra(self,url,category):
     url = "/AmbientePublico/" + url #append path
@@ -61,4 +76,3 @@ class WorkThread(threading.Thread):
     response = self.connection.getresponse()
     data = response.read()
     return data
-
