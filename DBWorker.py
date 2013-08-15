@@ -50,6 +50,7 @@ class DBWorker(threading.Thread):
           sleep(5)
           continue
         else:
+          session.close()
           self.logger.info("%i compras added to db", self.count)
           return
 

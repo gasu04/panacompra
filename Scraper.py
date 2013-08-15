@@ -77,6 +77,7 @@ class ScrapeThread(threading.Thread):
         self.logger.info('HTTP timeout from %s', str(self))
         continue
     self.connection.close()
+    self.session.close()
     self.logger.debug('%s dying', str(self))
     return
 
