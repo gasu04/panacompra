@@ -70,6 +70,7 @@ class WorkThread(threading.Thread):
         self.connection.request("GET", url)
         response = self.connection.getresponse()
         data = response.read()
+        success = True
       except Exception as e:
         sleep(1)
         self.logger.info('RESPONSE timeout from %s', str(self))
