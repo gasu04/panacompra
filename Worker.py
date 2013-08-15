@@ -74,7 +74,16 @@ class WorkThread(threading.Thread):
     self.compras.put([html,url,category])
 
   def get_compra_html(self,url):
-    self.connection.request("GET", url)
-    response = self.connection.getresponse()
-    data = response.read()
+    success = False
+    while not success:
+      try:
+        self.connection.request("GET", url)
+        response = self.connection.getresponse()
+        data = response.read()
+      except Exception as e:
+        sleep(1)
+        self.logger.info('RESPONSE timeout from %s', str(self))
+        self.reset_connection()
+        sleep(1)
+        continue
     return data
