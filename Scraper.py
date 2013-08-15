@@ -7,6 +7,10 @@ import threading
 from socket import timeout
 from time import sleep
 from bs4 import BeautifulSoup, SoupStrainer
+from sqlalchemy import create_engine
+from sqlalchemy.sql import exists
+from sqlalchemy.orm import sessionmaker
+import Compra
 
 class ScrapeThread(threading.Thread):
   """
@@ -28,6 +32,8 @@ class ScrapeThread(threading.Thread):
     self.pages_regex = re.compile("(?:TotalPaginas\">)([0-9]*)")
     self.current_regex= re.compile("(?:PaginaActual\">)([0-9]*)")
     self.logger = logging.getLogger('Scraper')
+    self.engine = create_engine('postgresql+psycopg2://panacompra:elpana@localhost/panacompra', echo=False,convert_unicode=False)
+    self.session_maker = sessionmaker(bind=self.engine)
     self.connection = False
 
   def reset_page(self):
@@ -59,6 +65,8 @@ class ScrapeThread(threading.Thread):
     self.reset_page()
     self.open_connection()
     self.parse_max_pages()
+    self.session = self.session_maker()
+    Compra.Base.metadata.create_all(self.engine)
     self.logger.info('starting category %s [%s pages]',self.category,self.pages)
     while self.pages >= self.get_page():
       try:
@@ -96,7 +104,8 @@ class ScrapeThread(threading.Thread):
   def parse_category_page(self,html):
     soup = BeautifulSoup(html, parse_only=self.strainer)
     links = soup.find_all(href=re.compile("VistaPreviaCP.aspx\?NumLc"))
-    return [link.get('href') for link in links]
+    remove_dupes = lambda x: not self.session.query(exists().where(Compra.Compra.url==("/AmbientePublico/" + str(x)))).scalar()
+    return filter(remove_dupes,[link.get('href') for link in links])
 
   def parse_max_pages(self):
     if self.update:

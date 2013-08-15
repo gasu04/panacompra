@@ -4,10 +4,6 @@ import httplib, urllib
 from socket import timeout
 from time import sleep
 from Queue import Empty
-import Compra
-from sqlalchemy import create_engine
-from sqlalchemy.sql import exists
-from sqlalchemy.orm import sessionmaker
 
 class WorkThread(threading.Thread):
   """
@@ -21,8 +17,6 @@ class WorkThread(threading.Thread):
     self.compras = out_queue
     self.scrapers = scrapers
     self.logger = logging.getLogger('Worker')
-    self.engine = create_engine('postgresql+psycopg2://panacompra:elpana@localhost/panacompra', echo=False,convert_unicode=False)
-    self.session_maker = sessionmaker(bind=self.engine)
     self.connection = False
 
   def open_connection(self):
@@ -44,14 +38,11 @@ class WorkThread(threading.Thread):
         continue
 
   def run(self):
-    session = self.session_maker()
-    Compra.Base.metadata.create_all(self.engine)
     self.open_connection()
     while True:
       try:
         url,category = self.compra_urls.get_nowait()
-        if not session.query(exists().where(Compra.Compra.url==("/AmbientePublico/" + url))).scalar():
-          self.eat_compra(url,category)
+        self.eat_compra(url,category)
         self.compra_urls.task_done()
       except Empty:
         self.logger.debug('url queue is empty from %s', str(self))
@@ -60,7 +51,6 @@ class WorkThread(threading.Thread):
           continue
         else:
           self.connection.close()
-          session.close()
           self.logger.info('worker dying %s', str(self))
           return
       except timeout:
