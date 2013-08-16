@@ -7,9 +7,7 @@ import threading
 from socket import timeout
 from time import sleep
 from bs4 import BeautifulSoup, SoupStrainer
-from sqlalchemy import create_engine
 from sqlalchemy.sql import exists
-from sqlalchemy.orm import sessionmaker
 import Compra
 
 class ScrapeThread(threading.Thread):
@@ -22,7 +20,7 @@ class ScrapeThread(threading.Thread):
 
   """
 
-  def __init__(self, compra_url, category, update=False):
+  def __init__(self, compra_url, category, session, update=False):
     threading.Thread.__init__(self)
     self.update = update
     self.data = dict(urlparse.parse_qsl(open('form.data').read()))
@@ -32,9 +30,8 @@ class ScrapeThread(threading.Thread):
     self.pages_regex = re.compile("(?:TotalPaginas\">)([0-9]*)")
     self.current_regex= re.compile("(?:PaginaActual\">)([0-9]*)")
     self.logger = logging.getLogger('Scraper')
-    self.engine = create_engine('postgresql+psycopg2://panacompra:elpana@localhost/panacompra', echo=False,convert_unicode=False)
-    self.session_maker = sessionmaker(bind=self.engine)
     self.connection = False
+    self.session = session
 
   def reset_page(self):
     self.data['ctl00$ContentPlaceHolder1$ControlPaginacion$hidNumeroPagina'] = 1
@@ -65,8 +62,6 @@ class ScrapeThread(threading.Thread):
     self.reset_page()
     self.open_connection()
     self.parse_max_pages()
-    self.session = self.session_maker()
-    Compra.Base.metadata.create_all(self.engine)
     self.logger.info('starting category %s [%s pages]',self.category,self.pages)
     while self.pages >= self.get_page():
       try:
@@ -74,7 +69,7 @@ class ScrapeThread(threading.Thread):
         self.increment_page()
       except:
         self.reset_connection()
-        self.logger.info('HTTP timeout from %s', str(self))
+        self.logger.debug('HTTP timeout from %s', str(self))
         continue
     self.connection.close()
     self.session.close()
@@ -96,7 +91,7 @@ class ScrapeThread(threading.Thread):
         success = True
       except Exception as e:
         sleep(1)
-        self.logger.info('RESPONSE timeout from %s', str(self))
+        self.logger.debug('RESPONSE timeout from %s', str(self))
         self.reset_connection()
         sleep(1)
         continue

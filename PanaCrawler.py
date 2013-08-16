@@ -13,6 +13,8 @@ from time import sleep
 from Worker import WorkThread
 from DBWorker import DBWorker
 from modules import rails
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 
 class PanaCrawler():
@@ -32,6 +34,8 @@ class PanaCrawler():
     self.compra_urls = Queue()
     self.compras = Queue()
     self.logger = logging.getLogger('PanaCrawler')
+    self.engine = create_engine('postgresql+psycopg2://panacompra:elpana@localhost/panacompra', echo=False,convert_unicode=False)
+    self.session_maker = sessionmaker(bind=self.engine)
 
   def eat_categories(self):
     """Build a list of categories by scraping site"""
@@ -69,7 +73,7 @@ class PanaCrawler():
       for i in range(amount):
         if len(self.categories) > 0:
           category = self.categories.pop()
-          t = ScrapeThread(self.compra_urls,category,update)
+          t = ScrapeThread(self.compra_urls,category,self.session_maker(),update)
           t.setDaemon(True)
           self.scrapers.append(t)
           t.start()

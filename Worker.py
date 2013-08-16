@@ -24,7 +24,7 @@ class WorkThread(threading.Thread):
       try:
         self.connection = httplib.HTTPConnection("201.227.172.42", "80",timeout=10)
       except:
-        self.logger.info('HTTP timeout in %s', str(self))
+        self.logger.debug('HTTP timeout in %s', str(self))
         continue
 
   def reset_connection(self):
@@ -34,7 +34,7 @@ class WorkThread(threading.Thread):
       try:
         self.connection = httplib.HTTPConnection("201.227.172.42", "80",timeout=15)
       except:
-        self.logger.info('HTTP timeout in %s', str(self))
+        self.logger.debug('HTTP timeout in %s', str(self))
         continue
 
   def run(self):
@@ -55,7 +55,7 @@ class WorkThread(threading.Thread):
           return
       except timeout:
         self.reset_connection()
-        self.logger.info('HTTP timeout from %s', str(self))
+        self.logger.debug('HTTP timeout from %s', str(self))
         continue
 
   def eat_compra(self,url,category):
@@ -73,7 +73,7 @@ class WorkThread(threading.Thread):
         success = True
       except Exception as e:
         sleep(1)
-        self.logger.info('RESPONSE timeout from %s', str(self))
+        self.logger.debug('RESPONSE timeout from %s', str(self))
         self.reset_connection()
         sleep(1)
         continue
