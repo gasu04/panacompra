@@ -141,6 +141,6 @@ class PanaCrawler():
     self.join_scrapers()
     #phase 2
     self.spawn_workers()
-    self.spawn_db_worker()
     self.join_workers()
+    self.spawn_db_worker()
     self.join_db_worker()
