@@ -7,7 +7,7 @@ class Url(Base):
   __tablename__ = 'urls'
   
   id = Column(Integer, Sequence('compra_id_seq'), primary_key=True)
-  url = Unique(Column(String(200)))
+  url = Column(String(200))
   category = Column(Integer(3))
   visited = Column(Boolean)
   status  = Column(Boolean)

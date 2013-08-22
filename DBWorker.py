@@ -45,14 +45,12 @@ class DBWorker(threading.Thread):
         self.compras_queue.task_done()
       except Empty:
         self.logger.debug("compra queue empty")
-        if any([worker.is_alive() for worker in self.workers]):
-          self.logger.debug("db worker going to sleep 5 seconds")
-          sleep(5)
-          continue
-        else:
-          session.close()
-          self.logger.info("%i compras added to db", self.count)
-          return
+        session.close()
+        self.logger.info("%i compras added to db", self.count)
+        return
+      except:
+        self.compras_queue.task_done()
+        continue
 
   def get_regexes(self):
     return [variable for variable in self.__dict__.keys() if "_regex" in variable]

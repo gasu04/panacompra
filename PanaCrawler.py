@@ -15,7 +15,9 @@ from DBWorker import DBWorker
 from modules import rails
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
+from sqlalchemy import distinct
+import Compra
+import Url
 
 class PanaCrawler():
   """
@@ -84,14 +86,19 @@ class PanaCrawler():
   def join_scrapers(self):
     while any([scraper.is_alive() for scraper in self.scrapers]):
       sleep(1)
+    self.build_compra_urls_queue()
     self.logger.info('%i compras on queue', self.compra_urls.qsize())
+
+  def build_compra_urls_queue(self):
+    for url in self.session_maker().query(Url.Url).filter(Url.Url.visited == False).distinct().all():
+      self.compra_urls.put([url.url,url.category])
 
   def live_workers(self):
     return len([worker for worker in self.workers if worker.is_alive()]) 
 
   def spawn_workers(self):
     for i in range(10):
-      t = WorkThread(self.compra_urls,self.compras,self.scrapers)
+      t = WorkThread(self.compra_urls,self.compras, self.session_maker() ,self.scrapers)
       t.setDaemon(True)
       self.workers.append(t)
       t.start()
@@ -127,6 +134,8 @@ class PanaCrawler():
 
   def run(self,update=False):
     self.eat_categories() #scrape and store list of categories
+    Url.Base.metadata.create_all(self.engine)
+    Compra.Base.metadata.create_all(self.engine)
     #phase 1
     self.spawn_scrapers(update)
     self.join_scrapers()

@@ -9,6 +9,7 @@ from time import sleep
 from bs4 import BeautifulSoup, SoupStrainer
 from sqlalchemy.sql import exists
 import Compra
+from Url import Url
 
 class ScrapeThread(threading.Thread):
   """
@@ -78,7 +79,8 @@ class ScrapeThread(threading.Thread):
 
   def eat_urls_for_category(self,category):
     for url in self.parse_category_page(self.get_category_page()):
-      self.compra_url.put([url,category])
+      self.session.add(Url(url,category))
+      self.session.commit()
 
   def get_category_page(self):
     headers = {"Content-type": "application/x-www-form-urlencoded"}

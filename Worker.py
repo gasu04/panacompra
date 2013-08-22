@@ -11,13 +11,14 @@ class WorkThread(threading.Thread):
   Parses html, creates Compra objects , adds them to compras Queue
 
   """
-  def __init__(self, queue, out_queue, scrapers):
+  def __init__(self, queue, out_queue, session, scrapers):
     threading.Thread.__init__(self)
     self.compra_urls = queue
     self.compras = out_queue
     self.scrapers = scrapers
     self.logger = logging.getLogger('Worker')
     self.connection = False
+    self.session = session
 
   def open_connection(self):
     while not self.connection:
@@ -73,6 +74,7 @@ class WorkThread(threading.Thread):
         success = True
       except Exception as e:
         sleep(1)
+        print e
         self.logger.debug('RESPONSE timeout from %s', str(self))
         self.reset_connection()
         sleep(1)
