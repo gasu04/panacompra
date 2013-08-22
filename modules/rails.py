@@ -56,8 +56,8 @@ def update(url,resource_name,resource_id,obj,token):
 
 def filter_new_objects_for_resource_by_key(url,objects,resource,key,token=False):
   '''returns only new objects'''
-  old_objects = {el[key]:0 for el in index(url,resource,token)}
-  dupes = lambda x: not old_objects.has_key(x[key].decode('latin-1', 'ignore'))
+  old_objects = {el[key] for el in index(url,resource,token)}
+  dupes = lambda x: x[key].decode('latin-1', 'ignore') not in old_objects
   objects = filter(dupes,objects)
   return objects
 
