@@ -36,7 +36,7 @@ class PanaCrawler():
     self.compra_urls = Queue()
     self.compras = Queue()
     self.logger = logging.getLogger('PanaCrawler')
-    self.engine = create_engine('postgresql+psycopg2://panacompra:elpana@localhost/panacompra', echo=True,convert_unicode=False)
+    self.engine = create_engine('postgresql+psycopg2://panacompra:elpana@localhost/panacompra', echo=False,convert_unicode=False)
     self.session_maker = sessionmaker(bind=self.engine)
 
   def eat_categories(self):
