@@ -4,6 +4,7 @@ import httplib, urllib
 from socket import timeout
 from time import sleep
 from Queue import Empty
+from Url import Url
 
 class WorkThread(threading.Thread):
   """
@@ -28,6 +29,11 @@ class WorkThread(threading.Thread):
         self.logger.debug('HTTP timeout in %s', str(self))
         continue
 
+  def mark_url_visited(self,url):
+    url.visited = True
+    self.session.merge(url)
+    self.session.commit()
+
   def reset_connection(self):
     self.connection.close()
     self.connection = False
@@ -42,8 +48,9 @@ class WorkThread(threading.Thread):
     self.open_connection()
     while True:
       try:
-        url,category = self.compra_urls.get_nowait()
-        self.eat_compra(url,category)
+        url = self.compra_urls.get_nowait()
+        self.eat_compra(url.url,url.category)
+        self.mark_url_visited(url)
         self.compra_urls.task_done()
       except Empty:
         self.logger.debug('url queue is empty from %s', str(self))

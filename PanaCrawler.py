@@ -36,7 +36,7 @@ class PanaCrawler():
     self.compra_urls = Queue()
     self.compras = Queue()
     self.logger = logging.getLogger('PanaCrawler')
-    self.engine = create_engine('postgresql+psycopg2://panacompra:elpana@localhost/panacompra', echo=False,convert_unicode=False)
+    self.engine = create_engine('postgresql+psycopg2://panacompra:elpana@localhost/panacompra', echo=True,convert_unicode=False)
     self.session_maker = sessionmaker(bind=self.engine)
 
   def eat_categories(self):
@@ -91,7 +91,7 @@ class PanaCrawler():
 
   def build_compra_urls_queue(self):
     for url in self.session_maker().query(Url.Url).filter(Url.Url.visited == False).distinct().all():
-      self.compra_urls.put([url.url,url.category])
+      self.compra_urls.put(url)
 
   def live_workers(self):
     return len([worker for worker in self.workers if worker.is_alive()]) 
