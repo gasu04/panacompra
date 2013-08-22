@@ -58,6 +58,5 @@ def filter_new_objects_for_resource_by_key(url,objects,resource,key,token=False)
   '''returns only new objects'''
   old_objects = {el[key] for el in index(url,resource,token)}
   dupes = lambda x: x[key].decode('latin-1', 'ignore') not in old_objects
-  objects = filter(dupes,objects)
-  return objects
+  return filter(dupes,objects)
 
