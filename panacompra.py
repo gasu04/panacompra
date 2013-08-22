@@ -57,7 +57,7 @@ def send_many_to_db():
   engine = create_engine('postgresql+psycopg2://panacompra:elpana@localhost/panacompra',  encoding='latin-1')
   session_maker = sessionmaker(bind=engine)
   session = session_maker()
-  compras_json = [{ 'precio':i.precio, 'fecha':i.fecha.isoformat() ,'acto': i.acto , 'url': i.url , 'entidad':i.entidad, 'category_id':i.category , 'proponente':i.proponente, 'description':i.description} for i in rails.filter_new_objects_for_resource_by_key(args.url,session.query(Compra).all(),'compras','acto')]
+  compras_json = [{ 'precio':i.precio, 'fecha':i.fecha.isoformat() ,'acto': i.acto , 'url': i.url , 'entidad':i.entidad, 'category_id':i.category , 'proponente':i.proponente, 'description':i.description} for i in rails.filter_new_objects_for_resource_by_key(args.url,session.query(Compra.acto).all(),'compras','acto')]
   chunks = grouper(3000,compras_json)
   logger.info('sending %i compras in %i chunks', len(compras_json) ,len(compras_json)/3000)
   for chunk in chunks:
