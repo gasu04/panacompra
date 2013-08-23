@@ -29,11 +29,6 @@ class WorkThread(threading.Thread):
         self.logger.debug('HTTP timeout in %s', str(self))
         continue
 
-  def mark_url_visited(self,url):
-    url.visited = True
-    self.session.merge(url)
-    self.session.commit()
-
   def reset_connection(self):
     self.connection.close()
     self.connection = False
@@ -49,8 +44,7 @@ class WorkThread(threading.Thread):
     while True:
       try:
         url = self.compra_urls.get_nowait()
-        self.eat_compra(url.url,url.category)
-        self.mark_url_visited(url)
+        self.eat_compra(url)
         self.compra_urls.task_done()
       except Empty:
         self.logger.debug('url queue is empty from %s', str(self))
@@ -66,10 +60,12 @@ class WorkThread(threading.Thread):
         self.logger.debug('HTTP timeout from %s', str(self))
         continue
 
-  def eat_compra(self,url,category):
-    url = "/AmbientePublico/" + url #append path
-    html = self.get_compra_html(url)
-    self.compras.put([html,url,category])
+  def eat_compra(self,url):
+    url_path = "/AmbientePublico/" + url.url #append path
+    url.html = self.get_compra_html(url_path)
+    url.visited = True
+    self.session.merge(url)
+    self.session.commit()
 
   def get_compra_html(self,url):
     success = False

@@ -6,7 +6,6 @@ from time import strptime
 from time import strftime 
 from Queue import Empty
 import Compra
-from sqlalchemy import create_engine
 from sqlalchemy.sql import exists
 from sqlalchemy.orm import sessionmaker
 from modules import mrclean 
@@ -16,11 +15,9 @@ class DBWorker(threading.Thread):
   """
   Stores Compra Objects
   """
-  def __init__(self,compras_queue,workers):
+  def __init__(self,compras_queue,workers,session):
     threading.Thread.__init__(self)
     self.count = 0
-    self.engine = create_engine('postgresql+psycopg2://panacompra:elpana@localhost/panacompra', echo=False,convert_unicode=False)
-    self.session_maker = sessionmaker(bind=self.engine)
     self.compras_queue = compras_queue
     self.workers = workers
     self.logger = logging.getLogger('DB')
@@ -30,25 +27,27 @@ class DBWorker(threading.Thread):
     self.acto_regex = re.compile("(?:ero de Acto:</td><td class=\"formEjemplos\">)([^<]*)")
     self.entidad_regex = re.compile("(?:Entidad:</td><td class=\"formEjemplos\">)([^<]*)") 
     self.proponente_regex = re.compile("(?:Proponente.*\n.*\n.*?Ejemplos\">)([^<]*)",re.MULTILINE)
+    self.session = session
 
   def run(self):
-    session = self.session_maker()
-    Compra.Base.metadata.create_all(self.engine)
     while True:
       try:
-        html,url,category = self.compras_queue.get_nowait()
-        compra = self.parse_compra_html(html,url,category)
-        if not session.query(exists().where(Compra.Compra.acto==compra.acto)).scalar():
-          session.add(compra)
-          session.commit()
+        url = self.compras_queue.get_nowait()
+        compra = self.parse_compra_html(url.html,url.url,url.category)
+        url.parsed = True
+        self.session.merge(url)
+        if not self.session.query(exists().where(Compra.Compra.acto==compra.acto)).scalar():
+          self.session.add(compra)
+          self.session.commit()
           self.count += 1
         self.compras_queue.task_done()
       except Empty:
         self.logger.debug("compra queue empty")
-        session.close()
+        self.session.close()
         self.logger.info("%i compras added to db", self.count)
         return
-      except:
+      except Exception as e:
+        print e
         self.compras_queue.task_done()
         continue
 

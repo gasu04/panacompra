@@ -1,0 +1,987 @@
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN""http://www.w3.org/TR/html4/Transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head><link rel="stylesheet" type="text/css" href="/WebResource.axd?d=bNK17XQfTxr-RduIe3kPJfsK7P7q2qn0shoMN8tvSSizvtIQCXAncG03gdKSqE-S03ZJjBLGfUrHymLT1OR68zg7dnHg7-crNFNvYzANvkPzir90vdUVsoSy7x-EyBTy2cU85Q2&amp;t=633815664364551380" />
+<title>
+	PanamaCompra :: Entérate lo que Panamá Compra
+</title><link href="/App_Themes/APpanama/APpanama.css" rel="stylesheet" type="text/css" />
+
+    <script src="/Portal/js/SpryCollapsiblePanel.js" type="text/javascript"></script>
+
+    <script type="text/javascript" src="../javascript/adicionales.js"></script>
+
+    <script type="text/javascript" src="../javascript/ambiente_publico.js"></script>
+
+    <script type="text/javascript" src="../javascript/_paginar_objeto.js"></script>
+
+    <script type="text/javascript" src="../javascript/Genericos.js"></script>
+
+    <script type="text/javascript" src="../javascript/dw_event.js"></script>
+
+    <script type="text/javascript" src="../javascript/dw_viewport.js"></script>
+
+    <script type="text/javascript" src="../javascript/dw_tooltip.js"></script>
+
+    <script type="text/javascript" src="../javascript/procesoContractual.js"></script>
+
+    <script type="text/javascript" src="../javascript/validarPagina.js"></script>
+
+    <script type="text/javascript" language="javascript">
+        //Funci&#65533;n de Fecha y Hora
+        var months = new Array("Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre");
+        var dayName = new Array("Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado");
+        var relojGlobal;
+        var intDiferencia;
+
+        function reloj() {
+            var date = relojGlobal;
+            intDiferencia = (relojGlobal - new Date()) / 1000;
+            correrReloj();
+        }
+        function correrReloj() {
+
+            //
+            var difMax = 60;
+            var difSeg = (relojGlobal - new Date()) / 1000;
+            if (difSeg > intDiferencia + difMax || difSeg < intDiferencia - difMax)
+                window.location.reload();
+
+            var date = new Date();
+            relojGlobal = new Date(date.getFullYear(), date.getMonth(), date.getDate(), date.getHours(), date.getMinutes(), date.getSeconds() + intDiferencia);
+            date = relojGlobal;
+
+            var year = date.getFullYear();
+            var month = date.getMonth();
+            var day = date.getDate();
+            var hour = date.getHours();
+            var minute = date.getMinutes();
+            var second = date.getSeconds();
+            var monthname = months[month];
+            var AM_PM;
+            if (hour > 12) {
+                //hour = hour - 12;
+                AM_PM = "";
+            }
+            else {
+                AM_PM = "";
+            }
+            if (minute < 10) { minute = "0" + minute; }
+            if (second < 10) { second = "0" + second; }
+            if (month < 10) { month = "0" + month; }
+            var dayString = dayName[date.getDay()];
+            if (document.getElementById('divReloj') != null) {
+                document.getElementById('divReloj').innerHTML = " " + dayString + " " + day + " de " + monthname + ", <b>" + hour + ":" + minute + ":" + second + " " + AM_PM + "</b>";
+            }
+            setTimeout("correrReloj()", 1000);
+        }
+        //Fin Funci&#65533;n de Fecha y Hora
+
+        function cierraSession() {
+            window.location.href = 'logoff.aspx';
+        }
+ 
+    </script>
+
+    <script type="text/javascript">
+
+
+        var gbltipo = '';
+        //  Vamos a presuponer que el usuario es una persona inteligente...
+        var isIE = false;
+        //  Creamos una variable para el objeto XMLHttpRequest
+        var req;
+        //  Creamos una funcion para cargar los datos en nuestro objeto.
+        //  Logicamente, antes tenemos que crear el objeto.
+        //  Vease que la sintaxis varia dependiendo de si usamos un navegador decente
+        //  o Internet Explorer
+        function cargaXML(url, tipo) {
+            //  Primero vamos a ver si la URL es una URL :)
+            gbltipo = tipo;
+            if (url == '') {
+                return;
+            }
+            //  Usuario inteligente...
+            if (window.XMLHttpRequest) {
+                req = new XMLHttpRequest();
+                req.onreadystatechange = processReqChange;
+                req.open("GET", url, true);
+                req.send(null);
+                //  ...y usuario de Internet Explorer Windows
+            } else if (window.ActiveXObject) {
+                isIE = true;
+                req = new ActiveXObject("Microsoft.XMLHTTP");
+                if (req) {
+                    req.onreadystatechange = processReqChange;
+                    req.open("GET", url, true);
+                    req.setRequestHeader('Content-Type', 'text/xml; charset=utf-8'); //jcadd
+                    //req.setRequestHeader('Content-Type', 'application/x-www-form-rulencoded');//jcadd
+                    req.send();
+                }
+            }
+        }
+
+        function processReqChange() {
+            //    Referencia a nuestro DIV con ID unica:
+            var detalles = document.getElementById("detalles");
+            //    Si se ha completado la carga de datos, los mostramos en el DIV...
+            if (req.readyState == 4) {
+
+                var str = req.responseText;
+                /*
+                alert(str);
+                while(str.indexOf('\"')>-1){
+                var i = str.indexOf('\"');
+                str   = str.substring(i-1) + str.substring(i+1);
+                }
+                alert(str);
+                */
+                if (gbltipo == 'pc') {
+                    str = str.substring(str.indexOf('<div id=\"gralContenedor\">'));
+                    str = str.substring(0, str.indexOf('</form>') - 1);
+                }
+
+                if (gbltipo == 'lc') {
+                    str = str.substring(str.indexOf('<div class="gralSubtitulos">'));
+
+                    str = str.replace('VersionAdquisicion.aspx?IdLC=', '../Adquisicion/Visualizacion/VersionAdquisicion.aspx?IdLC=');
+
+                    str = str.substring(0, str.indexOf('</body>') - 1);
+
+                    //VersionAdquisicion.aspx?IdLC=
+                }
+
+                if (gbltipo == 'ctr') {
+                    str = str.substring(str.indexOf('<div id=\"gralContenedor\">'));
+
+                    //str = str.replace ('VersionAdquisicion.aspx?IdLC=','../Adquisicion/Visualizacion/VersionAdquisicion.aspx?IdLC=');
+
+                    str = str.substring(0, str.indexOf('</body>') - 1);
+
+                    //VersionAdquisicion.aspx?IdLC=
+                }
+
+
+                detalles.innerHTML = str;
+                //detalles.innerHTML = req.responseText;
+            } else {
+                //    ...en caso contrario, le diremos al usuario que los estamos cargando:
+                detalles.innerHTML = 'Cargando...';
+                //<img src="loading.gif" align="absmiddle" /> 
+            }
+        }
+
+        function veritem(tipo, id) {
+            window.location.href = 'AP_BuscarItem.aspx?tipo=' + tipo + '&id=' + id;
+        }
+
+        function Ver(Id, Tipo) {
+            if (Tipo == 'Contrato')
+            //window.location.href='../Contrato/VistaPreliminarPublica.aspx?Id=' + Id;
+                veritem('ctr', Id);
+
+            else if (Tipo == 'Licitacion')
+                window.location.href = '../Adquisicion/Visualizacion/VistaPrevia.aspx?IdLC=' + Id;
+            else if (Tipo == 'LicitacionPub')
+            //window.location.href='../Adquisicion/Visualizacion/VistaPreviaPublica.aspx?IdLC=' + Id;
+                veritem('lc', Id);
+
+        }
+
+        function verAnexos(ids) {
+            open("../includes/ver_anexos_especial.aspx?qs=" + ids, "Attachs_Licitacion", "width=600, height=400, status=yes, menubar=no, resizable=yes, scrollbars=yes, left=0, top=0");
+        }
+
+
+        function _ver_historial(idlc, idempresa, idorgc) {
+            alert(strruta);
+            open("../Adquisicion/Historial/HistorialAdq.aspx?op1=" + idlc + "&op2=" + idempresa + "&op3=" + idorgc, "Historial", "width=700, height=500, status=no, scrollbars=yes, left=0, top=0 , resizable=yes");
+        }
+
+        /*=======================================================================*/
+
+
+
+        function VerAnexos(IdOC) {
+            s = 'AP_ListarAnexosOC.aspx?IdOC=' + IdOC;
+            open(s, "ListaDeAnexos", "width=80, height=50, status=no, scrollbars=no, left=50, top=50");
+        }
+        var sImagenAdvertencia = '<img src="../imagenes/Iconos/ic_advertencia.gif" width="16" height="14"/>';
+
+        function CajaTT(str) {
+            return '<u>' + str + '</u><br>';
+        }
+        function doTooltip(e, msg) {
+            if (typeof Tooltip == "undefined" || !Tooltip.ready) return;
+            Tooltip.clearTimer();
+            Tooltip.show(e, msg);
+        }
+
+        function hideTip() {
+            if (typeof Tooltip == "undefined" || !Tooltip.ready) return;
+            Tooltip.timerId = setTimeout("Tooltip.hide()", 300);
+        }
+
+
+        var tt1 = CajaTT('¿Qué es un archivo Comprimido?') + 'Es un archivo que es resultado de un proceso de "compresión" de la información digital, a través del cual se le disminuye el peso o tamaño al archivo original para reducir su tiempo de descarga.';
+
+        function VerAdquisicion(strId) {
+            if (strId != '') {
+                document.forms[0].hidRedir.value = strId;
+                __doPostBack('btnVerAdquisicion', '');
+            }
+        }
+        function LlenarDemandante(idOrgC, NombreOrgC) {
+            
+            document.getElementById('ctl00_ContentPlaceHolder1_hidIdOrgC').value = idOrgC;
+            document.getElementById('ctl00_ContentPlaceHolder1_hidNombreDemandante').value = NombreOrgC;
+            __doPostBack('Page_Load', '');
+        }
+        function LlenarDependencia(idOrgC, NombreOrgC) {
+            //debugger;
+            
+            document.getElementById('ctl00_ContentPlaceHolder1_hidIdDependencia').value = idOrgC;
+            document.getElementById('ctl00_ContentPlaceHolder1_hidNombreDependencia').value = NombreOrgC;
+            document.getElementById('ctl00_ContentPlaceHolder1_txtNombreDependencia').value = NombreOrgC;
+            __doPostBack('Page_Load', '');
+            
+        }
+        function LlenarProveedor(idOrgV, NombreOrgV, IdEmpresa) {
+            document.getElementById('ctl00_ContentPlaceHolder1_hidIdOrgV').value = idOrgV;
+            document.getElementById('ctl00_ContentPlaceHolder1_txtNombreProveedor').value = NombreOrgV;
+            document.getElementById('ctl00_ContentPlaceHolder1_hidNombreProveedor').value = NombreOrgV;
+            document.getElementById('ctl00_ContentPlaceHolder1_hidIdEmpresaVenta').value = IdEmpresa;
+            //__doPostBack('btnBuscar','')
+        }
+        function PopupBuscarDemandante() {
+            s = "AP_BuscarDemandanteBA.aspx?Popup=True&Texto=" + document.getElementById('ctl00_ContentPlaceHolder1_txtNombreDemandante').value;
+            open(s, "BuscarDemandante", "width=620, height=400, status=yes, scrollbars=yes, left=50, top=50");
+        }
+        function PopupBuscarDependencia() {
+            s = "AP_BuscarDependencia.aspx?Popup=True&Texto=" + document.getElementById('ctl00_ContentPlaceHolder1_txtNombreDemandante').value + "&NombreEntidad=" + document.getElementById('ctl00_ContentPlaceHolder1_txtNombreDemandante').value + "&OrgC=" + document.getElementById('ctl00_ContentPlaceHolder1_hidIdOrgC').value;
+            open(s, "BuscarDemandante", "width=620, height=400, status=yes, scrollbars=yes, left=50, top=50");
+        }
+        function PopupBuscarUnidadCompra() {
+            s = "AP_BusquedaUnidad.aspx?Popup=True&Texto=" + document.getElementById('ctl00_ContentPlaceHolder1_txtNombreDemandante').value + "&NombreEntidad=" + document.getElementById('ctl00_ContentPlaceHolder1_txtNombreDemandante').value + "&NombreDep=" + document.getElementById('ctl00_ContentPlaceHolder1_txtNombreDependencia').value + "&OrgC=" + document.getElementById('ctl00_ContentPlaceHolder1_hidIdOrgC').value + "&idDep=" + document.getElementById('ctl00_ContentPlaceHolder1_hidIdDependencia').value;
+            open(s, "BuscarDemandante", "width=620, height=400, status=yes, scrollbars=yes, left=50, top=50"); 
+        }
+        
+        function PopupBuscarProveedor() {
+            s = "AP_BuscarProveedorBA.aspx?Popup=True&Texto=" + document.getElementById('ctl00_ContentPlaceHolder1_txtNombreProveedor').value;
+            open(s, "BuscarProveedor", "width=620, height=400, status=yes, scrollbars=yes, left=50, top=50");
+        }
+        function PopupBuscarRubros() {
+            //HSN 20050413 buscador de rubros
+            //s = "AP_BuscarRubroPopup.aspx?Popup=True&Texto=" + document.forms[0].txtNombreRubro.value			
+            //open(s , "BuscarProveedor", "width=600, height=400, status=yes, scrollbars=yes, left=50, top=50");
+            s = "../BuscadorV7/Buscar_clasificador.aspx?Texto=" + document.getElementById('ctl00_ContentPlaceHolder1_txtNombreRubro').value;
+            open(s, "BuscarProveedor", "width=700, height=550, status=yes, scrollbars=yes, left=50, top=50, resizable=yes");
+
+        }
+
+
+        function AbrirPopup() {
+            open("../portal/popup_zip.asp", "_blank", "toolbar=0,status=0,menubar=0,scrollbars=0,resizable=0,location=0,width=415,height=400,left=50,top=50");
+            /*return;*/
+        }
+
+        //		function ValidarFechaVsEstado(){	
+        //		if (document.getElementById('ctl00_ContentPlaceHolder1_lstFechaAUtilizar').value == 'Adjudicacion'){
+        //			document.getElementById('ctl00_ContentPlaceHolder1_lstEstado').selectedIndex = 2;
+        //			}
+        //		}	
+        //		function ValidarEstadoVsFecha(){	
+        //			if (document.getElementById('ctl00_ContentPlaceHolder1_lstFechaAUtilizar').value == 'Adjudicacion'){
+        //				switch(document.getElementById('ctl00_ContentPlaceHolder1_lstEstado').value){
+        //					case '2':{document.getElementById('ctl00_ContentPlaceHolder1_lstFechaAUtilizar').selectedIndex = 0;break;}
+        //					case '3':{document.getElementById('ctl00_ContentPlaceHolder1_lstFechaAUtilizar').selectedIndex = 1;break;}
+        //				}
+        //			}					
+        //		}	
+
+        function PressTeclaEnter() {
+            if (event.keyCode == 13) {
+                event.returnValue = false;
+                event.cancel = true;
+                Buscar();
+            }
+        }
+        function Buscar() {
+
+            var blnPaginaValida = esPaginaValida();
+            MSG_FORMATO_NO_VALIDO = "La fecha ingresada no es válida, por favor ingrese una fecha con el formato dd-MM-yyyy";
+            MSG_DIFERENCIA_NO_VALIDA = "La fecha HASTA debe ser mayor a la fecha DESDE";
+            MSG_RANGO_NO_VALIDA = "El rango de la fecha no puede ser mayor a " + document.getElementById('ctl00_ContentPlaceHolder1_hidRangoMaximoFecha').value + " días";
+
+            FechaDesde = document.getElementById('ctl00_ContentPlaceHolder1_txtFechaDesde');
+            FechaHasta = document.getElementById('ctl00_ContentPlaceHolder1_txtFechaHasta');
+
+            //Valida el formato de la fecha Desde
+            if (!(ValidarFecha(FechaDesde.value))) {
+                FechaDesde.focus();
+                alert(MSG_FORMATO_NO_VALIDO);
+                return false;
+            }
+
+            //Valida el formato de la fecha Hasta						
+            if (!(ValidarFecha(FechaHasta.value))) {
+                FechaHasta.focus();
+                alert(MSG_FORMATO_NO_VALIDO);
+                return false;
+            }
+
+            //Valida que la fecha hasta sea mayor a la fecha desde
+            if (CompararFechas(FechaDesde.value, FechaHasta.value) > 0) {
+                FechaHasta.focus();
+                alert(MSG_DIFERENCIA_NO_VALIDA);
+                return false;
+            }
+
+            if (esPaginaValida()) {
+                __doPostBack('ctl00$ContentPlaceHolder1$btnBuscar', '');
+            }
+
+
+        }
+
+        function limpiarUnidadCompra() {
+
+            document.getElementById('ctl00_ContentPlaceHolder1_lstUnidadCompra').options.length = 0;
+            document.getElementById('ctl00_ContentPlaceHolder1_lstUnidadCompra').options[0] = new Option('seleccionar...', '0');
+            document.getElementById('ctl00_ContentPlaceHolder1_lstUnidadCompra').disabled = true;
+        }
+        function limpiarUnidadVenta() {
+            document.getElementById('ctl00_ContentPlaceHolder1_hidIdOrgV').value = '-1';
+            document.getElementById('ctl00_ContentPlaceHolder1_txtNombreProveedor').value = '';
+            document.getElementById('ctl00_ContentPlaceHolder1_hidNombreProveedor').value = '-1';
+            document.getElementById('ctl00_ContentPlaceHolder1_hidIdEmpresaVenta').value = 0;
+        }
+
+        function limpiarRubro() {
+            document.getElementById('ctl00_ContentPlaceHolder1_hidIDRubro').value = '-1';
+            document.getElementById('ctl00_ContentPlaceHolder1_hidIDProducto').value = '-1';
+            document.getElementById('ctl00_ContentPlaceHolder1_hidIDProductoNoIngresado').value = '';
+            document.getElementById('ctl00_ContentPlaceHolder1_hidNombreProducto').value = '';
+            document.getElementById('ctl00_ContentPlaceHolder1_txtNombreRubro').value = '';
+            __doPostBack('ctl00$ContentPlaceHolder1$btnElegirProducto', '');
+            //document.Form1.__EVENTTARGET.value = 'btnElegirProducto';
+            //document.Form1.__EVENTARGUMENT.value = '';
+            //document.Form1.submit();
+
+        }
+
+
+        function validarAdquisicion() {
+            var NumLC = trim(document.getElementById('ctl00_ContentPlaceHolder1_txtNumeroAdquisicion').value);
+            var divMsg = document.getElementById('divNumLC');
+
+            document.getElementById('ctl00_ContentPlaceHolder1_txtNumeroAdquisicion').value = NumLC;
+
+
+            divMsg.style.display = '';
+
+            if (NumLC == '') {
+                divMsg.innerHTML = sImagenAdvertencia + ' <span class=formCamposError>Debe ingresar un número de adquisición</span>';
+                return;
+            }
+            if (!esNumDocValido(NumLC)) {
+                divMsg.innerHTML = sImagenAdvertencia + ' <span class=formCamposError>El formato del número de adquisición no es válido</span>';
+                return;
+            }
+            divMsg.style.display = 'none';
+            //window.location.href='?NumLC=' + NumLC
+            //__doPostBack('btnVerAdquisicion',NumLC)
+
+            __doPostBack('ctl00$ContentPlaceHolder1$linkBuscarNumLc', '');
+        }
+        function _btnAccion(strIdOrden) {
+            window.location.href = 'AP_RevisarOC.aspx?IdEmpVenta=YES&QS=' + strIdOrden;
+        }
+
+        //AC 20080310 (inicio)
+
+        function habilitarRegiones(idPais) {
+            var lstRegion = document.getElementById('ctl00_ContentPlaceHolder1_lstRegion');
+            var lstcomuna = document.getElementById('ctl00_ContentPlaceHolder1_lstMunicipio');
+            if (idPais == 'PA') {
+                lstRegion.disabled = false;
+            }
+            else {
+                lstRegion.disabled = true;
+                lstMunicipio.disabled = true;
+                lstMunicipio.selectedIndex = 0;
+                lstRegion.selectedIndex = 0;
+            }
+        }
+
+        function CargaDepartamento(lstDepto) {
+            //alert("entro lstDepto= " + lstDepto);
+            var ddComuna = document.getElementById(lstDepto);
+            var estado = ddComuna.disabled;
+            ddComuna.options.length = 0;
+            ddComuna.options[0] = new Option('Todos los Departamentos...', '0');
+            for (i = 0; i < arrRegionList[0].length; i++) {
+                ddComuna.options[i + 1] = new Option(arrRegionList[0][i][0], arrRegionList[0][i][1]);
+            }
+            ddComuna.disabled = estado;
+        }
+
+        function listarComunaPorRegion(idRegion, lstComuna) {
+            var ddComuna = document.getElementById(lstComuna);
+            if (idRegion != 0) {
+                ddComuna.options.length = 0;
+                ddComuna.options[0] = new Option('Seleccionar Distrito...', '0');
+                for (i = 0; i < arrRegion[idRegion].length; i++) {
+                    ddComuna.options[i + 1] = new Option(arrRegion[idRegion][i][1], arrRegion[idRegion][i][0]);
+                }
+                ddComuna.disabled = false;
+            }
+            else {
+                ddComuna.value = 0;
+                ddComuna.disabled = true;
+            }
+        }
+
+
+
+        //AC 20080310 (fin)
+
+        //AC 20080326 (inicio)
+        function PopUpProveedor(qstring) {
+            open("../AmbientePublico/AP_FichaComprador.aspx?IdEmpresa=" + qstring, "InformacionProveedor", "width=600, height=500, status=yes, menubar=no, resizable=yes, scrollbars=yes, left=50, top=50,return=false");
+        }
+        //AC 20080326 (fin)
+		
+     
+    </script>
+
+    
+    </head>
+<body>
+    <form name="aspnetForm" method="post" action="VistaPreviaCP.aspx?NumLc=2013-0-07-08-08-CM-010397" id="aspnetForm">
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwUJNDExNTk0MjYyZBgBBR5fX0NvbnRyb2xzUmVxdWlyZVBvc3RCYWNrS2V5X18WAgUZY3RsMDAkQ3RybHRvcGdlbmVyYWwkYnRuRwUxY3RsMDAkQ29udGVudFBsYWNlSG9sZGVyMSRjcnRsRmljaGFBZHEkcG9wVXBNb2RhbCWUD4KdX0ek7JvLs8ipgGBWRQ74" />
+
+    <div id="container">
+        <table width="777px" align="center" border="0px" cellpadding="0" cellspacing="0"
+            style="background-color: #ffffff">
+            <tr>
+                <td>
+                    
+   <link href="/App_Themes/APpanama/APpanama.css" rel="stylesheet" type="text/css" /> 
+    <div class="top">
+    <div id="logoPC">
+    <a href="/portal/PortalPanama.aspx"><img src="/App_Themes/APpanama/imagenes/logos/logo_PanamaCompra.gif" border="0" alt="logo PanamáCompra" /></a><img src="/App_Themes/APPanama/imagenes/banners/banner_general.gif" border="0" alt="Banner" /></div>
+    <div id="bannertophome">
+    <div style="float:right; padding-right:4px;">
+        <img src="/App_Themes/APpanama/imagenes/logos/logo_GobNacional.gif" border="0" alt="logo Gobierno Nacional" />
+    </div>
+    </div>
+    </div>
+
+                    
+    
+    <div id="topgeneral">
+    <div class="bandera" style="width:770px; padding-bottom:5px;">
+    <div class="cajasgoogle">
+
+<div id="ctl00_Ctrltopgeneral_imprime_envia" style="float: right; margin-right:43px;">
+<!-- AddThis Button BEGIN -->
+<div id="btn" class="addthis_toolbox addthis_default_style">
+<a href="https://www.addthis.com/bookmark.php?v=250&amp;username=xa-4bac3f28068f35a8" class="addthis_button_compact" alt="Compartir con un amigo">Compartir</a>
+<span class="addthis_separator" style="color:gray">|</span>
+<a class="addthis_button_email"></a>
+<a class="addthis_button_print"></a>
+<!-- <a class="addthis_button_facebook"></a>-->
+<!-- <a class="addthis_button_myspace"></a>-->
+<!-- <a class="addthis_button_google"></a>-->
+<!-- <a class="addthis_button_twitter"></a>-->
+</div>
+<script type="text/javascript" src="https://s7.addthis.com/js/250/addthis_widget.js#username=xa-4bac3f28068f35a8"></script>
+<!-- AddThis Button END -->
+</div>
+    
+    <div style="float:left; width:auto">
+    <a href="/portal/acercade.aspx">Acerca de...</a> | <a href="/portal/transparencia.aspx">Transparencia</a> 
+    </div>
+    <div class="cajas2" style="width:auto; height:23px; background-position:left top; float:left; margin-left:10px;">
+    <input name="ctl00$Ctrltopgeneral$txtGSA" type="text" maxlength="355" id="ctl00_Ctrltopgeneral_txtGSA" class="cajas2ed" name="txtGSA" />
+    </div>
+    <div style="float:left; width:auto">
+    <input type="image" name="ctl00$Ctrltopgeneral$btnG" id="ctl00_Ctrltopgeneral_btnG" name="btnG" align="absmiddle" alt="" src="/portal/App_Themes/APpanama/imagenes/botones/bt_buscar.gif" border="0" /> 
+    </div>
+    <div style="float:left; width:auto; padding-left:5px;">
+    <a href="/ambientepublico/AP_BusquedaAvanzada.aspx" title="Búsqueda Avanzada">Búsqueda Avanzada</a>
+    </div>
+    
+    </div>
+    </div>
+    </div>
+
+                    <div id="globalheader" class="home">
+                        <!--googleoff: all-->
+                        <ul id="globalnav" style="background-image: url(/portal/App_Themes/APPanama/imagenes/fondos/menu_fondo_repite.gif);
+                            background-position: center top; background-repeat: no-repeat;">
+                            <li id="gn-home"><a href="/portal/portalpanama.aspx">Home</a></li>
+                            <li id="gn-proveedor"><a href="/Portal/OportunidadesDeNegocio.aspx">Proveedores</a></li>
+                            <li id="gn-comprador"><a href="/Portal/BaseDeConocimientoComprador.aspx">Compradores</a></li>
+                            <li id="gn-legislacion"><a href="/portal/Legislacion.aspx">Legislación</a></li>
+                            <li id="gn-salaprensa"><a href="/portal/NotasDePrensa.aspx">Sala de Prensa</a></li>
+                            <li id="gn-acercade"><a class="hover">&nbsp;</a></li>
+                            <li id="gn-transparencia"><a class="hover">&nbsp;</a></li>
+                            <li>
+                                <img src="/portal/App_Themes/APpanama/imagenes/fondos/menu_PC_fono.gif" alt="Mesa de ayuda" /></li>
+                        </ul>
+                    </div>
+                    
+
+<script type="text/javascript">
+        function _ver_Acta(idlc)
+        {
+            open("../Adquisicion/Actas/VerActaAdjudicacion.aspx?idlc=" + idlc, "ActaAdjudicacion","width=600, height=500, status=yes, menubar=no, resizable=yes, scrollbars=yes, left=50, top=50"); 
+        }   
+        
+        function _ver_Contacto(strIdControl)
+        {
+            open("AP_FichaContacto.aspx?IdProveedor="+strIdControl, "InfoProveedor","width=500, height=350, status=yes, scrollbars=yes, left=50, top=50");
+        }
+        
+        function _ver_adjudicados(id,linea)
+        {
+            open("Ap_FichaProvAdjudicados.aspx?idlc=" + id + "&linea=" + linea ,"Adjudicados","width=500,height=300,staus=yes,scrollbars=yes");
+        }    
+
+</script>
+
+<link href="/App_Themes/APpanama/APpanama.css" rel="stylesheet" type="text/css" />
+<link href="/estilos/Simetria.css" rel="stylesheet" type="text/css" />
+
+                
+
+
+<script type="text/javascript" language="javascript">
+    
+    //magh 20091019 inicio
+	//Función que invoca al cuadro comparativo
+	
+	function VerHistorico(idTipo, nombre, strTipo, numero, idDoc)
+    //function VerHistorico(nombre)
+    {
+        //alert(tipodoc);
+        var strLink;
+        strLink = "/Autorizaciones/ListarHistoricoDocu.aspx?idTipo=" + idTipo + "&nombre=" + nombre + "&strTipo=" + strTipo + "&numero=" + numero + "&idDoc=" + idDoc;
+        //  alert(nombre);
+        window.open(strLink, '_blank', 'width=600,height=550 status=yes, resizable=no,scrollbars=yes');
+
+    }
+	
+	function Mostrar(mensaje1, mensaje2) {
+	    alert(mensaje1);
+	    alert(mensaje2);
+	}
+	
+	function MensajeErrorPDF(mensaje) {
+	    alert(mensaje);
+	}
+	
+	function abrirPDF() {
+            
+	        var nom = document.getElementById('crtlFichaAdq_hidPDF').value;
+	        window.open("/PdfConvertidos/" + nom, "pdf", "status=no, location=no, menubar=yes");	       
+        }
+        
+        function OcultaVolver() {
+	     
+	        document.getElementById('crtlFichaAdq_lnkVover').style.display = 'none';
+        }
+	
+	function IrCuadroComparativo(idlc,idorgc) {
+    window.open("/Adquisicion/CuadroComparativo/CuadroComparativoSeleccion.aspx?idlc="+ idlc + "&idorgc=" + idorgc + "&tipo=1", "","width=800, height=500, status=yes, menubar=no, resizable=yes, scrollbars=yes, left=50, top=50,return=false");	
+    } 
+    //magh 20091019 fin
+
+    function _ver_ActaDesercion(strIDLC){
+            
+        //open("/Adquisicion/Actas/historial_adjudicaciones.aspx?op="+ strIDLC, "ActaDesercion","width=600, height=500, status=yes, menubar=no, resizable=yes, scrollbars=yes, left=50, top=50");	
+        //open("/Adquisicion/Adjudicacion/DesertarPaso4.aspx?lc="+ strIDLC + "&SoloVer=True", "ActaDesercion");	
+        window.open("/Adquisicion/Adjudicacion/DesertarPaso4.aspx?lc="+ strIDLC + "&SoloVer=True", "ActaDesercion");	
+    }
+	function PopUpProveedor(qstring){   
+		open("/AmbientePublico/AP_FichaProveedor.aspx?IdEmpresa="+qstring, "InformacionProveedor","width=600, height=500, status=yes, menubar=no, resizable=yes, scrollbars=yes, left=50, top=50,return=false");	
+	}
+	function resumen_Foro_Inverso(strid){
+		document.location.href='/Foro/Responder_Preguntas.aspx?strid=' +strid 
+	}
+	function verForo(s){
+		open("/Foro/foro_listar_mensajes.aspx?strid=" + s, "Respuestas","width=520, height=300, status=yes, menubar=no, resizable=no, scrollbars=yes, left=50, top=50" );   
+	}
+	function verPDF(url){
+		window.open('/adquisicion/VistaPDF.aspx' + url,"PDF","resizable=yes,width=600,height=400")
+	}
+	function verPDF_V2(url){
+		//window.open('/adquisicion/Visualizacion/VistaActoPublico.aspx?IdLC=' + url,"PDF","resizable=yes,width=600,height=400")
+		//debugger;
+		if (document.getElementById('crtlFichaAdq_LinkButton1') != undefined)
+		{
+		__doPostBack('crtlFichaAdq$LinkButton1','sds');
+		}
+		
+		if (document.getElementById('ctl00_ContentPlaceHolder1_crtlFichaAdq_LinkButton1') != undefined)
+		{
+		__doPostBack('ctl00$ContentPlaceHolder1$crtlFichaAdq$LinkButton1','sds');		
+		}
+		
+	}
+	function _ver_historial(idlc, idempresa, idorgc){
+		open("/Adquisicion/Historial/HistorialAdq.aspx?op1=" + idlc + "&op2=" + idempresa + "&op3=" + idorgc , "Historial","width=700, height=500, status=no, scrollbars=yes, left=0, top=0 , resizable=yes");
+	}
+	function ver_Reporte(idlc){
+        open("/Reportes/Adquisicion_Reporte.aspx?idlc=" + idlc,"","toolbar=0,status=1,menubar=0,scrollbars=1,resizable=1,location=0,width=680,height=600,left=50,top=50");
+	}
+	function VerHistoricoFirmas(idTipo,nombre,strTipo,numero,idDoc){
+        var strLink;
+        strLink = "/Autorizaciones/ListarHistoricoDocu.aspx?idTipo=" + idTipo + "&nombre=" + nombre + "&strTipo=" + strTipo + "&numero=" + numero +"&idDoc=" + idDoc;
+        window.open(strLink,'_blank','width=750,height=650 status=yes, resizable=no,scrollbars=yes') ;
+    }
+	function RevisarActas(strid){
+	    open("/ReincorporarOferta/ListarActasApertura.aspx?strid=" + strid, "Ver_Acto_Apertura","width=600, height=500, status=yes, menubar=yes, resizable=yes, scrollbars=yes, left=50, top=50");	
+	}
+	function verActaApertura(strid){
+	    open("/licitacion/VistaActoApertura.aspx?strid=" + strid, "Ver_Acto_Apertura","width=600, height=500, status=yes, menubar=yes, resizable=yes, scrollbars=yes, left=50, top=50");	
+	}
+	function verActaApertura1Etapa(strid,strver){
+	    open("/adquisicion/aperturas/ResultadoApertura1Etapa.aspx?strid=" + strid+ "&VER=" + strver, "ResultadoApertura1Etapa","width=600, height=500, status=yes, menubar=yes, resizable=yes, scrollbars=yes, left=50, top=50");	
+	}
+	function verObservacionBases(ids){		
+	    open("/Foro/VerObservacionesActInfEva.aspx?strid=" + ids , "RevisarObservaciones","width=600, height=400, status=yes, menubar=no, resizable=yes, scrollbars=yes, left=0, top=0");
+	}
+	function verActaAperturaAdministrativa(strid,strver){
+	   open("/adquisicion/aperturas/ResultadoAperturaAdministrativa.aspx?strid=" + strid+ "&VER=" + strver, "ResultadoAperturaAdministrativa","width=600, height=500, status=yes, menubar=yes, resizable=yes, scrollbars=yes, left=50, top=50");	
+	}
+	function verActaAperturaTecnica(strid,strver){
+	   open("/adquisicion/aperturas/ResultadoAperturaTecnica.aspx?strid=" + strid+ "&VER=" + strver, "ResultadoAperturaTecnico","width=600, height=500, status=yes, menubar=yes, resizable=yes, scrollbars=yes, left=50, top=50");	
+	}
+    function VerHistoricoFirma(IdLC){
+        window.open('/Autorizacion/Historial/Autorizacion_Historial.aspx?Qs=' + IdLC,"InfoProveedor","width=450, height=400, status=yes, scrollbars=yes, left=50, top=50");
+    }
+    function VerAdenda(strIdLc){
+        open("/adquisicion/HistorialAdenda.aspx?IdLC=" + strIdLc + "&Volver=False", "Adenda","width=600, height=400, status=yes, menubar=no, resizable=yes, scrollbars=yes, left=0, top=0");
+    }
+    function VerActaAdjudicacion(IdLC)
+    {
+    window.open("/adquisicion/adjudicacion/ResolucionAdjudicacion.aspx?idlc=" + IdLC);       
+    }
+    function VerAdenda(numero,idlc,idOrgCompra)
+    {    
+    window.open("/adquisicion/Visualizacion/VerAdenda.aspx?IdLC=" + idlc + "&VersionAdenda=" + numero + "&EsAdenda=True" + "&IdOrgCompra=" + idOrgCompra);       
+    }
+    function VerPublicacionAnterior(idlc)
+    {    
+    window.open("/adquisicion/Visualizacion/VistaPrevia.aspx?IdLC=" + idlc + "&VersionAdenda=1" + "&EsAdenda=True");       
+    }
+    function VerPublicacionAnteriorPublico(idlc)
+    {    
+    window.open("/AmbientePublico/VistaPreviaAP.aspx?IdLC=" + idlc + "&VersionAdenda=1" + "&EsAdenda=True");
+    }
+    function verInfSub(IdLC)
+    {
+    window.open("/Oferta/VerInfSubsanacion.aspx?idlc=" + IdLC);       
+    }    
+    function verReadjudicacion(IdLC)
+    {
+    window.open("/Adquisicion/Adjudicacion/VerReAdjudicacion.aspx?strid=" + IdLC);       
+    } 
+    function PopUpProveedor(qstring)
+	{
+	window.open("/AmbientePublico/AP_FichaProveedor.aspx?IdEmpresa="+ qstring + "&EsProvAdjudicado=1", "InformacionProveedor","width=600, height=500, status=yes, menubar=no, resizable=yes, scrollbars=yes, left=50, top=50,return=false");	
+	}   
+    
+</script>
+
+<script type="text/javascript" language="javascript" src="/javascript/fichaActoPublico.js"></script>
+
+<script type="text/javascript" src="/javascript/omiteEncoding.js"></script>
+
+<input type="hidden" id="ctl00_ContentPlaceHolder1_crtlFichaAdq_popUpModalWS" name="ctl00_ContentPlaceHolder1_crtlFichaAdq_popUpModalWS" value="0:0:-1:0:0:0:0:0:" />
+<script id="dxis_900063086" src="/WebResource.axd?d=pGnf5nTJxdp-NgbrB4tflukuN_zrXhM7ertvpISCD0Y_4rLvwrB86ARxC3GmtMJvyKnXoX6vokUaEQvKS5FK0pBq_sK4oDvVvhM0Y9bV-av-togJnNMrzsu8TI3mtLuToc_21Q2&amp;t=633815664364551380" type="text/javascript"></script>
+<script id="dxss_253106986" type="text/javascript">
+<!--
+window.__aspxServerFormID = 'aspnetForm';
+window.__aspxEmptyImageUrl = '/WebResource.axd?d=_C6M03tUzITwg_FV_ArxPaKJ2GR6GDkyd2xhsu5AXXodZu_H4j6t0UP7yIe-g7cjAva4jjuSBwo5LLPJbyT7-UQ3vrStwzzmdvYeo1ocAWXAYLIoS7W8Gs2K1rAhU2THGx20Ew2&t=633815664364551380';
+//-->
+</script>
+
+<div id="ctl00_ContentPlaceHolder1_crtlFichaAdq_popUpModal_PW-1" style="position:absolute;left:0px;top:0px;z-index:10000;visibility:hidden;display:none;">
+	<table id="ctl00_ContentPlaceHolder1_crtlFichaAdq_popUpModal_PWST-1" cellspacing="0" cellpadding="0" border="0" style="border-collapse:separate;position:relative;">
+		<tr>
+			<td class="dxpcControl" onmousedown="aspxPWMDown(event,'ctl00_ContentPlaceHolder1_crtlFichaAdq_popUpModal',-1,false)" width="160" style="cursor:default;"><table id="ctl00_ContentPlaceHolder1_crtlFichaAdq_popUpModal_CLW-1" cellspacing="0" cellpadding="0" border="0" width="160" style="border-collapse:separate;">
+				<tr>
+					<td id="ctl00_ContentPlaceHolder1_crtlFichaAdq_popUpModal_PWH-1" class="dxpcHeader" onmousedown="aspxPWDGMDown(event,'ctl00_ContentPlaceHolder1_crtlFichaAdq_popUpModal',-1)" style="cursor:move;padding-left:12px;padding-right:2px;padding-top:2px;padding-bottom:2px;"><table cellspacing="0" cellpadding="0" border="0" width="100%" style="border-collapse:separate;">
+						<tr>
+							<td id="ctl00_ContentPlaceHolder1_crtlFichaAdq_popUpModal_PWH-1T" class="dxpc" width="100%">PanamaCompra :: Ent&#233;rate de lo que Panam&#225; Compra</td><td style="padding-left:4px;"><table cellspacing="0" cellpadding="0" border="0" style="border-collapse:separate;">
+								<tr>
+									<td id="ctl00_ContentPlaceHolder1_crtlFichaAdq_popUpModal_HCB-1" class="dxpcCloseButton" onclick="aspxPWCBClick('ctl00_ContentPlaceHolder1_crtlFichaAdq_popUpModal',-1)" onmousedown="return aspxPWCBMDown(event);" style="cursor:pointer;"><img id="ctl00_ContentPlaceHolder1_crtlFichaAdq_popUpModal_HCB-1Img" src="/WebResource.axd?d=Fh5feRR69Yf8ab5-QNDxF2FsnF93lfwHOwt6S1AuwBHKiEL9VnYCQfRbCJuXMV0TQxun-1O3ZJs4FlDbQY06ow1kHln6Kl7q5bRyaqcz7I2V_sJ1_fYRA6F9Z0cGE4xNVMEWDisk9Np8fKzOSoISus0qiX81&amp;t=633815664364551380" alt="[Close]" height="14" width="15" border="0" /></td>
+								</tr>
+							</table></td>
+						</tr>
+					</table></td>
+				</tr><tr>
+					<td id="ctl00_ContentPlaceHolder1_crtlFichaAdq_popUpModal_PWC-1" class="dxpcContent" height="100%" style="border-top-width:0px;">&nbsp;</td>
+				</tr>
+			</table></td><td style="background:url('/WebResource.axd?d=8kkWYYAZs9PlCpUIbzrzBUoX2yTsQdPWe3NTBXhpqLic2vrEQyIT-MPQBpaEhMdhrMWrugTpfIiWdvbyXQ8CjRLKF8p4TMpImdm-3x_V53VGINGaWYm1wp1eDQZztAH5DbSHM_KZQOoD2b4vNfbQ7XacYFo1&amp;t=633815664364551380') no-repeat left top;"></td>
+		</tr><tr>
+			<td style="background:url('/WebResource.axd?d=iYXXryNHmWJfg2gwUXVkOLGqOEnqh2Vyyui_adhXbMqrWSSidqpZ9tL0XqFZWnbOuSynYzw9tK3jYYHrI8DNQxhRfCMyUZVcbAWtxHjMR85kvoTK23SSN9uz6Ve_YdWR6AIHXATk7L9o7kTAykxZrTb-Qko1&amp;t=633815664364551380') no-repeat left top;"></td><td><img src="/WebResource.axd?d=L2S0mx3-kjRd84Bag4pELvhIXETcev4g9PxnokMoLJjAImi5tsXHFR7IbzJ8hwIWdlmk9oNOhgCBRpfuYZD5grGgxWiJttyKBxw0taP0r8EX-qmKuZ4FoNLihIENiyfLqksd6jPA5v6t4e4ZUYHfreNW9kk1&amp;amp;t=633815664364551380" alt="" height="5" width="5" border="0" /></td>
+		</tr>
+	</table>
+</div><div id="ctl00_ContentPlaceHolder1_crtlFichaAdq_popUpModal_DXPWMB-1" class="dxpcModalBackground" style="position:absolute;visibility:hidden;left:0px;top:0px;z-index:9999;">
+
+</div><script id="dxss_1933744815" type="text/javascript">
+<!--
+aspxAddHoverItems('ctl00_ContentPlaceHolder1_crtlFichaAdq_popUpModal',[['dxpcCloseButtonHover','',['HCB-1']]]);
+
+var dxo = new ASPxClientPopupControl('ctl00_ContentPlaceHolder1_crtlFichaAdq_popUpModal');
+window['popUpModal'] = dxo;
+dxo.uniqueID = 'ctl00$ContentPlaceHolder1$crtlFichaAdq$popUpModal';
+dxo.closeAction='CloseButton';
+dxo.popupHorizontalAlign='WindowCenter';
+dxo.popupVerticalAlign='TopSides';
+dxo.isPopupPositionCorrectionOn=false;
+dxo.InlineInitialize();
+
+//-->
+</script>
+
+    <div id="ctl00_ContentPlaceHolder1_crtlFichaAdq_Ficha">
+        <table class="gralContenido" cellspacing="0" cellpadding="10" width="100%" border="0"
+            style="margin-bottom: 0px">
+            <tr>
+                <td valign="bottom">
+                    <table class="tituloarea" id="Table2" style="border-bottom: #bcbcbc 1px solid" cellspacing="0"
+                        cellpadding="0" width="100%" border="0">
+                        <tr>
+                            <td id="ctl00_ContentPlaceHolder1_crtlFichaAdq_celdaTituloFicha">Pliego de Cargos</td>
+
+                        </tr>
+                    </table>
+                    
+<table class="formTablas" cellspacing="0" cellpadding="0" width="755" border="0" style="table-layout: fixed">
+ <tr>
+   <td>
+       
+       <table class="formTablas" cellspacing="0" cellpadding="0" width="100%" border="0" style="table-layout: fixed">
+         <tr>
+           <td class="adquisicionCrearTdGris">
+              <strong>Número :</strong>&nbsp;<span id="ctl00_ContentPlaceHolder1_crtlFichaAdq_ctrlEncabezado_lblNumero">2013-0-07-08-08-CM-010397</span>
+              <br/>
+              <strong>Descripción :</strong>&nbsp;<span id="ctl00_ContentPlaceHolder1_crtlFichaAdq_ctrlEncabezado_lblDescripcion">Compra de materiales para el Cambio de 3 Fotoceldas y de Pantallas Acrílicas en diferentes partes de...</span>
+              <br />
+              <strong>Objeto de la Contratación :</strong>&nbsp;<span id="ctl00_ContentPlaceHolder1_crtlFichaAdq_ctrlEncabezado_lblObjetoContratacion">Bien</span>
+              <br/>
+           </td>
+         </tr>
+       </table>
+    </td>
+   </tr>
+</table>
+<br />
+                    <table cellspacing="0" cellpadding="0" width="100%" border="0" style="table-layout: fixed">
+                        <tr>
+                            <td>
+                                <table border="0" width="100%">
+	<tr>
+		<td class="gralSubtitulos2" colspan="2">Información de la Entidad</td>
+	</tr><tr>
+		<td class="formTextos" width="220">Entidad:</td><td class="formEjemplos">MINISTERIO DE EDUCACION</td>
+	</tr><tr>
+		<td class="formTextos" width="220">Dependencia:</td><td class="formEjemplos">DIRECCIÓN REGIONAL DE EDUCACIÓN DE PANAMÁ CENTRO</td>
+	</tr><tr>
+		<td class="formTextos" width="220">Unidad de Compra:</td><td class="formEjemplos">VILLA CATALINA</td>
+	</tr><tr>
+		<td class="formTextos" width="220">Dirección:</td><td class="formEjemplos">Villa Catalina</td>
+	</tr>
+</table>
+                                <table border="0" width="100%">
+	<tr>
+		<td class="gralSubtitulos2" colspan="2">Contacto de la Unidad de Compra</td>
+	</tr><tr>
+		<td class="formTextos" width="220">Nombre:</td><td class="formEjemplos">Maria Sosa</td>
+	</tr><tr>
+		<td class="formTextos" width="220">Cargo:</td><td class="formEjemplos"></td>
+	</tr>
+</table>
+                                <table border="0" width="100%">
+	<tr>
+		<td class="gralSubtitulos2" colspan="2">Aviso de Convocatoria</td>
+	</tr><tr>
+		<td class="formTextos" width="220">Número de Acto:</td><td class="formEjemplos">2013-0-07-08-08-CM-010397</td>
+	</tr><tr>
+		<td class="formTextos" width="220">Tipo de Procedimiento:</td><td class="formEjemplos">Compra Menor hasta B/. 3,000</td>
+	</tr><tr>
+		<td class="formTextos" width="220">Objeto Contractual:</td><td class="formEjemplos">Bien</td>
+	</tr><tr>
+		<td class="formTextos" width="220">Descripción:</td><td class="formEjemplos">Compra de materiales para el Cambio de 3 Fotoceldas y de Pantallas Acrílicas en diferentes partes del colegio.</td>
+	</tr><tr style="display:none;">
+		<td class="formTextos" width="220">Fecha de Creación:</td><td class="formEjemplos">22-08-2013</td>
+	</tr><tr>
+		<td class="formTextos" width="220">Fecha de Publicación:</td><td class="formEjemplos">22-08-2013 05:57 p.m.</td>
+	</tr><tr>
+		<td class="formTextos" width="220">Precio Referencia:</td><td class="formEjemplos">B/.  80.04</td>
+	</tr><tr>
+		<td class="formTextos" width="220">Partidas presupuestales:</td><td class="formEjemplos"><table class="adquisicionTablaAgregados" cellspacing="1" cellpadding="0" border="0" width="200">
+			<tr class="adquisicionTablaAgregadosCabezal">
+				<td width="30">N°</td><td width="170">Número Partida</td>
+			</tr><tr class="adquisicionTablaAgregadosFila1">
+				<td width="30">1</td><td width="170">010000125935</td>
+			</tr>
+		</table></td>
+	</tr><tr>
+		<td class="formTextos" width="220">Programa:</td><td class="formEjemplos">Fondo de Equidad y Calidad de la Educación (FECE)</td>
+	</tr><tr>
+		<td class="formTextos" width="220">Modalidad de adjudicación:</td><td class="formEjemplos">Global</td>
+	</tr><tr>
+		<td class="formTextos" width="220">Provincia de Entrega:</td><td class="formEjemplos">PANAMÁ</td>
+	</tr><tr>
+		<td class="texto13Azul" colspan="2" style="font-weight:bold;">Datos de Contacto</td>
+	</tr><tr>
+		<td class="formTextos" width="220">Nombre:</td><td class="formEjemplos">Maria Sosa</td>
+	</tr><tr>
+		<td class="formTextos" width="220">Cargo:</td><td class="formEjemplos"></td>
+	</tr><tr>
+		<td class="formTextos" width="220">Teléfono:</td><td class="formEjemplos">266-4052</td>
+	</tr><tr>
+		<td class="formTextos" width="220">Correo Electrónico:</td><td class="formEjemplos">escuelavaillacatalina@hotmail.com</td>
+	</tr>
+</table>
+                                
+                                
+                                
+                                
+                                
+                                <table border="0" width="100%">
+	<tr>
+		<td class="gralSubtitulos2" colspan="4">Especificaciones Técnicas</td>
+	</tr><tr>
+		<td class="texto13Azul" colspan="4" style="font-weight:bold;">Proponente Seleccionado</td>
+	</tr><tr>
+		<td class="formTextos" width="220">Nombre:</td><td class="formEjemplos">NOVEY</td><td class="formTextos">Número de Identificación:</td><td class="formEjemplos">138-289-35920-04</td>
+	</tr><tr>
+		<td class="formTextos" width="220">Dirección:</td><td class="formEjemplos">AVENIDA 7, CENTRAL CALIDONIA</td><td class="formTextos">Provincia:</td><td class="formEjemplos">PANAMÁ</td>
+	</tr><tr>
+		<td class="formTextos" width="220">Distrito:</td><td class="formEjemplos">Balboa</td><td class="formTextos">Correo Electrónico:</td><td class="formEjemplos">asventas20@cochezycia.com</td>
+	</tr><tr>
+		<td class="formTextos" width="220">Teléfono :</td><td class="formEjemplos" colspan="3">507-3028638</td>
+	</tr><tr>
+		<td class="texto13Azul" colspan="4" style="font-weight:bold;">Bien/Servicio/Obra Seleccionados</td>
+	</tr><tr>
+		<td colspan="4"><table class="adquisicionTablaAgregados" cellspacing="1" cellpadding="0" border="0" width="100%">
+			<tr class="adquisicionTablaAgregadosCabezal">
+				<td title="Numero de Renglon" align="center" width="1%">R</td><td title="Código Bien/Servicio/Obra" align="center" width="10%">Código</td><td title="Clasificación Bien/Servicio/Obra" align="center" width="15%">Clasificación</td><td align="center" width="10%">Cantidad</td><td title="Unidad de Medida" align="center" width="10%">U. Medida</td><td title="Descripción del Bien/Servicio/Obra" align="center" width="10%">Descripción</td><td title="Codigo SES" align="center" width="10%">SES</td>
+			</tr><tr class="adquisicionTablaAgregadosFila2">
+				<td align="left">1</td><td title="Primer Nivel: Suministros, componentes y accesorios eléctricos y de iluminación
+  Segundo Nivel: Lámparas y bombillas y componentes para lámparas
+    Tercer Nivel: Cuadros, registros y menaje para electricidad" align="left">39121311</td><td title="Primer Nivel: Suministros, componentes y accesorios eléctricos y de iluminación
+  Segundo Nivel: Lámparas y bombillas y componentes para lámparas
+    Tercer Nivel: Cuadros, registros y menaje para electricidad" align="left">Accesorios eléctricos</td><td align="left">4</td><td align="left">Unidad</td><td align="left">Pantallas acrílicas de 2 x 4</td><td align="left">---</td>
+			</tr><tr class="adquisicionTablaAgregadosFila1">
+				<td align="left">2</td><td title="Primer Nivel: Suministros, componentes y accesorios eléctricos y de iluminación
+  Segundo Nivel: Lámparas y bombillas y componentes para lámparas
+    Tercer Nivel: Cuadros, registros y menaje para electricidad" align="left">39121311</td><td title="Primer Nivel: Suministros, componentes y accesorios eléctricos y de iluminación
+  Segundo Nivel: Lámparas y bombillas y componentes para lámparas
+    Tercer Nivel: Cuadros, registros y menaje para electricidad" align="left">Accesorios eléctricos</td><td align="left">3</td><td align="left">Unidad</td><td align="left">Fotoceldas</td><td align="left">---</td>
+			</tr><tr class="adquisicionTablaAgregadosFila2">
+				<td align="left">3</td><td title="Primer Nivel: Suministros, componentes y accesorios eléctricos y de iluminación
+  Segundo Nivel: Lámparas y bombillas y componentes para lámparas
+    Tercer Nivel: Cuadros, registros y menaje para electricidad" align="left">39121311</td><td title="Primer Nivel: Suministros, componentes y accesorios eléctricos y de iluminación
+  Segundo Nivel: Lámparas y bombillas y componentes para lámparas
+    Tercer Nivel: Cuadros, registros y menaje para electricidad" align="left">Accesorios eléctricos</td><td align="left">4</td><td align="left">Unidad</td><td align="left">Tapa ciega octagonal</td><td align="left">---</td>
+			</tr><tr class="adquisicionTablaAgregadosFila1">
+				<td align="left">4</td><td title="Primer Nivel: Suministros, componentes y accesorios eléctricos y de iluminación
+  Segundo Nivel: Lámparas y bombillas y componentes para lámparas
+    Tercer Nivel: Cuadros, registros y menaje para electricidad" align="left">39121311</td><td title="Primer Nivel: Suministros, componentes y accesorios eléctricos y de iluminación
+  Segundo Nivel: Lámparas y bombillas y componentes para lámparas
+    Tercer Nivel: Cuadros, registros y menaje para electricidad" align="left">Accesorios eléctricos</td><td align="left">3</td><td align="left">Rollo</td><td align="left">Tape</td><td align="left">---</td>
+			</tr>
+		</table></td>
+	</tr>
+</table>
+                                <table border="0" width="100%">
+	<tr>
+		<td class="gralSubtitulos2">Documentos Adjuntos</td>
+	</tr><tr>
+		<td><table class="adquisicionTablaAgregados" cellspacing="1" cellpadding="0" border="0" width="100%">
+			<tr class="adquisicionTablaAgregadosFila2">
+				<td align="center" colspan="4">No hay Documentos Adjuntos Ingresados</td>
+			</tr>
+		</table></td>
+	</tr>
+</table>
+                                <table border="0" width="100%">
+	<tr>
+		<td class="gralSubtitulos2">Documentos del Acto Público</td>
+	</tr><tr>
+		<td><table class="adquisicionTablaAgregados" cellspacing="1" cellpadding="0" border="0" width="100%">
+			<tr class="adquisicionTablaAgregadosCabezal">
+				<td>Nombre Documento</td><td>Fecha Creación</td><td class="adquisicionTablaResultadosOfertasCab" align="center">Acciones</td>
+			</tr><tr class="adquisicionTablaAgregadosFila2">
+				<td align="center" colspan="3">No se han registrado Documentos</td>
+			</tr>
+		</table></td>
+	</tr>
+</table>
+                                <table border="0">
+
+</table>
+                                
+                                <table border="0" width="100%">
+	<tr>
+		<td class="gralSubtitulos2">Opciones</td>
+	</tr><tr>
+		<td><a title="Ver Acto Público en Formato PDF para imprimir" href="javascript:void(verPDF_V2('Ly8sKSopKw=='))" style="display:inline-block;"><img title="Ver Acto Público en Formato PDF para imprimir" src="/imagenes/iconos/ic_descargar_pdf.gif" border="0" /></a><a title="Imprimir Acto Publico" href="javascript:imprimir()" style="display:inline-block;"><img title="Imprimir Acto Publico" src="/imagenes/iconos/ic_imprimir.gif" border="0" /></a></td>
+	</tr>
+</table>
+                            </td>
+                        </tr>
+                    </table>
+                    <input name="ctl00$ContentPlaceHolder1$crtlFichaAdq$hidIdLc" type="hidden" id="ctl00_ContentPlaceHolder1_crtlFichaAdq_hidIdLc" value="0" />
+                    <input name="ctl00$ContentPlaceHolder1$crtlFichaAdq$hidruta" type="hidden" id="ctl00_ContentPlaceHolder1_crtlFichaAdq_hidruta" value="0" />
+                    <div style="display: none">
+                        <a id="ctl00_ContentPlaceHolder1_crtlFichaAdq_btnBuscarUnaAdq" href="javascript:__doPostBack('ctl00$ContentPlaceHolder1$crtlFichaAdq$btnBuscarUnaAdq','')"></a>
+                    </div>
+                    <div id="ctl00_ContentPlaceHolder1_crtlFichaAdq_divVolver">
+                        &nbsp;<a id="ctl00_ContentPlaceHolder1_crtlFichaAdq_lnkVover" class="texto11Link" href="javascript:window.history.back()">&lt;&lt;Volver</a></div>
+                    
+                    <input type="hidden" name="ctl00$ContentPlaceHolder1$crtlFichaAdq$hidPDF" id="ctl00_ContentPlaceHolder1_crtlFichaAdq_hidPDF" />
+                    <a id="ctl00_ContentPlaceHolder1_crtlFichaAdq_LinkButton1" href="javascript:__doPostBack('ctl00$ContentPlaceHolder1$crtlFichaAdq$LinkButton1','')" style="display: none">LinkButton</a>
+                    <br />
+                    <br />
+                </td>
+            </tr>
+        </table>
+    </div>
+
+
+ 
+    <script>document.getElementById('ctl00_ContentPlaceHolder1_crtlFichaAdq_hidruta').value = '../';</script>
+
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div id="bottomgeneral">
+        <div class="imgtop">
+        </div>
+        
+    <div class="menutransversal" align="right"><a href="/Portal/files/AcuerdoUsoSistema.pdf" class="linkblanco" target="_blank">Términos y Condiciones de Uso</a> | <a href="http://disclaimer.innovacion.gob.pa/" target="_blank" onclick="window.open(this.href,'disclaimer','toolbars=no,width=600px,height=500,scrollbars=yes');return false;" class="linkblanco">Política de Privacidad</a> | <a href="/Portal/contactenos.aspx" class="linkblanco">Contáctenos</a><!--a href="http://www.innovacion.gob.pa/" target="_blank" class="linkblanco">Secretaría de la Presidencia para la Innovación Gubernamental</a--><br />
+    <!--a href="/portal/rss.aspx"><img src="/portal/App_Themes/APpanama/imagenes/iconos/ico_rss.png" style="padding-top:2px; padding-bottom:2px;" alt="RSS" border="0" align="absmiddle" /></a-->    </div>
+    <div style="padding-left:10px;">© 2010 DGCP - Todos los Derechos Reservados</div>
+    <table>
+    <tr>
+    <td>
+    <div style="padding-left:10px; clear:left;">
+<script type="text/javascript" src="https://seal.verisign.com/getseal?host_name=www.panamacompra.gob.pa&amp;size=S&amp;use_flash=NO&amp;use_transparent=NO&amp;lang=es"></script>
+</div>
+</td>
+    </tr>
+    </table>
+    </div>
+    </form>
+</body>
+</html>

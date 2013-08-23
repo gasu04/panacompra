@@ -93,6 +93,10 @@ class PanaCrawler():
     for url in self.session_maker().query(Url.Url).filter(Url.Url.visited == False).distinct().all():
       self.compra_urls.put(url)
 
+  def build_compra_htmls_queue(self):
+    for url in self.session_maker().query(Url.Url).filter(Url.Url.parsed == False).distinct().all():
+      self.compras.put(url)
+
   def live_workers(self):
     return len([worker for worker in self.workers if worker.is_alive()]) 
 
@@ -112,8 +116,9 @@ class PanaCrawler():
     self.logger.info('finished waiting on workers')
 
   def spawn_db_worker(self):
+    self.build_compra_htmls_queue()
     if not self.dbworker or not self.dbworker.is_alive():
-      self.dbworker = DBWorker(self.compras,self.workers)
+      self.dbworker = DBWorker(self.compras,self.workers,self.session_maker())
       self.dbworker.setDaemon(True)
       self.dbworker.start()
       self.logger.info('db thread started')
