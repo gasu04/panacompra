@@ -109,7 +109,7 @@ class PanaCrawler():
 
   def run_db_worker(self):
     self.logger.info('db work started')
-    db_worker.run(self.session_maker())
+    db_worker.process_pending(self.session_maker())
 
   def handler(self,signum, frame):
     print 'Signal handler called with signal', signum

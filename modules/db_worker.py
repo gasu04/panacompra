@@ -17,25 +17,21 @@ regexes = {
   'proponente': re.compile("(?:Proponente.*\n.*\n.*?Ejemplos\">)([^<]*)",re.MULTILINE)
 }
 
-def run(session):
-  compras = session.query(Compra).filter(Compra.parsed == False).distinct().all()
+def process_pending(session):
   count = 0 
-  while True:
-    try:
-      compra = compras.pop()
-      data = parse_compra_html(compra.html)
-      update_compra(compra,data)
-      session.merge(compra)
-      count += 1
-    except IndexError:
-      logger.debug("compra queue empty")
-      session.commit()
-      logger.info("%i compras added to db", count)
-      session.close()
-      return
-    except Exception as e:
-      print e
-      continue
+  while session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).count() > 0:
+    for compra in session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).limit(100):
+      try:
+        data = parse_compra_html(compra.html)
+        update_compra(compra,data)
+        session.merge(compra)
+        count += 1
+      except Exception as e:
+        print e
+        continue
+  session.commit()
+  logger.info("%i compras added to db", count)
+  session.close()
 
 def update_compra(compra, data):
   for key,val in data.iteritems():
