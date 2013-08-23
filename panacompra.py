@@ -68,15 +68,15 @@ def send_many_to_db():
 if args.send:
   send_many_to_db()
 elif args.update:
-  crawler = PanaCrawler()
+  crawler = PanaCrawler(engine)
   crawler.run(True)
 elif args.sync:
-  crawler = PanaCrawler()
+  crawler = PanaCrawler(engine)
   crawler.run(True)
   del crawler
   send_to_db()
 else:
-  crawler = PanaCrawler()
+  crawler = PanaCrawler(engine)
   crawler.run()
 
 logger.info("panacompra FINISHED!!!!")

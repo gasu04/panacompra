@@ -12,11 +12,9 @@ from time import sleep
 from Worker import WorkThread
 from modules import db_worker
 from modules import rails
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy import distinct
+from sqlalchemy.orm import sessionmaker
 import Compra
-import Url
 
 class PanaCrawler():
   """
@@ -27,15 +25,15 @@ class PanaCrawler():
   Print Output
 
   """
-  def __init__(self):
+  def __init__(self,engine):
     self.scrapers = []
     self.workers = []
     self.dbworker = False
     self.categories = []
     self.compras_queue = Queue()
     self.logger = logging.getLogger('PanaCrawler')
-    self.engine = create_engine('postgresql+psycopg2://panacompra:elpana@localhost/panacompra', echo=False,convert_unicode=False)
-    self.session_maker = sessionmaker(bind=self.engine)
+    self.engine = engine
+    self.session_maker = sessionmaker(bind=engine)
 
   def eat_categories(self):
     """Build a list of categories by scraping site"""
@@ -68,7 +66,7 @@ class PanaCrawler():
     return len([scraper for scraper in self.scrapers if scraper.is_alive()]) 
 
   def spawn_scrapers(self,update=False):
-    while len(self.categories) > 50:
+    while len(self.categories) > 0:
       amount = 10 - self.live_scrapers()
       for i in range(amount):
         if len(self.categories) > 0:
@@ -122,7 +120,6 @@ class PanaCrawler():
 
   def run(self,update=False):
     self.eat_categories() #scrape and store list of categories
-    Url.Base.metadata.create_all(self.engine)
     Compra.Base.metadata.create_all(self.engine)
     #phase 1
     self.spawn_scrapers(update)
