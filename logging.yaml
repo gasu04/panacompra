@@ -39,10 +39,6 @@ loggers:
     level: INFO 
     handlers: [file,console]
     propagate: no
-  mrclean:
-    level: DEBUG
-    handlers: [file]
-    propagate: no
   rails:
     level: INFO 
     handlers: [file]
