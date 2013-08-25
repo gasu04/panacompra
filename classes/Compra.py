@@ -10,7 +10,7 @@ class Compra(Base):
   
   id = Column(Integer, Sequence('compra_id_seq'), primary_key=True)
   url = Column(String(200))
-  html = Column(LargeBinary(80000))
+  html = Column(UnicodeText(65000))
   visited = Column(Boolean)
   parsed = Column(Boolean)
   category = Column(Integer(3))

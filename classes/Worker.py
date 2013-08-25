@@ -5,6 +5,7 @@ from socket import timeout
 from time import sleep
 from Queue import Empty
 from Url import Url
+from bs4 import BeautifulSoup
 
 class WorkThread(threading.Thread):
   """
@@ -73,4 +74,4 @@ class WorkThread(threading.Thread):
         self.reset_connection()
         sleep(1)
         continue
-    return data
+    return unicode(BeautifulSoup(data))

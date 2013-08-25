@@ -9,6 +9,7 @@ from sqlalchemy.orm import sessionmaker
 from classes.Compra import Compra
 from modules import rails
 from itertools import izip_longest
+from modules import db_worker
 
 from classes.PanaCrawler import PanaCrawler
 
@@ -41,6 +42,8 @@ def parse_args():
   parser.add_argument('--send', dest='send', action='store_const',const="True", default=False, help="send db")
   parser.add_argument('--update', dest='update', action='store_const',const="True", default=False, help="update db")
   parser.add_argument('--sync', dest='sync', action='store_const',const="True", default=False, help="sync db")
+  parser.add_argument('--revisit', dest='revisit', action='store_const',const="True", default=False, help="revisit db")
+  parser.add_argument('--reparse', dest='reparse', action='store_const',const="True", default=False, help="reparse db")
   parser.add_argument('--url', dest='url', type=str, default='http://localhost:3000')
   return parser.parse_args()
 
@@ -75,6 +78,11 @@ elif args.sync:
   crawler.run(True)
   del crawler
   send_to_db()
+elif args.revisit:
+  crawler = PanaCrawler(engine)
+  crawler.revisit()
+elif args.reparse:
+  db_worker.reparse(session_maker())
 else:
   crawler = PanaCrawler(engine)
   crawler.run()

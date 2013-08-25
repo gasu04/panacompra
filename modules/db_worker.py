@@ -12,13 +12,31 @@ regexes = {
   'precio': re.compile("(?:Precio.*?>.*?>[^0-9]*)([0-9,]*\.[0-9][0-9]*)"),
   'descripcion': re.compile("(?:Descripcion\">)([^<]*)"),
   'fecha': re.compile("(?:Fecha de Public.*?>.*?>)([^<]*)"), 
-  'acto': re.compile("(?:ero de Acto:</td><td class:\"formEjemplos\">)([^<]*)"),
-  'entidad': re.compile("(?:Entidad:</td><td class:\"formEjemplos\">)([^<]*)"),
+  'acto': re.compile("(?:de Acto...............................)([^<]*)"),
+  'entidad': re.compile("(?:Entidad.................formEjemplos..)([^<]*)"),
   'proponente': re.compile("(?:Proponente.*\n.*\n.*?Ejemplos\">)([^<]*)",re.MULTILINE)
 }
 
 def process_pending(session):
   count = 0 
+  while session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).count() > 0:
+    for compra in session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).limit(100):
+      try:
+        data = parse_compra_html(compra.html)
+        update_compra(compra,data)
+        session.merge(compra)
+        count += 1
+      except Exception as e:
+        print e
+        continue
+  session.commit()
+  logger.info("%i compras added to db", count)
+  session.close()
+
+def reparse(session):
+  logger.info("Setting parsed to FALSE and parsing again")
+  count = 0 
+  session.query(Compra).update({'parsed':False})
   while session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).count() > 0:
     for compra in session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).limit(100):
       try:
@@ -57,7 +75,6 @@ def parse_precio(precio):
 
 def sanitize(string):
   no_quotes_or_newlines = string.replace('"', '').replace("'","").replace('\n',' ').replace('\r',' ').strip() 
-  no_quotes_or_newlines = no_quotes_or_newlines.decode('latin-1')
   return re.sub(' +',' ', no_quotes_or_newlines) #no repeated spaces
 
 def parse_compra_html(html):
@@ -67,7 +84,7 @@ def parse_compra_html(html):
       val = regex.findall(html)[0]
     except IndexError:
       logger.debug("%s not found",name)
-      val = 'empty'
+      val = unicode('empty')
     if name == "fecha":
       val = parse_date(val)
     elif name == 'precio':

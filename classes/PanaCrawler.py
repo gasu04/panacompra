@@ -129,3 +129,9 @@ class PanaCrawler():
     self.join_workers()
     #phase 3
     self.run_db_worker()
+
+  def revisit(self,):
+    self.session_maker().query(Compra.Compra).update({'visited':False})
+    self.build_compras_queue_queue()
+    self.spawn_workers()
+    self.join_workers()
