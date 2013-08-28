@@ -10,14 +10,15 @@ class Compra(Base):
   
   id = Column(Integer, Sequence('compra_id_seq'), primary_key=True)
   url = Column(String(200))
-  html = Column(UnicodeText(65000))
+  html = Column(UnicodeText)
   visited = Column(Boolean)
   parsed = Column(Boolean)
   category = Column(Integer(3))
+  compra_type = Column(Unicode(100))
   entidad = Column(Unicode(200))
   precio = Column(Float(50))
   proponente = Column(Unicode(200))
-  description = Column(UnicodeText(1000))
+  description = Column(UnicodeText)
   acto = Column(Unicode(200))
   fecha = Column(DateTime)
 

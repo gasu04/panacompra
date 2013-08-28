@@ -9,7 +9,6 @@ from time import sleep
 from bs4 import BeautifulSoup, SoupStrainer
 from sqlalchemy.sql import exists
 from classes.Compra import Compra
-from Url import Url
 
 class ScrapeThread(threading.Thread):
   """

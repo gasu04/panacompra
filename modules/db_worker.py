@@ -11,6 +11,7 @@ logger = logging.getLogger('DB')
 regexes = {
   'precio': re.compile("(?:Precio.*?>.*?>[^0-9]*)([0-9,]*\.[0-9][0-9]*)"),
   'description': re.compile('(?:Descripci[^n]n:</td><td class="formEjemplos">)([^<]*)'),
+  'compra_type': re.compile('(?:Procedimiento:</td><td class="formEjemplos">)([^<]*)'),
   'fecha': re.compile("(?:Fecha de Public.*?>.*?>)([^<]*)"), 
   'acto': re.compile("(?:de Acto...............................)([^<]*)"),
   'entidad': re.compile("(?:Entidad.................formEjemplos..)([^<]*)"),
