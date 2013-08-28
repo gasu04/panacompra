@@ -10,7 +10,7 @@ from classes.Compra import Compra
 logger = logging.getLogger('DB')
 regexes = {
   'precio': re.compile("(?:Precio.*?>.*?>[^0-9]*)([0-9,]*\.[0-9][0-9]*)"),
-  'descripcion': re.compile("(?:Descripcion\">)([^<]*)"),
+  'description': re.compile('(?:Descripci[^n]n:</td><td class="formEjemplos">)([^<]*)'),
   'fecha': re.compile("(?:Fecha de Public.*?>.*?>)([^<]*)"), 
   'acto': re.compile("(?:de Acto...............................)([^<]*)"),
   'entidad': re.compile("(?:Entidad.................formEjemplos..)([^<]*)"),

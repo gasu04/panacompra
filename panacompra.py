@@ -44,7 +44,7 @@ def parse_args():
   parser.add_argument('--sync', dest='sync', action='store_const',const="True", default=False, help="sync db")
   parser.add_argument('--revisit', dest='revisit', action='store_const',const="True", default=False, help="revisit db")
   parser.add_argument('--reparse', dest='reparse', action='store_const',const="True", default=False, help="reparse db")
-  parser.add_argument('--url', dest='url', type=str, default='http://localhost:3000')
+  parser.add_argument('--url', dest='url', type=str, default='http://localhost:5000')
   return parser.parse_args()
 
 args = parse_args()
@@ -52,39 +52,48 @@ args = parse_args()
 
 def send_to_db():
   logger.info('sending compras to rails')
-  compras = session.query(Compra).all()
-  compras_json = [{ 'compra[precio]':i.precio, 'compra[category_id]':i.category, 'compra[fecha]':i.fecha.isoformat() ,'compra[acto]': i.acto , 'compra[url]': i.url , 'compra[entidad]':i.entidad, 'compra[proponente]':i.proponente, 'compra[description]':i.description} for i in rails.filter_new_objects_for_resource_by_key(args.url,compras,'compras','acto')]
+  compras_json = [ session.query(Compra).filter(Compra.id == i.id).distinct().first().to_json() for i in rails.filter_new_objects_for_resource_by_key(args.url,session.query(Compra.id,Compra.acto).filter(Compra.parsed == True).distinct().all(),'compras','acto')]
+  logger.info('sending compras to rails')
   for compra in compras_json:
     rails.create(args.url,'compras',compra)
   logger.info('sent %i compras to rails', len(compras_json))
 
 def send_many_to_db():
   logger.info('sending compras to rails')
-  compras_json = [{ 'precio':i.precio, 'fecha':i.fecha.isoformat() ,'acto': i.acto , 'url': i.url , 'entidad':i.entidad, 'category_id':i.category , 'proponente':i.proponente, 'description':i.description} for i in rails.filter_new_objects_for_resource_by_key(args.url,session.query(Compra).filter(Compra.parsed == True).distinct().all(),'compras','acto')]
+  compras_json = [ session.query(Compra).filter(Compra.id == i.id).distinct().first().to_dict() for i in rails.filter_new_objects_for_resource_by_key(args.url,session.query(Compra.id,Compra.acto).filter(Compra.parsed == True).distinct().all(),'compras','acto')]
   chunks = grouper(3000,compras_json)
   logger.info('sending %i compras in %i chunks', len(compras_json) ,len(compras_json)/3000)
   for chunk in chunks:
     rails.create_many(args.url,'compras',chunk)
   logger.info('sent %i compras to rails', len(compras_json))
 
+def sanitize_db():
+  session.query(Compra).filter(Compra.acto == None).delete()
+  session.query(Compra).filter(Compra.acto == unicode('empty')).delete()
 
 if args.send:
+  sanitize_db()
   send_many_to_db()
 elif args.update:
   crawler = PanaCrawler(engine)
   crawler.run(True)
+  sanitize_db()
 elif args.sync:
   crawler = PanaCrawler(engine)
   crawler.run(True)
   del crawler
+  sanitize_db()
   send_to_db()
 elif args.revisit:
   crawler = PanaCrawler(engine)
   crawler.revisit()
 elif args.reparse:
   db_worker.reparse(session_maker())
+  sanitize_db()
 else:
   crawler = PanaCrawler(engine)
   crawler.run()
+  del crawler
+  sanitize_db()
 
 logger.info("panacompra FINISHED!!!!")

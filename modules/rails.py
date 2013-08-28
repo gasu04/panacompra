@@ -5,6 +5,7 @@ import logging
 import urllib2
 from StringIO import StringIO
 import gzip
+from time import sleep
 
 logger = logging.getLogger('rails')
 def create(url,resource_name,obj,token=False):
@@ -67,6 +68,6 @@ def update(url,resource_name,resource_id,obj,token):
 def filter_new_objects_for_resource_by_key(url,objects,resource,key,token=False):
   '''returns only new objects'''
   old_objects = {el[key] for el in index(url,resource,token)}
-  dupes = lambda x: x[key].decode('latin-1', 'ignore') not in old_objects
-  return filter(dupes,objects)
+  dupes = lambda x: x[1].decode('latin-1', 'ignore') not in old_objects
+  return filter(dupes,objects)   
 

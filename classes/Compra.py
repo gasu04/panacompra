@@ -17,7 +17,7 @@ class Compra(Base):
   entidad = Column(Unicode(200))
   precio = Column(Float(50))
   proponente = Column(Unicode(200))
-  description = Column(Unicode(500))
+  description = Column(UnicodeText(1000))
   acto = Column(Unicode(200))
   fecha = Column(DateTime)
 
@@ -27,6 +27,26 @@ class Compra(Base):
     self.html = None
     self.visited = False
     self.parsed = False
+
+  def to_json(self):
+    try:
+      date = self.fecha.isoformat()
+    except:
+      date = None
+    return self.convert({'compra[url]':self.url, 'compra[category_id]':self.category, 'compra[entidad]':self.entidad, 'compra[proponente]':self.proponente, 'compra[description]':self.description, 'compra[precio]':self.precio, 'compra[fecha]':date, 'compra[acto]':self.acto })
+
+  def to_dict(self):
+    try:
+      date = self.fecha.isoformat()
+    except:
+      date = None
+    return self.convert({'url':self.url, 'category_id':self.category, 'entidad':self.entidad, 'proponente':self.proponente, 'description':self.description, 'precio':self.precio, 'fecha':date, 'acto':self.acto })
+
+  def convert(self, obj):
+    for key,val in obj.iteritems():
+      if val != None and (key == 'entidad' or key == 'proponente' or key == 'description'):
+        obj[key] = val.encode('latin-1', 'ignore')
+    return obj
 
   def __getitem__(self,key):
     return getattr(self, key)
