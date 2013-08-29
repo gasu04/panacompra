@@ -17,6 +17,8 @@ class Compra(Base):
   compra_type = Column(Unicode(100))
   entidad = Column(Unicode(200))
   dependencia = Column(Unicode(200))
+  nombre_contacto = Column(Unicode(40))
+  telefono_contacto = Column(Unicode(15))
   objeto = Column(Unicode(200))
   modalidad = Column(Unicode(200))
   correo_contacto = Column(Unicode(200))

@@ -18,6 +18,8 @@ regexes = {
   'modalidad': re.compile('(?:Modalidad de adjudicaci.n:</td><td class="formEjemplos">)([^<]*)'),
   'provincia': re.compile('(?:Provincia de Entrega:</td><td class="formEjemplos">)([^<]*)'),
   'correo_contacto': re.compile('(?:formTextos[^w]*width[^C]*Correo Electr.nico:</td><td class="formEjemplos">)([^<]*)'),
+  'nombre_contacto': re.compile('(?:Datos de Contacto[^N]*Nombre:</td><td class="formEjemplos">)([^<]*)'),
+  'telefono_contacto': re.compile('(?:Tel[^:]*:</td><td class="formEjemplos">)([^<]*)'),
   'fecha': re.compile("(?:Fecha de Public.*?>.*?>)([^<]*)"), 
   'acto': re.compile("(?:de Acto...............................)([^<]*)"),
   'entidad': re.compile("(?:Entidad.................formEjemplos..)([^<]*)"),
