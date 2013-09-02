@@ -11,6 +11,7 @@ logger = logging.getLogger('rails')
 def create(url,resource_name,obj,token=False):
     '''creates objects of a resource'''
     url = '/'.join([url, resource_name+'.json'])
+    url = url + ('?token=%s' % token)
     response = requests.post(url, data=obj)
     if response.status_code == 201:
       logger.debug('created %s from %s', resource_name, str(obj))
@@ -18,11 +19,13 @@ def create(url,resource_name,obj,token=False):
       logger.error('error creating %s from %s', resource_name, str(obj))
     return response
 
-def create_many(url,resource_name,objs):
+def create_many(url,resource_name,objs,token=False):
     '''creates many objects of a resource using bulk upload'''
     url = '/'.join([url, resource_name, 'create_many.json'])
+    url = url + ('?token=%s' % token)
     headers = {'content-type': 'application/json', 'charset':'latin-1'}
-    response = requests.post(url, data=json.dumps(objs, encoding='latin-1'), headers=headers)
+    data = json.dumps(objs, encoding='latin-1')
+    response = requests.post(url, data=data, headers=headers)
     if response.status_code == 201:
       logger.debug('created %i objects of %s', len(objs), resource_name)
     else:
@@ -32,6 +35,7 @@ def create_many(url,resource_name,objs):
 def index(url,resource_name,token=False):
     '''returns json document with all objects of resource'''
     url = '/'.join([url, resource_name, 'all.json'])
+    url = url + ('?token=%s' % token)
     request = urllib2.Request(url)
     request.add_header('Accept-encoding', 'gzip')
     response = urllib2.urlopen(request)
@@ -68,6 +72,6 @@ def update(url,resource_name,resource_id,obj,token):
 def filter_new_objects_for_resource_by_key(url,objects,resource,key,token=False):
   '''returns only new objects'''
   old_objects = {el[key] for el in index(url,resource,token)}
-  dupes = lambda x: x[1].decode('latin-1', 'ignore') not in old_objects
+  dupes = lambda x: x[1].encode('latin-1', 'ignore') not in old_objects
   return filter(dupes,objects)   
 

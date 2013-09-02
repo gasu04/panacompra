@@ -35,10 +35,11 @@ def process_pending(session):
         update_compra(compra,data)
         session.merge(compra)
         count += 1
+        session.commit()
       except Exception as e:
-        print e
+        session.rollback()
+        print compra.url 
         continue
-  session.commit()
   logger.info("%i compras added to db", count)
   session.close()
 
@@ -53,10 +54,11 @@ def reparse(session):
         update_compra(compra,data)
         session.merge(compra)
         count += 1
+        session.commit()
       except Exception as e:
-        print e
+        session.rollback()
+        print compra.url
         continue
-  session.commit()
   logger.info("%i compras added to db", count)
   session.close()
 
@@ -100,6 +102,8 @@ def parse_compra_html(html):
       val = parse_precio(val)
     elif name == 'proponente':
       val = sanitize(val[:199])
+    elif name == 'telefono_contacto':
+      val = val[:14]
     else:
       val = sanitize(val)
     data[name] = val

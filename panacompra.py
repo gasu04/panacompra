@@ -52,19 +52,19 @@ args = parse_args()
 
 def send_to_db():
   logger.info('sending compras to rails')
-  compras_json = [ session.query(Compra).filter(Compra.id == i.id).distinct().first().to_json() for i in rails.filter_new_objects_for_resource_by_key(args.url,session.query(Compra.id,Compra.acto).filter(Compra.parsed == True).distinct().all(),'compras','acto')]
+  compras_json = [ session.query(Compra).filter(Compra.id == i.id).distinct().first().to_json() for i in rails.filter_new_objects_for_resource_by_key(args.url,session.query(Compra.id,Compra.acto).filter(Compra.parsed == True).distinct().all(),'compras','acto','1zWRXH7m3kgV0CV3P8wxPXN1i6zgU2Bvm4mIpaA00lFmaswla9Qj5WIOAcNPSko')]
   logger.info('sending compras to rails')
   for compra in compras_json:
-    rails.create(args.url,'compras',compra)
+    rails.create(args.url,'compras',compra,'1zWRXH7m3kgV0CV3P8wxPXN1i6zgU2Bvm4mIpaA00lFmaswla9Qj5WIOAcNPSko')
   logger.info('sent %i compras to rails', len(compras_json))
 
 def send_many_to_db():
   logger.info('sending compras to rails')
-  compras_json = [ session.query(Compra).filter(Compra.id == i.id).distinct().first().to_dict() for i in rails.filter_new_objects_for_resource_by_key(args.url,session.query(Compra.id,Compra.acto).filter(Compra.parsed == True).distinct().all(),'compras','acto')]
+  compras_json = [ session.query(Compra).filter(Compra.id == i.id).distinct().first().to_dict() for i in rails.filter_new_objects_for_resource_by_key(args.url,session.query(Compra.id,Compra.acto).filter(Compra.parsed == True).distinct().all(),'compras','acto','1zWRXH7m3kgV0CV3P8wxPXN1i6zgU2Bvm4mIpaA00lFmaswla9Qj5WIOAcNPSko')]
   chunks = grouper(3000,compras_json)
   logger.info('sending %i compras in %i chunks', len(compras_json) ,len(compras_json)/3000)
   for chunk in chunks:
-    rails.create_many(args.url,'compras',chunk)
+    rails.create_many(args.url,'compras',chunk,'1zWRXH7m3kgV0CV3P8wxPXN1i6zgU2Bvm4mIpaA00lFmaswla9Qj5WIOAcNPSko')
   logger.info('sent %i compras to rails', len(compras_json))
 
 def sanitize_db():
