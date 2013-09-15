@@ -26,7 +26,7 @@ logger = logging.getLogger('panacompra')
 logger.info('panacompra started')
 
 #psql setup
-engine = create_engine('postgresql+psycopg2://' + os.environ['PANAUSER'] + ':' + os.environ['PANAPASS'] + '@localhost/panacompra',  encoding='latin-1')
+engine = create_engine('postgresql+psycopg2://' + os.environ['PANAUSER'] + ':' + os.environ['PANAPASS'] + '@localhost/panacompra',  encoding='latin-1',echo=False)
 session_maker = sessionmaker(bind=engine)
 session = session_maker()
 
@@ -50,6 +50,9 @@ def parse_args():
 args = parse_args()
 
 
+def get_new():
+  return [ i.id for i in rails.filter_new_objects_for_resource_by_key(args.url,session.query(Compra.id,Compra.acto).filter(Compra.parsed == True).distinct(),'compras','acto','1zWRXH7m3kgV0CV3P8wxPXN1i6zgU2Bvm4mIpaA00lFmaswla9Qj5WIOAcNPSko')]
+
 def send_to_db():
   logger.info('sending compras to rails')
   compras_json = [ session.query(Compra).filter(Compra.id == i.id).distinct().first().to_json() for i in rails.filter_new_objects_for_resource_by_key(args.url,session.query(Compra.id,Compra.acto).filter(Compra.parsed == True).distinct().all(),'compras','acto','1zWRXH7m3kgV0CV3P8wxPXN1i6zgU2Bvm4mIpaA00lFmaswla9Qj5WIOAcNPSko')]
@@ -60,12 +63,14 @@ def send_to_db():
 
 def send_many_to_db():
   logger.info('sending compras to rails')
-  compras_json = [ session.query(Compra).filter(Compra.id == i.id).distinct().first().to_dict() for i in rails.filter_new_objects_for_resource_by_key(args.url,session.query(Compra.id,Compra.acto).filter(Compra.parsed == True).distinct().all(),'compras','acto','1zWRXH7m3kgV0CV3P8wxPXN1i6zgU2Bvm4mIpaA00lFmaswla9Qj5WIOAcNPSko')]
-  chunks = grouper(3000,compras_json)
-  logger.info('sending %i compras in %i chunks', len(compras_json) ,len(compras_json)/3000)
-  for chunk in chunks:
-    rails.create_many(args.url,'compras',chunk,'1zWRXH7m3kgV0CV3P8wxPXN1i6zgU2Bvm4mIpaA00lFmaswla9Qj5WIOAcNPSko')
-  logger.info('sent %i compras to rails', len(compras_json))
+  n = get_new()
+  m = 0
+  while True:
+    chunk = session.query(Compra).filter(Compra.id.in_(n)).offset(m).limit(1000).all()
+    logger.info('sending %i compras to rails',len(chunk))
+    rails.create_many(args.url,'compras',[i.to_dict() for i in chunk],'1zWRXH7m3kgV0CV3P8wxPXN1i6zgU2Bvm4mIpaA00lFmaswla9Qj5WIOAcNPSko')
+    m = m + 1000
+  logger.info('done sending compras to rails')
 
 def sanitize_db():
   session.query(Compra).filter(Compra.acto == None).delete()
