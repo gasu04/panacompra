@@ -90,15 +90,13 @@ class ScrapeThread(threading.Thread):
         data = response.read()
         success = True
       except Exception as e:
-        sleep(1)
         self.logger.debug('RESPONSE timeout from %s', str(self))
         self.reset_connection()
-        sleep(1)
         continue
     return data
 
   def parse_category_page(self,html):
-    soup = BeautifulSoup(html, parse_only=self.strainer)
+    soup = BeautifulSoup(html, "html.parser", parse_only=self.strainer)
     links = soup.find_all(href=re.compile("VistaPreviaCP.aspx\?NumLc"))
     remove_dupes = lambda x: not self.session.query(exists().where(Compra.url==(str(x)))).scalar()
     return filter(remove_dupes,[link.get('href') for link in links])

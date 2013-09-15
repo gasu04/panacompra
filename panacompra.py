@@ -26,7 +26,7 @@ logger = logging.getLogger('panacompra')
 logger.info('panacompra started')
 
 #psql setup
-engine = create_engine('postgresql+psycopg2://' + os.environ['PANAUSER'] + ':' + os.environ['PANAPASS'] + '@localhost/panacompra',  encoding='latin-1')
+engine = create_engine('postgresql+psycopg2://' + os.environ['PANAUSER'] + ':' + os.environ['PANAPASS'] + '@localhost/panacompra',  encoding='latin-1', echo=False)
 session_maker = sessionmaker(bind=engine)
 session = session_maker()
 

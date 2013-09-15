@@ -4,7 +4,7 @@ import httplib, urllib
 from socket import timeout
 from time import sleep
 from Queue import Empty
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, SoupStrainer
 
 class WorkThread(threading.Thread):
   """
@@ -16,6 +16,7 @@ class WorkThread(threading.Thread):
     self.logger = logging.getLogger('Worker')
     self.connection = False
     self.session = session
+    self.strainer = SoupStrainer('body')
 
   def open_connection(self):
     while not self.connection:
@@ -67,10 +68,7 @@ class WorkThread(threading.Thread):
         data = response.read()
         success = True
       except Exception as e:
-        sleep(1)
-        print e
         self.logger.debug('RESPONSE timeout from %s', str(self))
         self.reset_connection()
-        sleep(1)
         continue
-    return unicode(BeautifulSoup(data))
+    return unicode(BeautifulSoup(data, "html.parser", parse_only=self.strainer))

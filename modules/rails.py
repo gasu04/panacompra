@@ -11,7 +11,7 @@ logger = logging.getLogger('rails')
 def create(url,resource_name,obj,token=False):
     '''creates objects of a resource'''
     url = '/'.join([url, resource_name+'.json'])
-    url = url + ('?token=%s' % token)
+#   url = url + ('?token=%s' % token)
     response = requests.post(url, data=obj)
     if response.status_code == 201:
       logger.debug('created %s from %s', resource_name, str(obj))
@@ -22,7 +22,7 @@ def create(url,resource_name,obj,token=False):
 def create_many(url,resource_name,objs,token=False):
     '''creates many objects of a resource using bulk upload'''
     url = '/'.join([url, resource_name, 'create_many.json'])
-    url = url + ('?token=%s' % token)
+#   url = url + ('?token=%s' % token)
     headers = {'content-type': 'application/json', 'charset':'latin-1'}
     data = json.dumps(objs, encoding='latin-1')
     response = requests.post(url, data=data, headers=headers)
@@ -35,7 +35,7 @@ def create_many(url,resource_name,objs,token=False):
 def index(url,resource_name,token=False):
     '''returns json document with all objects of resource'''
     url = '/'.join([url, resource_name, 'all.json'])
-    url = url + ('?token=%s' % token)
+#   url = url + ('?token=%s' % token)
     request = urllib2.Request(url)
     request.add_header('Accept-encoding', 'gzip')
     response = urllib2.urlopen(request)
