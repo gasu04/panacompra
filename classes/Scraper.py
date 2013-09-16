@@ -9,6 +9,7 @@ from time import sleep
 from bs4 import BeautifulSoup, SoupStrainer
 from sqlalchemy.sql import exists
 from classes.Compra import Compra
+from random import shuffle
 
 class ScrapeThread(threading.Thread):
   """
@@ -37,6 +38,9 @@ class ScrapeThread(threading.Thread):
   
   def increment_page(self):
     self.data['ctl00$ContentPlaceHolder1$ControlPaginacion$hidNumeroPagina'] = 1 + int(self.data['ctl00$ContentPlaceHolder1$ControlPaginacion$hidNumeroPagina'])
+  
+  def set_page(self,page):
+    self.data['ctl00$ContentPlaceHolder1$ControlPaginacion$hidNumeroPagina'] = int(page)
 
   def get_page(self):
     return int(self.data['ctl00$ContentPlaceHolder1$ControlPaginacion$hidNumeroPagina'])
@@ -44,7 +48,7 @@ class ScrapeThread(threading.Thread):
   def open_connection(self):
     while not self.connection:
       try:
-        self.connection = httplib.HTTPConnection("201.227.172.42", "80",timeout=15)
+        self.connection = httplib.HTTPConnection("201.227.172.42", "80",timeout=10)
       except:
         continue
 
@@ -53,7 +57,7 @@ class ScrapeThread(threading.Thread):
     self.connection = False
     while not self.connection:
       try:
-        self.connection = httplib.HTTPConnection("201.227.172.42", "80",timeout=15)
+        self.connection = httplib.HTTPConnection("201.227.172.42", "80",timeout=10)
       except:
         continue
 
@@ -61,14 +65,17 @@ class ScrapeThread(threading.Thread):
     self.reset_page()
     self.open_connection()
     self.parse_max_pages()
-    self.logger.info('starting category %s [%s pages]',self.category,self.pages)
-    while self.pages >= self.get_page():
+    shuffle(self.pages)
+    self.logger.info('starting category %s [%s pages]',self.category,len(self.pages))
+    while self.pages:
       try:
+        current_page = self.pages.pop()
+        self.set_page(current_page)
         self.eat_urls_for_category(self.category)
-        self.increment_page()
-      except:
+      except Exception as e:
         self.reset_connection()
-        self.logger.debug('HTTP timeout from %s', str(self))
+        self.pages.push(current_page)
+        self.logger.debug('%s from %s', str(e),str(self))
         continue
     self.connection.close()
     self.session.close()
@@ -103,11 +110,11 @@ class ScrapeThread(threading.Thread):
 
   def parse_max_pages(self):
     if self.update:
-      self.pages = 1 
+      pages = 1 
     else:
       html = self.get_category_page()
       pages = self.pages_regex.findall(html)[0].decode('latin-1', 'ignore')
-      self.pages = int(pages)
+    self.pages = [i + 1 for i in range(int(pages))]
   
   def __str__(self):
     return "<(Scraper: category[%i], page[%i])>" % (int(self.category), int(self.get_page()))
