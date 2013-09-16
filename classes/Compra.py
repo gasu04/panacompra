@@ -42,14 +42,14 @@ class Compra(Base):
       date = self.fecha.isoformat()
     except:
       date = None
-    return self.convert({'compra[url]':self.url, 'compra[category_id]':self.category, 'compra[entidad]':self.entidad, 'compra[proponente]':self.proponente, 'compra[description]':self.description, 'compra[precio]':self.precio, 'compra[fecha]':date, 'compra[acto]':self.acto })
+    return self.convert({'compra[url]':self.url, 'compra[category_id]':self.category, 'compra[entidad]':self.entidad, 'compra[proponente]':self.proponente, 'compra[description]':self.description, 'compra[precio]':self.precio, 'compra[fecha]':date, 'compra[acto]':self.acto, 'compra[compra_type]':self.compra_type, 'compra[dependencia]': self.dependencia, 'compra[nombre_contacto]':self.nombre_contacto, 'compra[telefono_contacto]': self.telefono_contacto, 'compra[correo_contacto]': self.correo_contacto, 'compra[objeto]': self.objeto, 'compra[modalidad]': self.modalidad, 'compra[unidad]': self.unidad, 'compra[provincia]': self.provincia})
 
   def to_dict(self):
     try:
       date = self.fecha.isoformat()
     except:
       date = None
-    return self.convert({'url':self.url, 'category_id':self.category, 'entidad':self.entidad, 'proponente':self.proponente, 'description':self.description, 'precio':self.precio, 'fecha':date, 'acto':self.acto })
+    return self.convert({'url':self.url, 'category_id':self.category, 'entidad':self.entidad, 'proponente':self.proponente, 'description':self.description, 'precio':self.precio, 'fecha':date, 'acto':self.acto, 'compra_type':self.compra_type, 'dependencia': self.dependencia, 'nombre_contacto':self.nombre_contacto, 'telefono_contacto': self.telefono_contacto, 'correo_contacto': self.correo_contacto, 'objeto': self.objeto, 'modalidad': self.modalidad, 'unidad': self.unidad, 'provincia': self.provincia })
 
   def convert(self, obj):
     for key,val in obj.iteritems():

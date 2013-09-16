@@ -14,7 +14,7 @@ from modules import db_worker
 from modules import rails
 from sqlalchemy import distinct
 from sqlalchemy.orm import sessionmaker
-import Compra
+from classes import Compra
 
 class PanaCrawler():
   """
@@ -83,11 +83,11 @@ class PanaCrawler():
     while any([scraper.is_alive() for scraper in self.scrapers]):
       sleep(1)
     self.build_compras_queue_queue()
-    self.logger.info('%i compras on queue', self.compras_queue.qsize())
 
   def build_compras_queue_queue(self):
     for compra in self.session_maker().query(Compra.Compra).filter(Compra.Compra.visited == False).distinct().all():
       self.compras_queue.put(compra)
+    self.logger.info('%i compras on queue', self.compras_queue.qsize())
 
   def live_workers(self):
     return len([worker for worker in self.workers if worker.is_alive()]) 
@@ -131,7 +131,9 @@ class PanaCrawler():
     self.run_db_worker()
 
   def revisit(self,):
-    self.session_maker().query(Compra.Compra).update({'visited':False})
+    sess = self.session_maker()
+    sess.query(Compra.Compra).update({'visited':False})
+    sess.commit()
     self.build_compras_queue_queue()
     self.spawn_workers()
     self.join_workers()

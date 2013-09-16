@@ -12,7 +12,9 @@ def create(url,resource_name,obj,token=False):
     '''creates objects of a resource'''
     url = '/'.join([url, resource_name+'.json'])
     #url = url + ('?token=%s' % token)
-    response = requests.post(url, data=obj)
+    headers = {'content-type': 'application/json', 'charset':'latin-1'}
+    data = json.dumps(obj, encoding='latin-1')
+    response = requests.post(url, data=data, headers=headers)
     if response.status_code == 201:
       logger.debug('created %s from %s', resource_name, str(obj))
     else:

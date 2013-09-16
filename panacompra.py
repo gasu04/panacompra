@@ -51,25 +51,25 @@ args = parse_args()
 
 
 def get_new():
-  return [ i.id for i in rails.filter_new_objects_for_resource_by_key(args.url,session.query(Compra.id,Compra.acto).filter(Compra.parsed == True).distinct(),'compras','acto','1zWRXH7m3kgV0CV3P8wxPXN1i6zgU2Bvm4mIpaA00lFmaswla9Qj5WIOAcNPSko')]
+  return [ i.id for i in rails.filter_new_objects_for_resource_by_key(args.url,session.query(Compra.id,Compra.acto).filter(Compra.parsed == True).filter(Compra.fecha != None).distinct(),'compras','acto')]
 
 def send_to_db():
   logger.info('sending compras to rails')
-  compras_json = [ session.query(Compra).filter(Compra.id == i.id).distinct().first().to_json() for i in rails.filter_new_objects_for_resource_by_key(args.url,session.query(Compra.id,Compra.acto).filter(Compra.parsed == True).distinct().all(),'compras','acto','1zWRXH7m3kgV0CV3P8wxPXN1i6zgU2Bvm4mIpaA00lFmaswla9Qj5WIOAcNPSko')]
-  logger.info('sending compras to rails')
-  for compra in compras_json:
-    rails.create(args.url,'compras',compra,'1zWRXH7m3kgV0CV3P8wxPXN1i6zgU2Bvm4mIpaA00lFmaswla9Qj5WIOAcNPSko')
-  logger.info('sent %i compras to rails', len(compras_json))
+  new = get_new()
+  for compra in session.query(Compra).filter(Compra.id.in_(new)):
+    rails.create(args.url,'compras',compra.to_json(),'1zWRXH7m3kgV0CV3P8wxPXN1i6zgU2Bvm4mIpaA00lFmaswla9Qj5WIOAcNPSko')
+  logger.info('sent %i compras to rails', len(new))
 
 def send_many_to_db():
   logger.info('sending compras to rails')
   n = get_new()
   m = 0
   while True:
-    chunk = session.query(Compra).filter(Compra.id.in_(n)).offset(m).limit(1000).all()
+    chunk = session.query(Compra).filter(Compra.id.in_(n)).offset(m).limit(3000).all()
+    if len(chunk) == 0: break
     logger.info('sending %i compras to rails',len(chunk))
     rails.create_many(args.url,'compras',[i.to_dict() for i in chunk],'1zWRXH7m3kgV0CV3P8wxPXN1i6zgU2Bvm4mIpaA00lFmaswla9Qj5WIOAcNPSko')
-    m = m + 1000
+    m = m + 3000
   logger.info('done sending compras to rails')
 
 def sanitize_db():
