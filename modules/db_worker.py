@@ -29,7 +29,7 @@ regexes = {
 def process_pending(session):
   count = 0 
   while session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).count() > 0:
-    for compra in session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).limit(100):
+    for compra in session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).limit(1000):
       try:
         data = parse_compra_html(compra.html)
         update_compra(compra,data)
@@ -48,7 +48,7 @@ def reparse(session):
   count = 0 
   session.query(Compra).update({'parsed':False})
   while session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).count() > 0:
-    for compra in session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).limit(100):
+    for compra in session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).limit(1000):
       try:
         data = parse_compra_html(compra.html)
         update_compra(compra,data)

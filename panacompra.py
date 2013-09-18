@@ -44,6 +44,7 @@ def parse_args():
   parser.add_argument('--sync', dest='sync', action='store_const',const="True", default=False, help="sync db")
   parser.add_argument('--revisit', dest='revisit', action='store_const',const="True", default=False, help="revisit db")
   parser.add_argument('--reparse', dest='reparse', action='store_const',const="True", default=False, help="reparse db")
+  parser.add_argument('--pending', dest='pending', action='store_const',const="True", default=False, help="pending db")
   parser.add_argument('--url', dest='url', type=str, default='http://localhost:5000')
   return parser.parse_args()
 
@@ -57,7 +58,7 @@ def send_to_db():
   logger.info('sending compras to rails')
   new = get_new()
   for compra in session.query(Compra).filter(Compra.id.in_(new)):
-    rails.create(args.url,'compras',compra.to_json(),'1zWRXH7m3kgV0CV3P8wxPXN1i6zgU2Bvm4mIpaA00lFmaswla9Qj5WIOAcNPSko')
+    rails.create(args.url,'compras',compra.to_dict(),'1zWRXH7m3kgV0CV3P8wxPXN1i6zgU2Bvm4mIpaA00lFmaswla9Qj5WIOAcNPSko')
   logger.info('sent %i compras to rails', len(new))
 
 def send_many_to_db():
@@ -94,6 +95,9 @@ elif args.revisit:
   crawler.revisit()
 elif args.reparse:
   db_worker.reparse(session_maker())
+  sanitize_db()
+elif args.pending:
+  db_worker.process_pending(session_maker())
   sanitize_db()
 else:
   crawler = PanaCrawler(engine)
