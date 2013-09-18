@@ -10,7 +10,6 @@ from Queue import Queue
 from Scraper import ScrapeThread
 from time import sleep
 from Worker import WorkThread
-from modules import db_worker
 from modules import rails
 from sqlalchemy import distinct
 from sqlalchemy.orm import sessionmaker
@@ -107,10 +106,6 @@ class PanaCrawler():
       sleep(5)
     self.logger.info('finished waiting on workers')
 
-  def run_db_worker(self):
-    self.logger.info('db work started')
-    db_worker.process_pending(self.session_maker())
-
   def handler(self,signum, frame):
     print 'Signal handler called with signal', signum
     print 'waiting for threads to finish'
@@ -127,8 +122,6 @@ class PanaCrawler():
     #phase 2
     self.spawn_workers()
     self.join_workers()
-    #phase 3
-    self.run_db_worker()
 
   def revisit(self,):
     sess = self.session_maker()

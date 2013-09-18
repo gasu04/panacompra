@@ -116,6 +116,7 @@ class Compra(Base):
         val = unicode('empty')
       setattr(self,name,parse_and_sanitize(val,name))
     self.parsed = True
+    return self
     
   def __getitem__(self,key):
     return getattr(self, key)
