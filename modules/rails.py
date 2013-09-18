@@ -3,18 +3,17 @@ import inflect
 import json
 import logging
 import urllib2
-from StringIO import StringIO
-import gzip
+import os
 from time import sleep
 
 logger = logging.getLogger('rails')
+headers = {'content-type': 'application/json', 'charset':'latin-1'}
 def create(url,resource_name,obj,token=False):
     '''creates objects of a resource'''
     url = '/'.join([url, resource_name+'.json'])
     #url = url + ('?token=%s' % token)
-    headers = {'content-type': 'application/json', 'charset':'latin-1'}
     data = json.dumps(obj, encoding='latin-1')
-    response = requests.post(url, data=data, headers=headers)
+    response = requests.post(url, data=data, headers=headers, auth=(os.environ['admin_user'],os.environ['admin_pass']))
     if response.status_code == 201:
       logger.debug('created %s from %s', resource_name, str(obj))
     else:
@@ -28,7 +27,7 @@ def create_many(url,resource_name,objs,token=False):
     #url = url + ('?token=%s' % token)
     headers = {'content-type': 'application/json', 'charset':'latin-1'}
     data = json.dumps(objs, encoding='latin-1')
-    response = requests.post(url, data=data, headers=headers)
+    response = requests.post(url, data=data, headers=headers, auth=(os.environ['admin_user'],os.environ['admin_pass']))
     if response.status_code == 201:
       logger.debug('created %i objects of %s', len(objs), resource_name)
     else:
@@ -39,16 +38,8 @@ def index(url,resource_name,token=False):
     '''returns json document with all objects of resource'''
     url = '/'.join([url, resource_name, 'all.json'])
     #url = url + ('?token=%s' % token)
-    request = urllib2.Request(url)
-    request.add_header('Accept-encoding', 'gzip')
-    response = urllib2.urlopen(request)
-    if response.info().get('Content-Encoding') == 'gzip':
-      buf = StringIO( response.read())
-      f = gzip.GzipFile(fileobj=buf)
-      data = f.read()
-    else:
-      data = response.read()
-    return json.loads(data)
+    response = requests.get(url, auth=(os.environ['admin_user'],os.environ['admin_pass']), headers=headers)
+    return response.json()
 
 def show(url,resource_name,resource_id,token):
     '''returns json document with a specific object from a resource'''
@@ -64,7 +55,6 @@ def update(url,resource_name,resource_id,obj,token):
     '''updates an object with id of a resource'''
     auth = {'auth_token':token}
     url = '/'.join([url, resource_name, str(resource_id)]) +'.json'
-    headers = {'content-type': 'application/json'}
     response = requests.put(url, params=auth ,data=json.dumps(obj), headers=headers)
     if response.status_code == 204:
       logger.debug('updated %s with id %i to %s', resource_name, int(resource_id), str(obj))
