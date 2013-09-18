@@ -1,9 +1,60 @@
+import re
 from sqlalchemy.ext.declarative import declarative_base
 
 from sqlalchemy import *
 from sqlalchemy.types import Unicode, UnicodeText
 
 Base = declarative_base()
+
+regexes = {
+  'precio': re.compile("(?:Precio.*?>.*?>[^0-9]*)([0-9,]*\.[0-9][0-9]*)"),
+  'description': re.compile('(?:Descripci[^n]n:</td><td class="formEjemplos">)([^<]*)'),
+  'compra_type': re.compile('(?:Procedimiento:</td><td class="formEjemplos">)([^<]*)'),
+  'dependencia': re.compile('(?:Dependencia:</td><td class="formEjemplos">)([^<]*)'),
+  'unidad': re.compile('(?:Unidad de Compra:</td><td class="formEjemplos">)([^<]*)'),
+  'objeto': re.compile('(?:Contractual:</td><td class="formEjemplos">)([^<]*)'),
+  'modalidad': re.compile('(?:Modalidad de adjudicaci.n:</td><td class="formEjemplos">)([^<]*)'),
+  'provincia': re.compile('(?:Provincia de Entrega:</td><td class="formEjemplos">)([^<]*)'),
+  'correo_contacto': re.compile('(?:formTextos[^w]*width[^C]*Correo Electr.nico:</td><td class="formEjemplos">)([^<]*)'),
+  'nombre_contacto': re.compile('(?:Datos de Contacto[^N]*Nombre:</td><td class="formEjemplos">)([^<]*)'),
+  'telefono_contacto': re.compile('(?:Tel[^:]*:</td><td class="formEjemplos">)([^<]*)'),
+  'fecha': re.compile("(?:Fecha de Public.*?>.*?>)([^<]*)"), 
+  'acto': re.compile("(?:de Acto.*?>.*?>)([^<]*)"),
+  'entidad': re.compile("(?:Entidad.................formEjemplos..)([^<]*)"),
+  'proponente': re.compile("(?:Proponente.*\n.*\n.*?Ejemplos\">)([^<]*)",re.MULTILINE)
+}
+
+def parse_date(date):
+  try:
+    date = date.replace('.','').upper()
+    date = datetime.strptime(date,"%d-%m-%Y %I:%M %p") 
+  except:
+    date= None
+  return date
+
+def parse_precio(precio):
+  precio = re.sub(r'[^\d.]', '',precio) #remove non digits
+  if not precio == "":
+    precio = float(precio)
+  else:
+    precio = 0.00
+  return precio
+
+def sanitize(string):
+  no_quotes_or_newlines = string.replace('"', '').replace("'","").replace('\n',' ').replace('\r',' ').strip() 
+  return re.sub(' +',' ', no_quotes_or_newlines) #no repeated spaces
+
+def parse_and_sanitize(string,name):
+  string = sanitize(string)
+  if name == "fecha":
+    string = parse_date(string)
+  elif name == 'precio':
+    string = parse_precio(string)
+  elif name == 'proponente':
+    string = sanitize(string[:199])
+  elif name == 'telefono_contacto':
+    string = string[:14]
+  return string
 
 class Compra(Base):
   __tablename__ = 'compras'
@@ -57,6 +108,15 @@ class Compra(Base):
         obj[key] = val.encode('latin-1', 'ignore')
     return obj
 
+  def parse_html(self):
+    for name,regex in regexes.iteritems():
+      try:
+        val = regex.findall(self.html)[0]
+      except IndexError:
+        val = unicode('empty')
+      setattr(self,name,parse_and_sanitize(val,name))
+    self.parsed = True
+    
   def __getitem__(self,key):
     return getattr(self, key)
 

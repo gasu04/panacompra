@@ -36,7 +36,6 @@ def grouper(n, iterable, fillvalue=None):
   args = [iter(iterable)] * n
   return izip_longest(fillvalue=fillvalue, *args)
 
-
 def parse_args():
   parser = argparse.ArgumentParser(description='Dataminer for Panacompra')
   parser.add_argument('--send', dest='send', action='store_const',const="True", default=False, help="send db")
@@ -93,7 +92,7 @@ elif args.revisit:
   crawler = PanaCrawler(engine)
   crawler.revisit()
 elif args.reparse:
-  db_worker.reparse(session_maker())
+  db_worker.reparse(session_maker)
   sanitize_db()
 else:
   crawler = PanaCrawler(engine)
