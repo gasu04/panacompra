@@ -41,11 +41,10 @@ class WorkThread(threading.Thread):
     while True:
       try:
         compra = self.compra_urls.get_nowait()
-        self.eat_compra(compra)
         self.compra_urls.task_done()
+        self.eat_compra(compra)
       except Empty:
         self.connection.close()
-        self.session.commit()
         self.logger.info('worker dying %s', str(self))
         return
       except timeout:
@@ -58,17 +57,17 @@ class WorkThread(threading.Thread):
     compra.html = self.get_compra_html(url_path)
     compra.visited = True
     self.session.merge(compra)
+    self.session.commit()
 
   def get_compra_html(self,url):
-    success = False
-    while not success:
+    done = False
+    while not done:
       try:
         self.connection.request("GET", url)
         response = self.connection.getresponse()
         data = response.read()
-        success = True
       except Exception as e:
         self.logger.debug('RESPONSE timeout from %s', str(self))
         self.reset_connection()
         continue
-    return unicode(BeautifulSoup(data, "html.parser", parse_only=self.strainer))
+      return unicode(BeautifulSoup(data, "html.parser", parse_only=self.strainer))

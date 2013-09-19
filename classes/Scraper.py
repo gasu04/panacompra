@@ -85,7 +85,7 @@ class ScrapeThread(threading.Thread):
   def eat_urls_for_category(self,category):
     for url in self.parse_category_page(self.get_category_page()):
       self.session.add(Compra(url,category))
-      self.session.commit()
+    self.session.commit()
 
   def get_category_page(self):
     headers = {"Content-type": "application/x-www-form-urlencoded"}

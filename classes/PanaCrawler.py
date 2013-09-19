@@ -84,7 +84,7 @@ class PanaCrawler():
     self.build_compras_queue_queue()
 
   def build_compras_queue_queue(self):
-    for compra in self.session_maker().query(Compra.Compra).filter(Compra.Compra.visited == False).distinct().all():
+    for compra in self.session_maker().query(Compra.Compra).filter(Compra.Compra.visited == False).distinct():
       self.compras_queue.put(compra)
     self.logger.info('%i compras on queue', self.compras_queue.qsize())
 
