@@ -50,11 +50,12 @@ def process_pending(engine):
       batch = []
       for i in range(batch_size):
         batch.append(query.next())
-    except:
+    except StopIteration:
       done = True
-    for chunk in pool.imap_unordered(process_compras_chunk, batch):
-      for compra in chunk:
-        session.merge(compra)
+    finally:
+      for chunk in pool.imap_unordered(process_compras_chunk, batch):
+        for compra in chunk:
+          session.merge(compra)
     session.commit()
   logger.info("compras added to db")
   session.close()
