@@ -44,18 +44,18 @@ def process_pending(engine):
   query = chunks(session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).yield_per(CHUNK_SIZE),CHUNK_SIZE)
   pool = Pool(processes=cpu_count())
   batch_size = cpu_count()
-  while True:
+  done = False
+  while not done:
     try:
-      if batch_size == 0: 
-        break
-      for chunk in pool.imap_unordered(process_compras_chunk, [query.next() for i in range(batch_size)]):
-        for compra in chunk:
-          session.merge(compra)
-        del chunk
-      session.commit()
-    except StopIteration:
-      batch_size = batch_size - 1
-      continue
+      batch = []
+      for i in range(batch_size):
+        batch.append(query.next())
+    except:
+      done = True
+    for chunk in pool.imap_unordered(process_compras_chunk, batch):
+      for compra in chunk:
+        session.merge(compra)
+    session.commit()
   logger.info("compras added to db")
   session.close()
 
