@@ -48,7 +48,7 @@ class ScrapeThread(threading.Thread):
   def open_connection(self):
     while not self.connection:
       try:
-        self.connection = httplib.HTTPConnection("201.227.172.42", "80",timeout=10)
+        self.connection = httplib.HTTPConnection("127.0.0.1", "8118",timeout=20)
       except:
         continue
 
@@ -57,7 +57,7 @@ class ScrapeThread(threading.Thread):
     self.connection = False
     while not self.connection:
       try:
-        self.connection = httplib.HTTPConnection("201.227.172.42", "80",timeout=10)
+        self.connection = httplib.HTTPConnection("127.0.0.1", "8118",timeout=20)
       except:
         continue
 
@@ -92,7 +92,7 @@ class ScrapeThread(threading.Thread):
     success = False
     while not success:
       try:
-        self.connection.request("POST", "/AmbientePublico/AP_Busquedaavanzada.aspx?BusquedaRubros=true&IdRubro=" + str(self.category), urllib.urlencode(self.data), headers)
+        self.connection.request("POST", "http://201.227.172.42/AmbientePublico/AP_Busquedaavanzada.aspx?BusquedaRubros=true&IdRubro=" + str(self.category), urllib.urlencode(self.data), headers)
         response = self.connection.getresponse()
         data = response.read()
         success = True

@@ -21,7 +21,7 @@ class WorkThread(threading.Thread):
   def open_connection(self):
     while not self.connection:
       try:
-        self.connection = httplib.HTTPConnection("201.227.172.42", "80",timeout=10)
+        self.connection = httplib.HTTPConnection("127.0.0.1", "8118",timeout=20)
       except:
         self.logger.debug('HTTP timeout in %s', str(self))
         continue
@@ -31,7 +31,7 @@ class WorkThread(threading.Thread):
     self.connection = False
     while not self.connection:
       try:
-        self.connection = httplib.HTTPConnection("201.227.172.42", "80",timeout=15)
+        self.connection = httplib.HTTPConnection("127.0.0.1", "8118",timeout=20)
       except:
         self.logger.debug('HTTP timeout in %s', str(self))
         continue
@@ -54,7 +54,7 @@ class WorkThread(threading.Thread):
         continue
 
   def eat_compra(self,compra):
-    url_path = "/AmbientePublico/" + compra.url #append path
+    url_path = "http://201.227.172.42/AmbientePublico/" + compra.url #append path
     compra.html = self.get_compra_html(url_path)
     compra.visited = True
     self.session.merge(compra)

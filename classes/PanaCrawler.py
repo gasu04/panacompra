@@ -54,8 +54,8 @@ class PanaCrawler():
 
   def get_categories_html(self):
     """returns html from category listing page"""
-    connection = httplib.HTTPConnection("201.227.172.42", "80", timeout=10)
-    connection.request("GET", "/Portal/OportunidadesDeNegocio.aspx")
+    connection = httplib.HTTPConnection("127.0.0.1", "8118", timeout=10)
+    connection.request("GET", "http://201.227.172.42/Portal/OportunidadesDeNegocio.aspx")
     response = connection.getresponse()
     data = response.read()
     connection.close()
