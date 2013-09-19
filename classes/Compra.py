@@ -6,24 +6,6 @@ from sqlalchemy.types import Unicode, UnicodeText
 
 Base = declarative_base()
 
-regexes = {
-  'precio': re.compile("(?:Precio.*?>.*?>[^0-9]*)([0-9,]*\.[0-9][0-9]*)"),
-  'description': re.compile('(?:Descripci[^n]n:</td><td class="formEjemplos">)([^<]*)'),
-  'compra_type': re.compile('(?:Procedimiento:</td><td class="formEjemplos">)([^<]*)'),
-  'dependencia': re.compile('(?:Dependencia:</td><td class="formEjemplos">)([^<]*)'),
-  'unidad': re.compile('(?:Unidad de Compra:</td><td class="formEjemplos">)([^<]*)'),
-  'objeto': re.compile('(?:Contractual:</td><td class="formEjemplos">)([^<]*)'),
-  'modalidad': re.compile('(?:Modalidad de adjudicaci.n:</td><td class="formEjemplos">)([^<]*)'),
-  'provincia': re.compile('(?:Provincia de Entrega:</td><td class="formEjemplos">)([^<]*)'),
-  'correo_contacto': re.compile('(?:formTextos[^w]*width[^C]*Correo Electr.nico:</td><td class="formEjemplos">)([^<]*)'),
-  'nombre_contacto': re.compile('(?:Datos de Contacto[^N]*Nombre:</td><td class="formEjemplos">)([^<]*)'),
-  'telefono_contacto': re.compile('(?:Tel[^:]*:</td><td class="formEjemplos">)([^<]*)'),
-  'fecha': re.compile("(?:Fecha de Public.*?>.*?>)([^<]*)"), 
-  'acto': re.compile("(?:de Acto.*?>.*?>)([^<]*)"),
-  'entidad': re.compile("(?:Entidad.................formEjemplos..)([^<]*)"),
-  'proponente': re.compile("(?:Proponente.*\n.*\n.*?Ejemplos\">)([^<]*)",re.MULTILINE)
-}
-
 def parse_date(date):
   try:
     date = date.replace('.','').upper()
@@ -108,7 +90,7 @@ class Compra(Base):
         obj[key] = val.encode('latin-1', 'ignore')
     return obj
 
-  def parse_html(self):
+  def parse_html(self,regexes):
     for name,regex in regexes.iteritems():
       try:
         val = regex.findall(self.html)[0]
