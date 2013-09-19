@@ -1,8 +1,8 @@
 import re
 from sqlalchemy.ext.declarative import declarative_base
-
 from sqlalchemy import *
 from sqlalchemy.types import Unicode, UnicodeText
+from datetime import datetime
 
 Base = declarative_base()
 
