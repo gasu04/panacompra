@@ -105,7 +105,15 @@ class ScrapeThread(threading.Thread):
     if self.update:
       pages = 1 
     else:
-      html = self.get_category_page()
+      done = False
+      while not done:
+        try:
+          html = self.get_category_page()
+          done = True
+        except Exception as e:
+          self.reset_connection()
+          self.logger.debug('%s from %s', str(e),str(self))
+          continue
       pages = self.pages_regex.findall(html)[0].decode('latin-1', 'ignore')
     self.pages = [i + 1 for i in range(int(pages))]
   
