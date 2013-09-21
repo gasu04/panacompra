@@ -77,7 +77,7 @@ class ScrapeThread(threading.Thread):
         self.logger.debug('got page from %s', self)
       except Exception as e:
         self.reset_connection()
-        self.pages.push(current_page)
+        self.pages.append(current_page)
         self.logger.debug('%s from %s', str(e),str(self))
         continue
     self.connection.close()
