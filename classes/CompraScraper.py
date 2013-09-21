@@ -46,7 +46,7 @@ class CompraScraperThread(threading.Thread):
         self.compra_urls.task_done()
       except Empty:
         self.connection.close()
-        self.logger.info('worker dying %s', str(self))
+        self.logger.debug('worker dying %s', str(self))
         return
       except timeout:
         self.reset_connection()

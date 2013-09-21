@@ -69,7 +69,7 @@ class UrlScraperThread(threading.Thread):
     self.open_connection()
     self.parse_max_pages()
     shuffle(self.pages)
-    self.logger.info('starting category %s [%s pages]',self.category,len(self.pages))
+    self.logger.debug('starting category %s [%s pages]',self.category,len(self.pages))
     while self.pages:
       try:
         current_page = self.pages.pop()
@@ -83,7 +83,7 @@ class UrlScraperThread(threading.Thread):
         continue
     self.connection.close()
     self.session.close()
-    self.logger.debug('%s dying', str(self))
+    self.logger.info('%s dying', str(self))
     return
 
   def eat_urls_for_category(self,category):
@@ -119,5 +119,4 @@ class UrlScraperThread(threading.Thread):
     self.pages = [i + 1 for i in range(int(pages))]
   
   def __str__(self):
-    return "<(UrlScraper: category[%i], page[%i])>" % (int(self.category), int(self.get_page()))
-    return "<(UrlScraper: category[%i], page[%i])>" % (int(self.category), int(self.get_page()))
+    return "<(UrlScraper: category[%i], pending[%i])>" % (int(self.category), (len(self.pages)))

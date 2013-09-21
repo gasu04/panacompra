@@ -69,6 +69,7 @@ class PanaCrawler():
       t.setDaemon(True)
       self.scrapers.append(t)
       t.start()
+    self.logger.info('spawned %i UrlScraperThreads', len(self.scrapers))
 
   def join_scrapers(self):
     while any([scraper.is_alive() for scraper in self.scrapers]):
@@ -89,7 +90,7 @@ class PanaCrawler():
       t.setDaemon(True)
       self.workers.append(t)
       t.start()
-    self.logger.info('workers running')
+    self.logger.info('spawned %i CompraScraperThreads', len(self.workers))
 
   def join_workers(self):
     self.logger.info('waiting on workers')
