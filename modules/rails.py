@@ -1,5 +1,4 @@
 import requests
-import inflect
 import json
 import logging
 import urllib2
