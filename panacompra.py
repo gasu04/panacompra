@@ -25,8 +25,10 @@ logging.config.dictConfig(yaml.load(open('logging.yaml','r').read()))
 logger = logging.getLogger('panacompra')
 logger.info('panacompra started')
 
+db_url = 'postgresql+psycopg2://' + os.environ['PANAUSER'] + ':' + os.environ['PANAPASS'] + '@localhost/panacompra'
+
 #psql setup
-engine = create_engine('postgresql+psycopg2://' + os.environ['PANAUSER'] + ':' + os.environ['PANAPASS'] + '@localhost/panacompra',  encoding='latin-1',echo=False)
+engine = create_engine(db_url,  encoding='latin-1',echo=False)
 session_maker = sessionmaker(bind=engine)
 session = session_maker()
 

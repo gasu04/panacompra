@@ -12,11 +12,14 @@ Dependencies
 * requests 
 * python 2.7
 
+Database Setup
+--------------
+1. configurar db_url en panacompra.py para usar un db existente que sea [compatible con sqlalchemy]('http://docs.sqlalchemy.org/en/rel_0_8/core/engines.html#database-urls', 'SqlAlchemy')
 
 To-Do
 -------
 * collect more data (more regex)
-* get_new via pgsql
+* get new via pgsql
 * handle updates
 
 
