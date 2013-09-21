@@ -14,7 +14,7 @@ Dependencies
 
 Database Setup
 --------------
-1. configurar db_url en panacompra.py para usar un db existente que sea [compatible con sqlalchemy]('http://docs.sqlalchemy.org/en/rel_0_8/core/engines.html#database-urls', 'SqlAlchemy')
+1. configurar db_url en panacompra.py para usar un db existente que sea [compatible con sqlalchemy](http://docs.sqlalchemy.org/en/rel_0_8/core/engines.html#database-urls "SqlAlchemy")
 
 To-Do
 -------
