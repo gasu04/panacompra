@@ -11,7 +11,7 @@ from sqlalchemy.sql import exists
 from classes.Compra import Compra
 from random import shuffle
 
-class ScrapeThread(threading.Thread):
+class UrlScraperThread(threading.Thread):
   """
   Scrapes pages for a category
   Parses compra_urls from scraped html and adds them to the Queue
@@ -29,7 +29,8 @@ class ScrapeThread(threading.Thread):
     self.strainer = SoupStrainer('a')
     self.pages_regex = re.compile("(?:TotalPaginas\">)([0-9]*)")
     self.current_regex= re.compile("(?:PaginaActual\">)([0-9]*)")
-    self.logger = logging.getLogger('Scraper')
+    self.logger = logging.getLogger('UrlScraper')
+    self.logger = logging.getLogger('UrlScraper')
     self.connection = False
     self.session = session
     self.base_url = "/AmbientePublico/AP_Busquedaavanzada.aspx?BusquedaRubros=true&IdRubro="
@@ -118,4 +119,5 @@ class ScrapeThread(threading.Thread):
     self.pages = [i + 1 for i in range(int(pages))]
   
   def __str__(self):
-    return "<(Scraper: category[%i], page[%i])>" % (int(self.category), int(self.get_page()))
+    return "<(UrlScraper: category[%i], page[%i])>" % (int(self.category), int(self.get_page()))
+    return "<(UrlScraper: category[%i], page[%i])>" % (int(self.category), int(self.get_page()))

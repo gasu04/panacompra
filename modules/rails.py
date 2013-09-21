@@ -8,6 +8,7 @@ from time import sleep
 
 logger = logging.getLogger('rails')
 headers = {'content-type': 'application/json', 'charset':'latin-1'}
+
 def create(url,resource_name,obj,token=False):
     '''creates objects of a resource'''
     url = '/'.join([url, resource_name+'.json'])
@@ -25,7 +26,6 @@ def create_many(url,resource_name,objs,token=False):
     objs = filter(lambda x: x != None,objs)
     url = '/'.join([url, resource_name, 'create_many.json'])
     #url = url + ('?token=%s' % token)
-    headers = {'content-type': 'application/json', 'charset':'latin-1'}
     data = json.dumps(objs, encoding='latin-1')
     response = requests.post(url, data=data, headers=headers, auth=(os.environ['admin_user'],os.environ['admin_pass']))
     if response.status_code == 201:
@@ -39,27 +39,6 @@ def index(url,resource_name,token=False):
     url = '/'.join([url, resource_name, 'all.json'])
     #url = url + ('?token=%s' % token)
     response = requests.get(url, auth=(os.environ['admin_user'],os.environ['admin_pass']), headers=headers)
-    return response.json()
-
-def show(url,resource_name,resource_id,token):
-    '''returns json document with a specific object from a resource'''
-    url = '/'.join([url, resource_name, str(resource_id)]) +'.json' + '?auth_token=' + token
-    response = requests.get(url)
-    if response.status_code == 200:
-      logger.debug('showed %s with id %i', resource_name, int(resource_id))
-    else:
-      logger.error('error showing %s with id %i', resource_name, int(resource_id))
-    return response.json()
-
-def update(url,resource_name,resource_id,obj,token):
-    '''updates an object with id of a resource'''
-    auth = {'auth_token':token}
-    url = '/'.join([url, resource_name, str(resource_id)]) +'.json'
-    response = requests.put(url, params=auth ,data=json.dumps(obj), headers=headers)
-    if response.status_code == 204:
-      logger.debug('updated %s with id %i to %s', resource_name, int(resource_id), str(obj))
-    else:
-      logger.error('error updating %s with id %i to %s', resource_name, int(resource_id), str(obj))
     return response.json()
 
 def filter_new_objects_for_resource_by_key(url,objects,resource,key,token=False):

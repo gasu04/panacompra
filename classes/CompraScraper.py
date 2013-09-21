@@ -6,14 +6,15 @@ from time import sleep
 from Queue import Empty
 from bs4 import BeautifulSoup, SoupStrainer
 
-class WorkThread(threading.Thread):
+class CompraScraperThread(threading.Thread):
   """
   Scrapes pages using urls from compra_url Queue
   """
   def __init__(self, queue, session):
     threading.Thread.__init__(self)
     self.compra_urls = queue
-    self.logger = logging.getLogger('Worker')
+    self.logger = logging.getLogger('CompraScraper')
+    self.logger = logging.getLogger('CompraScraper')
     self.connection = False
     self.session = session
     self.strainer = SoupStrainer('body')

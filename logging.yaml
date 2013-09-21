@@ -27,11 +27,11 @@ loggers:
     level: DEBUG
     handlers: [console,file]
     propagate: no
-  Worker:
+  CompraScraper:
     level: DEBUG
     handlers: [file]
     propagate: no
-  Scraper:
+  UrlScraper:
     level: DEBUG
     handlers: [file,console]
     propagate: no

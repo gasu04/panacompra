@@ -7,9 +7,9 @@ import logging
 import threading
 import sys,os,signal
 from Queue import Queue
-from Scraper import ScrapeThread
+from UrlScraper import UrlScraperThread
 from time import sleep
-from Worker import WorkThread
+from CompraScraper import CompraScraperThread
 from modules import rails
 from sqlalchemy import distinct
 from sqlalchemy.orm import sessionmaker
@@ -20,7 +20,7 @@ class PanaCrawler():
   Main Crawler class
 
   Scrapes Category Ids
-  Spawns all threads ( WorkerThread, ScraperThread )
+  Spawns all threads ( CompraScraperThread, UrlScraperThread )
   Print Output
 
   """
@@ -65,7 +65,7 @@ class PanaCrawler():
 
   def spawn_scrapers(self,update=False):
     for category in self.categories:
-      t = ScrapeThread(category,self.session_maker(),update)
+      t = UrlScraperThread(category,self.session_maker(),update)
       t.setDaemon(True)
       self.scrapers.append(t)
       t.start()
@@ -85,7 +85,7 @@ class PanaCrawler():
 
   def spawn_workers(self):
     for i in range(40):
-      t = WorkThread(self.compras_queue, self.session_maker())
+      t = CompraScraperThread(self.compras_queue, self.session_maker())
       t.setDaemon(True)
       self.workers.append(t)
       t.start()
