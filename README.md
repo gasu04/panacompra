@@ -3,6 +3,8 @@ panacompra
 
 tool para recolectar data de panacompra
 
+usado en http://www.panacompra.net
+
 
 Dependencies
 -------------
