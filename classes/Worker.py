@@ -21,7 +21,7 @@ class WorkThread(threading.Thread):
   def open_connection(self):
     while not self.connection:
       try:
-        self.connection = httplib.HTTPConnection("127.0.0.1", "8118",timeout=20)
+        self.connection = httplib.HTTPConnection("201.227.172.42", "80",timeout=20)
       except:
         self.logger.debug('HTTP timeout in %s', str(self))
         continue
@@ -31,7 +31,7 @@ class WorkThread(threading.Thread):
     self.connection = False
     while not self.connection:
       try:
-        self.connection = httplib.HTTPConnection("127.0.0.1", "8118",timeout=20)
+        self.connection = httplib.HTTPConnection("201.227.172.42", "80",timeout=20)
       except:
         self.logger.debug('HTTP timeout in %s', str(self))
         continue
@@ -41,8 +41,8 @@ class WorkThread(threading.Thread):
     while True:
       try:
         compra = self.compra_urls.get_nowait()
-        self.compra_urls.task_done()
         self.eat_compra(compra)
+        self.compra_urls.task_done()
       except Empty:
         self.connection.close()
         self.logger.info('worker dying %s', str(self))
@@ -53,7 +53,7 @@ class WorkThread(threading.Thread):
         continue
 
   def eat_compra(self,compra):
-    url_path = "http://201.227.172.42/AmbientePublico/" + compra.url #append path
+    url_path = "http:///AmbientePublico/" + compra.url #append path
     compra.html = self.get_compra_html(url_path)
     compra.visited = True
     self.session.merge(compra)
@@ -66,8 +66,9 @@ class WorkThread(threading.Thread):
         self.connection.request("GET", url)
         response = self.connection.getresponse()
         data = response.read()
+        done = True
       except Exception as e:
-        self.logger.debug('RESPONSE timeout from %s', str(self))
+        self.logger.debug('%s from %s',str(e) ,str(self))
         self.reset_connection()
         continue
-      return unicode(BeautifulSoup(data, "html.parser", parse_only=self.strainer))
+    return unicode(BeautifulSoup(data, "html.parser", parse_only=self.strainer))

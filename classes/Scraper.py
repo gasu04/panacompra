@@ -32,6 +32,8 @@ class ScrapeThread(threading.Thread):
     self.logger = logging.getLogger('Scraper')
     self.connection = False
     self.session = session
+    self.base_url = "/AmbientePublico/AP_Busquedaavanzada.aspx?BusquedaRubros=true&IdRubro="
+    self.headers = {"Content-type": "application/x-www-form-urlencoded"}
 
   def reset_page(self):
     self.data['ctl00$ContentPlaceHolder1$ControlPaginacion$hidNumeroPagina'] = 1
@@ -48,7 +50,7 @@ class ScrapeThread(threading.Thread):
   def open_connection(self):
     while not self.connection:
       try:
-        self.connection = httplib.HTTPConnection("127.0.0.1", "8118",timeout=20)
+        self.connection = httplib.HTTPConnection("201.227.172.42", "80",timeout=20)
       except:
         continue
 
@@ -57,7 +59,7 @@ class ScrapeThread(threading.Thread):
     self.connection = False
     while not self.connection:
       try:
-        self.connection = httplib.HTTPConnection("127.0.0.1", "8118",timeout=20)
+        self.connection = httplib.HTTPConnection("201.227.172.42", "80",timeout=20)
       except:
         continue
 
@@ -72,6 +74,7 @@ class ScrapeThread(threading.Thread):
         current_page = self.pages.pop()
         self.set_page(current_page)
         self.eat_urls_for_category(self.category)
+        self.logger.debug('got page from %s', self)
       except Exception as e:
         self.reset_connection()
         self.pages.push(current_page)
@@ -88,19 +91,9 @@ class ScrapeThread(threading.Thread):
     self.session.commit()
 
   def get_category_page(self):
-    headers = {"Content-type": "application/x-www-form-urlencoded"}
-    success = False
-    while not success:
-      try:
-        self.connection.request("POST", "http://201.227.172.42/AmbientePublico/AP_Busquedaavanzada.aspx?BusquedaRubros=true&IdRubro=" + str(self.category), urllib.urlencode(self.data), headers)
-        response = self.connection.getresponse()
-        data = response.read()
-        success = True
-      except Exception as e:
-        self.logger.debug('RESPONSE timeout from %s', str(self))
-        self.reset_connection()
-        continue
-    return data
+    self.connection.request("POST", str(self.base_url) + str(self.category), urllib.urlencode(self.data), self.headers)
+    response = self.connection.getresponse()
+    return response.read()
 
   def parse_category_page(self,html):
     soup = BeautifulSoup(html, "html.parser", parse_only=self.strainer)

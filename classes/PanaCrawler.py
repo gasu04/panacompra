@@ -27,7 +27,6 @@ class PanaCrawler():
   def __init__(self,engine):
     self.scrapers = []
     self.workers = []
-    self.dbworker = False
     self.categories = []
     self.compras_queue = Queue()
     self.logger = logging.getLogger('PanaCrawler')
@@ -54,8 +53,8 @@ class PanaCrawler():
 
   def get_categories_html(self):
     """returns html from category listing page"""
-    connection = httplib.HTTPConnection("127.0.0.1", "8118", timeout=10)
-    connection.request("GET", "http://201.227.172.42/Portal/OportunidadesDeNegocio.aspx")
+    connection = httplib.HTTPConnection("201.227.172.42", "80", timeout=10)
+    connection.request("GET", "/Portal/OportunidadesDeNegocio.aspx")
     response = connection.getresponse()
     data = response.read()
     connection.close()
@@ -65,22 +64,15 @@ class PanaCrawler():
     return len([scraper for scraper in self.scrapers if scraper.is_alive()]) 
 
   def spawn_scrapers(self,update=False):
-    while len(self.categories) > 0:
-      amount = 10 - self.live_scrapers()
-      for i in range(amount):
-        if len(self.categories) > 0:
-          category = self.categories.pop()
-          t = ScrapeThread(category,self.session_maker(),update)
-          t.setDaemon(True)
-          self.scrapers.append(t)
-          t.start()
-        else:
-          return 0  
-      sleep(5)
+    for category in self.categories:
+      t = ScrapeThread(category,self.session_maker(),update)
+      t.setDaemon(True)
+      self.scrapers.append(t)
+      t.start()
 
   def join_scrapers(self):
     while any([scraper.is_alive() for scraper in self.scrapers]):
-      sleep(1)
+      sleep(10)
     self.build_compras_queue_queue()
 
   def build_compras_queue_queue(self):
@@ -92,7 +84,7 @@ class PanaCrawler():
     return len([worker for worker in self.workers if worker.is_alive()]) 
 
   def spawn_workers(self):
-    for i in range(10):
+    for i in range(40):
       t = WorkThread(self.compras_queue, self.session_maker())
       t.setDaemon(True)
       self.workers.append(t)
@@ -103,7 +95,7 @@ class PanaCrawler():
     self.logger.info('waiting on workers')
     while any([worker.is_alive() for worker in self.workers]):
       self.logger.info('%i compras remaining', self.compras_queue.qsize())
-      sleep(5)
+      sleep(15)
     self.logger.info('finished waiting on workers')
 
   def handler(self,signum, frame):
