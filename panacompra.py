@@ -38,12 +38,12 @@ def grouper(n, iterable, fillvalue=None):
 
 def parse_args():
   parser = argparse.ArgumentParser(description='Dataminer for Panacompra')
-  parser.add_argument('--send', dest='send', action='store_const',const="True", default=False, help="send db")
-  parser.add_argument('--update', dest='update', action='store_const',const="True", default=False, help="update db")
-  parser.add_argument('--sync', dest='sync', action='store_const',const="True", default=False, help="sync db")
+  parser.add_argument('--send', dest='send', action='store_const',const="True", default=False, help="send bulk compras to rails")
+  parser.add_argument('--update', dest='update', action='store_const',const="True", default=False, help="only scrape first page of every category")
+  parser.add_argument('--sync', dest='sync', action='store_const',const="True", default=False, help="sync db to rails app")
   parser.add_argument('--revisit', dest='revisit', action='store_const',const="True", default=False, help="revisit db")
   parser.add_argument('--reparse', dest='reparse', action='store_const',const="True", default=False, help="reparse db")
-  parser.add_argument('--pending', dest='pending', action='store_const',const="True", default=False, help="pending db")
+  parser.add_argument('--pending', dest='pending', action='store_const',const="True", default=False, help="process pending compras in db")
   parser.add_argument('--url', dest='url', type=str, default='http://localhost:5000')
   return parser.parse_args()
 

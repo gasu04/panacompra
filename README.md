@@ -29,12 +29,12 @@ Dataminer for Panacompra
 
 optional arguments:
   -h, --help  show this help message and exit
-  --send      send db
-  --update    update db
-  --sync      sync db
+  --send      send bulk compras to rails
+  --update    only scrape first page of every category
+  --sync      sync db to rails app
   --revisit   revisit db
   --reparse   reparse db
-  --pending   pending db
+  --pending   process pending compras in db
   --url URL
 ```
 
