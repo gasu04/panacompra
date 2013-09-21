@@ -16,6 +16,9 @@ Dependencies
 To-Do
 -------
 * collect more data (more regex)
+* get_new via pgsql
+* handle updates
+
 
 usage
 ------
