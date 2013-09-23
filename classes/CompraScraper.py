@@ -54,7 +54,7 @@ class CompraScraperThread(threading.Thread):
         continue
 
   def eat_compra(self,compra):
-    url_path = "http:///AmbientePublico/" + compra.url #append path
+    url_path = "/AmbientePublico/" + compra.url #append path
     compra.html = self.get_compra_html(url_path)
     compra.visited = True
     self.session.merge(compra)
