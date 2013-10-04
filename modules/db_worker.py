@@ -5,7 +5,7 @@ from time import sleep
 from time import strptime
 from time import strftime 
 from sqlalchemy.sql import exists
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker,undefer
 from classes.Compra import Compra
 from multiprocessing import Pool,cpu_count,Lock
 import itertools
@@ -43,7 +43,7 @@ def process_pending(engine):
   session_maker = sessionmaker(bind=engine)
   session = session_maker()
   logger.info("%i compras pending", session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).count())
-  query = chunks(session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).yield_per(CHUNK_SIZE),CHUNK_SIZE)
+  query = chunks(session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).options(undefer('html')).yield_per(CHUNK_SIZE),CHUNK_SIZE)
   pool = Pool(processes=cpu_count())
   for chunk in pool.imap_unordered(process_compras_chunk, query, CHUNK_SIZE):
     for compra in chunk:

@@ -1,6 +1,7 @@
 import re
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import *
+from sqlalchemy.orm import deferred
 from sqlalchemy.types import Unicode, UnicodeText
 from datetime import datetime
 
@@ -44,7 +45,7 @@ class Compra(Base):
   
   id = Column(Integer, Sequence('compra_id_seq'), primary_key=True)
   url = Column(String(200))
-  html = Column(UnicodeText)
+  html = deferred(Column(UnicodeText))
   visited = Column(Boolean)
   parsed = Column(Boolean)
   category = Column(Integer(3))
