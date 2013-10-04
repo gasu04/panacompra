@@ -18,7 +18,7 @@ def chunks(q, n):
   for i in xrange(0, q.count(), n):
     yield list(itertools.islice(q, 0, n))
 
-def process_compras_chunk(chunk):
+def process_compra(compra):
   regexes = {
     'precio': re.compile("(?:Precio.*?>.*?>[^0-9]*)([0-9,]*\.[0-9][0-9]*)"),
     'description': re.compile('(?:Descripci[^n]n:</td><td class="formEjemplos">)([^<]*)'),
@@ -37,7 +37,7 @@ def process_compras_chunk(chunk):
     'entidad': re.compile("(?:Entidad.................formEjemplos..)([^<]*)"),
     'proponente': re.compile("(?:Proponente.*\n.*\n.*?Ejemplos\">)([^<]*)",re.MULTILINE)
   }
-  return [compra.parse_html(regexes) for compra in chunk]
+  return compra.parse_html(regexes)
 
 def process_pending(engine):
   session_maker = sessionmaker(bind=engine)
@@ -45,9 +45,9 @@ def process_pending(engine):
   logger.info("%i compras pending", session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).count())
   query = session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).options(undefer('html')).yield_per(CHUNK_SIZE)
   pool = Pool(processes=cpu_count())
-  for chunk in pool.imap(process_compras_chunk, chunks(query,CHUNK_SIZE), 10):
-    query.merge_result(chunk)
-    session.commit()
+  for compra in pool.imap(process_compra, query, CHUNK_SIZE):
+    session.merge(compra)
+  session.commit()
   logger.info("compras added to db")
   session.close()
 
