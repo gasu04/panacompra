@@ -11,12 +11,17 @@ from multiprocessing import Pool,cpu_count,Lock
 import itertools
 
 logger = logging.getLogger('DB')
-CHUNK_SIZE=3000
+CHUNK_SIZE=1000
 
-def chunks(q, n):
+def query_chunks(q, n):
   """ Yield successive n-sized chunks from query object."""
   for i in xrange(0, q.count(), n):
     yield list(itertools.islice(q, 0, n))
+
+def chunks(l, n):
+    """ return n-sized chunks from l."""
+    for i in xrange(0, len(l), n):
+        yield l[i:i+n]
 
 def process_compra(compra):
   regexes = {
@@ -43,13 +48,15 @@ def process_pending(engine):
   session_maker = sessionmaker(bind=engine)
   session = session_maker()
   logger.info("%i compras pending", session.query(Compra.id).filter(Compra.parsed == False).filter(Compra.visited == True).count())
-  query = session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).options(undefer('html')).yield_per(CHUNK_SIZE)
+  query = session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).options(undefer('html')).limit(CHUNK_SIZE)
   pool = Pool(processes=cpu_count()-1)
-  for chunk in query:
-    pool.apply_async(process_compra, chunk, callback=session.merge)
-  session.commit()
+  while query.count() > 0:
+    for compra in pool.imap(process_compra, query.all(), CHUNK_SIZE/(cpu_count()-1)):
+      session.merge(compra)
+    session.commit()
   logger.info("compras added to db")
   session.close()
+
 
 def reparse(engine):
   session_maker = sessionmaker(bind=engine)
