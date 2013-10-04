@@ -46,7 +46,6 @@ def process_pending(engine):
   pool = Pool(processes=cpu_count())
   for chunk in pool.imap_unordered(process_compras_chunk, query):
     for compra in chunk:
-      del compra.html
       session.merge(compra)
     session.commit()
   logger.info("compras added to db")

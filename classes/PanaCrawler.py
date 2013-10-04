@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup, SoupStrainer
 
-import httplib, urllib
+import httplib, urllib, urllib3
 from random import shuffle
 import re
 import logging
@@ -14,6 +14,7 @@ from modules import rails
 from sqlalchemy import distinct
 from sqlalchemy.orm import sessionmaker
 from classes import Compra
+THREADS = 15
 
 class PanaCrawler():
   """
@@ -27,6 +28,7 @@ class PanaCrawler():
   def __init__(self,engine):
     self.scrapers = []
     self.workers = []
+    self.connection_pool = urllib3.HTTPConnectionPool('201.227.172.42',maxsize=70) 
     self.categories = []
     self.compras_queue = Queue()
     self.logger = logging.getLogger('PanaCrawler')
@@ -63,12 +65,15 @@ class PanaCrawler():
   def live_scrapers(self):
     return len([scraper for scraper in self.scrapers if scraper.is_alive()]) 
 
-  def spawn_scrapers(self,update=False):
-    for category in self.categories:
-      t = UrlScraperThread(category,self.session_maker(),update)
-      t.setDaemon(True)
-      self.scrapers.append(t)
-      t.start()
+  def spawn_scrapers(self,n,update=False):
+    for i in xrange(n):
+        try:
+            t = UrlScraperThread(self.categories.pop(),self.session_maker(),self.connection_pool,update)
+            t.setDaemon(True)
+            self.scrapers.append(t)
+            t.start()
+        except IndexError:
+            break 
     self.logger.info('spawned %i UrlScraperThreads', len(self.scrapers))
 
   def join_scrapers(self):
@@ -85,8 +90,8 @@ class PanaCrawler():
     return len([worker for worker in self.workers if worker.is_alive()]) 
 
   def spawn_workers(self):
-    for i in range(40):
-      t = CompraScraperThread(self.compras_queue, self.session_maker())
+    for i in xrange(THREADS):
+      t = CompraScraperThread(self.compras_queue, self.session_maker(), self.connection_pool)
       t.setDaemon(True)
       self.workers.append(t)
       t.start()
@@ -110,7 +115,9 @@ class PanaCrawler():
     self.eat_categories() #scrape and store list of categories
     Compra.Base.metadata.create_all(self.engine)
     #phase 1
-    self.spawn_scrapers(update)
+    while len(self.categories) > 0:
+      self.spawn_scrapers(update,THREADS - active_count() + 1)
+      sleep(0.1)
     self.join_scrapers()
     #phase 2
     self.spawn_workers()

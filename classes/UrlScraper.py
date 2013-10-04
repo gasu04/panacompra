@@ -21,7 +21,7 @@ class UrlScraperThread(threading.Thread):
 
   """
 
-  def __init__(self, category, session, update=False):
+  def __init__(self, category, session, connection, update=False):
     threading.Thread.__init__(self)
     self.update = update
     self.data = dict(urlparse.parse_qsl(open('form.data').read()))
@@ -31,7 +31,7 @@ class UrlScraperThread(threading.Thread):
     self.current_regex= re.compile("(?:PaginaActual\">)([0-9]*)")
     self.logger = logging.getLogger('UrlScraper')
     self.logger = logging.getLogger('UrlScraper')
-    self.connection = False
+    self.connection = connection
     self.session = session
     self.base_url = "/AmbientePublico/AP_Busquedaavanzada.aspx?BusquedaRubros=true&IdRubro="
     self.headers = {"Content-type": "application/x-www-form-urlencoded"}
@@ -48,25 +48,8 @@ class UrlScraperThread(threading.Thread):
   def get_page(self):
     return int(self.data['ctl00$ContentPlaceHolder1$ControlPaginacion$hidNumeroPagina'])
 
-  def open_connection(self):
-    while not self.connection:
-      try:
-        self.connection = httplib.HTTPConnection("201.227.172.42", "80",timeout=20)
-      except:
-        continue
-
-  def reset_connection(self):
-    self.connection.close()
-    self.connection = False
-    while not self.connection:
-      try:
-        self.connection = httplib.HTTPConnection("201.227.172.42", "80",timeout=20)
-      except:
-        continue
-
   def run(self):
     self.reset_page()
-    self.open_connection()
     self.parse_max_pages()
     shuffle(self.pages)
     self.logger.debug('starting category %s [%s pages]',self.category,len(self.pages))
@@ -77,11 +60,9 @@ class UrlScraperThread(threading.Thread):
         self.eat_urls_for_category(self.category)
         self.logger.debug('got page from %s', self)
       except Exception as e:
-        self.reset_connection()
         self.pages.append(current_page)
         self.logger.debug('%s from %s', str(e),str(self))
         continue
-    self.connection.close()
     self.session.close()
     self.logger.info('%s dying', str(self))
     return
@@ -92,9 +73,8 @@ class UrlScraperThread(threading.Thread):
     self.session.commit()
 
   def get_category_page(self):
-    self.connection.request("POST", str(self.base_url) + str(self.category), urllib.urlencode(self.data), self.headers)
-    response = self.connection.getresponse()
-    return response.read()
+    response = self.connection.request("POST", str(self.base_url) + str(self.category), urllib.urlencode(self.data), self.headers)
+    return response.data
 
   def parse_category_page(self,html):
     soup = BeautifulSoup(html, "html.parser", parse_only=self.strainer)
@@ -112,7 +92,6 @@ class UrlScraperThread(threading.Thread):
           html = self.get_category_page()
           done = True
         except Exception as e:
-          self.reset_connection()
           self.logger.debug('%s from %s', str(e),str(self))
           continue
       pages = self.pages_regex.findall(html)[0].decode('latin-1', 'ignore')
