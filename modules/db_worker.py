@@ -8,6 +8,7 @@ from sqlalchemy.sql import exists
 from sqlalchemy.orm import sessionmaker
 from classes.Compra import Compra
 from multiprocessing import Pool,cpu_count,Lock
+import itertools
 
 logger = logging.getLogger('DB')
 CHUNK_SIZE=1000
@@ -15,7 +16,7 @@ CHUNK_SIZE=1000
 def chunks(q, n):
   """ Yield successive n-sized chunks from query object."""
   for i in xrange(0, q.count(), n):
-    yield q[i:i+n]
+    yield list(itertools.islice(q, 0, n))
 
 def process_compras_chunk(chunk):
   regexes = {
@@ -44,7 +45,7 @@ def process_pending(engine):
   logger.info("%i compras pending", session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).count())
   query = chunks(session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).yield_per(CHUNK_SIZE),CHUNK_SIZE)
   pool = Pool(processes=cpu_count())
-  for chunk in pool.imap_unordered(process_compras_chunk, query):
+  for chunk in pool.imap_unordered(process_compras_chunk, query, CHUNK_SIZE):
     for compra in chunk:
       del compra.html
       session.merge(compra)
