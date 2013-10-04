@@ -24,6 +24,7 @@ def process_compras_chunk(chunk):
     'compra_type': re.compile('(?:Procedimiento:</td><td class="formEjemplos">)([^<]*)'),
     'dependencia': re.compile('(?:Dependencia:</td><td class="formEjemplos">)([^<]*)'),
     'unidad': re.compile('(?:Unidad de Compra:</td><td class="formEjemplos">)([^<]*)'),
+    'precio_cd': re.compile('(?:Monto de la Contrataci.n:</td><td class="formEjemplos">)([^<]*)'),
     'objeto': re.compile('(?:Contractual:</td><td class="formEjemplos">)([^<]*)'),
     'modalidad': re.compile('(?:Modalidad de adjudicaci.n:</td><td class="formEjemplos">)([^<]*)'),
     'provincia': re.compile('(?:Provincia de Entrega:</td><td class="formEjemplos">)([^<]*)'),

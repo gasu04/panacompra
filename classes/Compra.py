@@ -16,10 +16,11 @@ def parse_date(date):
 
 def parse_precio(precio):
   precio = re.sub(r'[^\d.]', '',precio) #remove non digits
+  precio = re.sub(r'^.', '',precio) #remove leading period
   if not precio == "":
     precio = float(precio)
   else:
-    precio = 0.00
+    precio = float(0) 
   return precio
 
 def sanitize(string):
@@ -30,7 +31,7 @@ def parse_and_sanitize(string,name):
   string = sanitize(string)
   if name == "fecha":
     string = parse_date(string)
-  elif name == 'precio':
+  elif name == 'precio' or name == 'precio_cd':
     string = parse_precio(string)
   elif name == 'proponente':
     string = sanitize(string[:199])
@@ -57,7 +58,8 @@ class Compra(Base):
   correo_contacto = Column(Unicode(200))
   unidad = Column(Unicode(200))
   provincia = Column(Unicode(50))
-  precio = Column(Float(50))
+  precio = Column(Float(20))
+  precio_cd = Column(Float(20))
   proponente = Column(Unicode(200))
   description = Column(UnicodeText)
   acto = Column(Unicode(200))
