@@ -14,6 +14,7 @@ from modules import rails
 from sqlalchemy import distinct
 from sqlalchemy.orm import sessionmaker
 from classes import Compra
+from threading import active_count
 THREADS = 15
 
 class PanaCrawler():
@@ -28,7 +29,7 @@ class PanaCrawler():
   def __init__(self,engine):
     self.scrapers = []
     self.workers = []
-    self.connection_pool = urllib3.HTTPConnectionPool('201.227.172.42',maxsize=70) 
+    self.connection_pool = urllib3.HTTPConnectionPool('201.227.172.42',maxsize=THREADS) 
     self.categories = []
     self.compras_queue = Queue()
     self.logger = logging.getLogger('PanaCrawler')
@@ -37,15 +38,9 @@ class PanaCrawler():
 
   def eat_categories(self):
     """Build a list of categories by scraping site"""
-    success = False
-    while not success:
-      try:
-        html = self.get_categories_html() 
-        self.categories.extend(self.parse_categories_html(html))
-        shuffle(self.categories)
-        success = True
-      except:
-        continue
+    html = self.get_categories_html() 
+    self.categories.extend(self.parse_categories_html(html))
+    shuffle(self.categories)
 
   def parse_categories_html(self,html):
     """returns an array of ints (category ids) from html"""
@@ -55,11 +50,8 @@ class PanaCrawler():
 
   def get_categories_html(self):
     """returns html from category listing page"""
-    connection = httplib.HTTPConnection("201.227.172.42", "80", timeout=10)
-    connection.request("GET", "/Portal/OportunidadesDeNegocio.aspx")
-    response = connection.getresponse()
-    data = response.read()
-    connection.close()
+    response = self.connection_pool.request("GET", "/Portal/OportunidadesDeNegocio.aspx")
+    data = response.data
     return data
 
   def live_scrapers(self):
@@ -74,7 +66,6 @@ class PanaCrawler():
             t.start()
         except IndexError:
             break 
-    self.logger.info('spawned %i UrlScraperThreads', len(self.scrapers))
 
   def join_scrapers(self):
     while any([scraper.is_alive() for scraper in self.scrapers]):
@@ -115,8 +106,9 @@ class PanaCrawler():
     self.eat_categories() #scrape and store list of categories
     Compra.Base.metadata.create_all(self.engine)
     #phase 1
+    self.logger.info('spawning %i UrlScraperThreads', THREADS)
     while len(self.categories) > 0:
-      self.spawn_scrapers(update,THREADS - active_count() + 1)
+      self.spawn_scrapers(THREADS - active_count() + 1,update)
       sleep(0.1)
     self.join_scrapers()
     #phase 2

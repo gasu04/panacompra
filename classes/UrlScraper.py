@@ -58,7 +58,6 @@ class UrlScraperThread(threading.Thread):
         current_page = self.pages.pop()
         self.set_page(current_page)
         self.eat_urls_for_category(self.category)
-        self.logger.debug('got page from %s', self)
       except Exception as e:
         self.pages.append(current_page)
         self.logger.debug('%s from %s', str(e),str(self))
@@ -73,7 +72,7 @@ class UrlScraperThread(threading.Thread):
     self.session.commit()
 
   def get_category_page(self):
-    response = self.connection.request("POST", str(self.base_url) + str(self.category), urllib.urlencode(self.data), self.headers)
+    response = self.connection.request("POST", str(self.base_url) + str(self.category), self.data, self.headers)
     return response.data
 
   def parse_category_page(self,html):
@@ -86,14 +85,7 @@ class UrlScraperThread(threading.Thread):
     if self.update:
       pages = 1 
     else:
-      done = False
-      while not done:
-        try:
-          html = self.get_category_page()
-          done = True
-        except Exception as e:
-          self.logger.debug('%s from %s', str(e),str(self))
-          continue
+      html = self.get_category_page()
       pages = self.pages_regex.findall(html)[0].decode('latin-1', 'ignore')
     self.pages = [i + 1 for i in range(int(pages))]
   
