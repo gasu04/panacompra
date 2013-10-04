@@ -47,7 +47,8 @@ def process_pending(engine):
   pool = Pool(processes=cpu_count())
   for compra in pool.imap(process_compra, query, CHUNK_SIZE):
     session.merge(compra)
-  session.commit()
+    session.commit()
+    del compra
   logger.info("compras added to db")
   session.close()
 
