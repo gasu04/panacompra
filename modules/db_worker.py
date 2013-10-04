@@ -11,7 +11,7 @@ from multiprocessing import Pool,cpu_count,Lock
 import itertools
 
 logger = logging.getLogger('DB')
-CHUNK_SIZE=1000
+CHUNK_SIZE=100
 
 def chunks(q, n):
   """ Yield successive n-sized chunks from query object."""
@@ -43,12 +43,10 @@ def process_pending(engine):
   session_maker = sessionmaker(bind=engine)
   session = session_maker()
   logger.info("%i compras pending", session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).count())
-  query = chunks(session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).options(undefer('html')).yield_per(CHUNK_SIZE),CHUNK_SIZE)
+  query = session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).options(undefer('html')).yield_per(CHUNK_SIZE)
   pool = Pool(processes=cpu_count())
-  for chunk in pool.imap_unordered(process_compras_chunk, query, CHUNK_SIZE):
-    for compra in chunk:
-      del compra.html
-      session.merge(compra)
+  for chunk in pool.imap(process_compras_chunk, chunks(query,CHUNK_SIZE), 10):
+    query.merge_result(chunk)
     session.commit()
   logger.info("compras added to db")
   session.close()
