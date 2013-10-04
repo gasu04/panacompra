@@ -44,10 +44,9 @@ def process_pending(engine):
   session = session_maker()
   logger.info("%i compras pending", session.query(Compra.id).filter(Compra.parsed == False).filter(Compra.visited == True).count())
   query = session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).options(undefer('html')).yield_per(CHUNK_SIZE)
-  pool = Pool(processes=cpu_count())
-  for compra in pool.imap(process_compra, query, CHUNK_SIZE):
-    session.merge(compra)
-    del compra
+  pool = Pool(processes=cpu_count()-1)
+  for chunk in query:
+    pool.apply_async(process_compra, chunk, callback=session.merge)
   session.commit()
   logger.info("compras added to db")
   session.close()
