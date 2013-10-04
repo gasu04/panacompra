@@ -11,7 +11,7 @@ from multiprocessing import Pool,cpu_count,Lock
 import itertools
 
 logger = logging.getLogger('DB')
-CHUNK_SIZE=100
+CHUNK_SIZE=1000
 
 def chunks(q, n):
   """ Yield successive n-sized chunks from query object."""
