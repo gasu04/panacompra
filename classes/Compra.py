@@ -3,6 +3,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import *
 from sqlalchemy.orm import deferred
 from sqlalchemy.types import Unicode, UnicodeText
+from bs4 import BeautifulSoup,SoupStrainer
 from datetime import datetime
 
 Base = declarative_base()
@@ -43,12 +44,12 @@ def parse_and_sanitize(string,name):
 class Compra(Base):
   __tablename__ = 'compras'
   
-  id = Column(Integer, Sequence('compra_id_seq'), primary_key=True)
-  url = Column(String(200))
+  id = Column(Integer, Sequence('compras_id_seq'))
+  url = Column(String(200), primary_key=True)
   html = deferred(Column(UnicodeText))
   visited = Column(Boolean)
   parsed = Column(Boolean)
-  category = Column(Integer(3))
+  category_id = Column(Integer(3))
   compra_type = Column(Unicode(100))
   entidad = Column(Unicode(200))
   dependencia = Column(Unicode(200))
@@ -61,31 +62,20 @@ class Compra(Base):
   provincia = Column(Unicode(50))
   precio = Column(Float(20))
   precio_cd = Column(Float(20))
-  proponente = Column(Unicode(200))
-  description = Column(UnicodeText)
+  proponente = Column(Unicode(200),default=unicode('empty'))
+  description = deferred(Column(UnicodeText))
   acto = Column(Unicode(200))
   fecha = Column(DateTime)
+  created_at = Column(Date, default=datetime.now)
+  updated_at = Column(Date, default=datetime.now, onupdate=datetime.now)
+
 
   def __init__(self,url,category):
     self.url = url
-    self.category = category
+    self.category_id = category
     self.html = None
     self.visited = False
     self.parsed = False
-
-  def to_json(self):
-    try:
-      date = self.fecha.isoformat()
-    except:
-      date = None
-    return self.convert({'compra[url]':self.url, 'compra[category_id]':self.category, 'compra[entidad]':self.entidad, 'compra[proponente]':self.proponente, 'compra[description]':self.description, 'compra[precio]':self.precio, 'compra[fecha]':date, 'compra[acto]':self.acto, 'compra[compra_type]':self.compra_type, 'compra[dependencia]': self.dependencia, 'compra[nombre_contacto]':self.nombre_contacto, 'compra[telefono_contacto]': self.telefono_contacto, 'compra[correo_contacto]': self.correo_contacto, 'compra[objeto]': self.objeto, 'compra[modalidad]': self.modalidad, 'compra[unidad]': self.unidad, 'compra[provincia]': self.provincia})
-
-  def to_dict(self):
-    try:
-      date = self.fecha.isoformat()
-    except:
-      date = None
-    return self.convert({'url':self.url, 'category_id':self.category, 'entidad':self.entidad, 'proponente':self.proponente, 'description':self.description, 'precio':self.precio, 'fecha':date, 'acto':self.acto, 'compra_type':self.compra_type, 'dependencia': self.dependencia, 'nombre_contacto':self.nombre_contacto, 'telefono_contacto': self.telefono_contacto, 'correo_contacto': self.correo_contacto, 'objeto': self.objeto, 'modalidad': self.modalidad, 'unidad': self.unidad, 'provincia': self.provincia, 'precio_cd': self.precio_cd })
 
   def convert(self, obj):
     for key,val in obj.iteritems():
@@ -94,14 +84,21 @@ class Compra(Base):
     return obj
 
   def parse_html(self,regexes):
+    self.html = unicode(BeautifulSoup(self.html,'html.parser',parse_only=SoupStrainer('table')))
     for name,regex in regexes.iteritems():
       try:
         val = regex.findall(self.html)[0]
+        setattr(self,name,parse_and_sanitize(val,name))
       except IndexError:
-        val = unicode('empty')
-      setattr(self,name,parse_and_sanitize(val,name))
+        continue 
     self.parsed = True
     return self
+  
+  def __hash__(self):
+    return hash(self.url)
+
+  def __eq__(self, other):
+    return self.url == other.url
     
   def __getitem__(self,key):
     return getattr(self, key)

@@ -9,8 +9,6 @@ import sys,os,signal
 from Queue import Queue
 from UrlScraper import UrlScraperThread
 from time import sleep
-from CompraScraper import CompraScraperThread
-from modules import rails
 from sqlalchemy import distinct
 from sqlalchemy.orm import sessionmaker
 from classes import Compra
@@ -28,7 +26,6 @@ class PanaCrawler():
   """
   def __init__(self,engine):
     self.scrapers = []
-    self.workers = []
     self.connection_pool = urllib3.HTTPConnectionPool('201.227.172.42',maxsize=THREADS) 
     self.categories = []
     self.compras_queue = Queue()
@@ -60,7 +57,7 @@ class PanaCrawler():
   def spawn_scrapers(self,n,update=False):
     for i in xrange(n):
         try:
-            t = UrlScraperThread(self.categories.pop(),self.session_maker(),self.connection_pool,update)
+            t = UrlScraperThread(self.categories.pop(),self.compras_queue,self.connection_pool,self.urls,update)
             t.setDaemon(True)
             self.scrapers.append(t)
             t.start()
@@ -70,55 +67,35 @@ class PanaCrawler():
   def join_scrapers(self):
     while any([scraper.is_alive() for scraper in self.scrapers]):
       sleep(10)
-    self.build_compras_queue_queue()
-
-  def build_compras_queue_queue(self):
-    for compra in self.session_maker().query(Compra.Compra).filter(Compra.Compra.visited == False).distinct():
-      self.compras_queue.put(compra)
-    self.logger.info('%i compras on queue', self.compras_queue.qsize())
-
-  def live_workers(self):
-    return len([worker for worker in self.workers if worker.is_alive()]) 
-
-  def spawn_workers(self):
-    for i in xrange(THREADS):
-      t = CompraScraperThread(self.compras_queue, self.session_maker(), self.connection_pool)
-      t.setDaemon(True)
-      self.workers.append(t)
-      t.start()
-    self.logger.info('spawned %i CompraScraperThreads', len(self.workers))
-
-  def join_workers(self):
-    self.logger.info('waiting on workers')
-    while any([worker.is_alive() for worker in self.workers]):
-      self.logger.info('%i compras remaining', self.compras_queue.qsize())
-      sleep(15)
-    self.logger.info('finished waiting on workers')
-
-  def handler(self,signum, frame):
-    print 'Signal handler called with signal', signum
-    print 'waiting for threads to finish'
-    self.join_scrapers()
-    self.join_workers()
-    exit(0)
 
   def run(self,update=False):
     self.eat_categories() #scrape and store list of categories
     Compra.Base.metadata.create_all(self.engine)
     #phase 1
     self.logger.info('spawning %i UrlScraperThreads', THREADS)
+    try:
+      self.urls = set(zip(*self.session_maker().query(Compra.Compra.url).all())[0])
+    except:
+      self.urls = set()
     while len(self.categories) > 0:
       self.spawn_scrapers(THREADS - active_count() + 1,update)
+      self.process_compras_queue()
       sleep(0.1)
     self.join_scrapers()
-    #phase 2
-    self.spawn_workers()
-    self.join_workers()
+    self.process_compras_queue()
+
+  def process_compras_queue(self):
+    session = self.session_maker()
+    while self.compras_queue.qsize() > 0:
+      compra = self.compras_queue.get()
+      if compra.url not in self.urls: 
+        session.add(compra) 
+        self.urls.add(compra.url)
+      self.compras_queue.task_done()
+    session.commit()
 
   def revisit(self,):
     sess = self.session_maker()
     sess.query(Compra.Compra).update({'visited':False})
     sess.commit()
-    self.build_compras_queue_queue()
-    self.spawn_workers()
-    self.join_workers()
+    self.run()
