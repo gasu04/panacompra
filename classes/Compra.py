@@ -5,6 +5,7 @@ from sqlalchemy.orm import deferred
 from sqlalchemy.types import Unicode, UnicodeText
 from bs4 import BeautifulSoup,SoupStrainer
 from datetime import datetime
+from decimal import Decimal
 
 Base = declarative_base()
 
@@ -20,9 +21,9 @@ def parse_precio(precio):
   precio = re.sub(r'[^\d.]', '',precio) #remove non digits
   precio = re.sub(r'^.', '',precio) #remove leading period
   if not precio == "":
-    precio = float(precio)
+    precio = Decimal(precio)
   else:
-    precio = float(0) 
+    precio = Decimal(0) 
   return precio
 
 def sanitize(string):
@@ -60,8 +61,8 @@ class Compra(Base):
   correo_contacto = Column(Unicode(200))
   unidad = Column(Unicode(200))
   provincia = Column(Unicode(50))
-  precio = Column(Float(20))
-  precio_cd = Column(Float(20))
+  precio = Column(Numeric(15,2))
+  precio_cd = Column(Numeric(15,2))
   proponente = Column(Unicode(200),default=unicode('empty'))
   description = deferred(Column(UnicodeText))
   acto = Column(Unicode(200))
@@ -92,6 +93,7 @@ class Compra(Base):
       except IndexError:
         continue 
     self.parsed = True
+    del self.html
     return self
   
   def __hash__(self):
