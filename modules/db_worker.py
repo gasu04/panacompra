@@ -47,12 +47,12 @@ def process_compra(compra):
 def process_pending(engine):
   session_maker = sessionmaker(bind=engine)
   session = session_maker()
-  logger.info("%i compras pending", session.query(Compra.id).filter(Compra.parsed == False).filter(Compra.visited == True).count())
+  logger.info("%i compras pending", session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).count())
   query = session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).options(undefer('html')).limit(CHUNK_SIZE)
   pool = Pool(processes=cpu_count()-1)
   while query.count() > 0:
-    for compra in pool.imap(process_compra, query.all(), CHUNK_SIZE/(cpu_count()-1)):
-      session.merge(compra)
+    cache = query.all()
+    query.merge_result(pool.map(process_compra, cache, CHUNK_SIZE/(cpu_count()-1)))
     session.commit()
   logger.info("compras added to db")
   session.close()
