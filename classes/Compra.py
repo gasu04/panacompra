@@ -87,8 +87,12 @@ class Compra(Base):
   def parse_html(self,methods):
     soup = BeautifulSoup(self.html,'html.parser',parse_only=SoupStrainer('tr'))
     for name,method in methods.iteritems():
-      val = method(soup)
-      setattr(self,name,val)
+      try:
+        val = method(soup)
+      except:
+        val = None
+      finally:
+        setattr(self,name,val)
     self.parsed = True
     del self.html
     return self
