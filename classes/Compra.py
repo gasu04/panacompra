@@ -84,14 +84,11 @@ class Compra(Base):
         obj[key] = val.encode('latin-1', 'ignore')
     return obj
 
-  def parse_html(self,regexes):
-    self.html = unicode(BeautifulSoup(self.html,'html.parser',parse_only=SoupStrainer('table')))
-    for name,regex in regexes.iteritems():
-      try:
-        val = regex.findall(self.html)[0]
-        setattr(self,name,parse_and_sanitize(val,name))
-      except IndexError:
-        continue 
+  def parse_html(self,methods):
+    soup = BeautifulSoup(self.html,'html.parser',parse_only=SoupStrainer('tr'))
+    for name,method in methods.iteritems():
+      val = method(soup)
+      setattr(self,name,val)
     self.parsed = True
     del self.html
     return self

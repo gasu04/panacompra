@@ -8,6 +8,7 @@ from sqlalchemy.sql import exists
 from sqlalchemy.orm import sessionmaker,undefer
 from classes.Compra import Compra
 from multiprocessing import Pool,cpu_count,Lock
+from modules import parser
 import itertools
 
 logger = logging.getLogger('DB')
@@ -24,25 +25,24 @@ def chunks(l, n):
         yield l[i:i+n]
 
 def process_compra(compra):
-  regexes = {
-    'precio': re.compile("(?:Precio.*?>.*?>[^0-9]*)([0-9,]*\.[0-9][0-9]*)"),
-    'description': re.compile('(?:Descripci[^n]n:</td><td class="formEjemplos">)([^<]*)'),
-    'compra_type': re.compile('(?:Procedimiento:</td><td class="formEjemplos">)([^<]*)'),
-    'dependencia': re.compile('(?:Dependencia:</td><td class="formEjemplos">)([^<]*)'),
-    'unidad': re.compile('(?:Unidad de Compra:</td><td class="formEjemplos">)([^<]*)'),
-    'precio_cd': re.compile('(?:Monto de la Contrataci.n:</td><td class="formEjemplos">)([^<]*)'),
-    'objeto': re.compile('(?:Contractual:</td><td class="formEjemplos">)([^<]*)'),
-    'modalidad': re.compile('(?:Modalidad de adjudicaci.n:</td><td class="formEjemplos">)([^<]*)'),
-    'provincia': re.compile('(?:Provincia de Entrega:</td><td class="formEjemplos">)([^<]*)'),
-    'correo_contacto': re.compile('(?:formTextos[^w]*width[^C]*Correo Electr.nico:</td><td class="formEjemplos">)([^<]*)'),
-    'nombre_contacto': re.compile('(?:Datos de Contacto[^N]*Nombre:</td><td class="formEjemplos">)([^<]*)'),
-    'telefono_contacto': re.compile('(?:Tel[^:]*:</td><td class="formEjemplos">)([^<]*)'),
-    'fecha': re.compile("(?:Fecha de Public.*?>.*?>)([^<]*)"), 
-    'acto': re.compile("(?:de Acto.*?>.*?>)([^<]*)"),
-    'entidad': re.compile("(?:Entidad.................formEjemplos..)([^<]*)"),
-    'proponente': re.compile("(?:Proponente.*\n.*\n.*?Ejemplos\">)([^<]*)",re.MULTILINE)
+  modules = {
+    'precio': parser.extract_precio,
+    'description': parser.extract_description,
+    'compra_type': parser.extract_compra_type,
+    'dependencia': parser.extract_dependencia,
+    'unidad': parser.extract_unidad,
+    'objeto': parser.extract_objeto,
+    'modalidad': parser.extract_modalidad,
+    'provincia': parser.extract_provincia,
+    'correo_contacto': parser.extract_correo_contacto,
+    'nombre_contacto': parser.extract_nombre_contacto,
+    'telefono_contacto': parser.extract_telefono_contacto,
+    'fecha': parser.extract_fecha,
+    'acto': parser.extract_acto,
+    'entidad': parser.extract_entidad,
+    'proponente': parser.extract_proponente
   }
-  return compra.parse_html(regexes)
+  return compra.parse_html(modules)
 
 def process_pending(engine):
   session_maker = sessionmaker(bind=engine)
