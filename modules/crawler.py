@@ -47,8 +47,9 @@ def spawn_scrapers(categories,compras_queue,connection_pool,urls,n,update=False)
 
 def spawn_compra_scrapers(compras):
     compra_scrapers = []
+    threads = THREADS - active_count() + 1)
     while True:
-        for i in xrange(THREADS - active_count() + 1):
+        for i in xrange(threads):
             try:
                 t = CompraScraperThread(compras.next(),connection_pool)
                 t.setDaemon(True)
@@ -56,6 +57,7 @@ def spawn_compra_scrapers(compras):
                 t.start()
             except StopIteration:
                return join_threads(compra_scrapers)
+        sleep(0.1)
 
 def join_threads(threads):
     while any([thread.is_alive() for thread in threads]):
@@ -80,9 +82,10 @@ def visit_pending():
     logger.info('%i compras pending', db_worker.count_not_visited())
     logger.info('spawning %i CompraScraperThreads', THREADS)
     while query.count() > 0:
-        cache = iter(query.all())
-        result = [thread.compra for thread in spawn_compra_scrapers(cache)]
-        db_worker.merge_query(query,result)
+        cache = query.all()
+        spawn_compra_scrapers(iter(cache))
+        db_worker.merge_query(query,cache)
+        del cache
 
 def revisit():
     db_worker.reset_visited()
