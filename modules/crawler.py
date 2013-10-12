@@ -47,7 +47,7 @@ def spawn_scrapers(categories,compras_queue,connection_pool,urls,n,update=False)
 
 def spawn_compra_scrapers(compras):
     compra_scrapers = []
-    threads = THREADS - active_count() + 1)
+    threads = THREADS - active_count() + 1
     while True:
         for i in xrange(threads):
             try:
