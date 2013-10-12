@@ -3,17 +3,8 @@ import argparse
 import logging
 import yaml
 import logging.config
-
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from classes.Compra import Compra
-from itertools import izip_longest
-from modules import db_worker
-
-from classes.PanaCrawler import PanaCrawler
-
 import os
-import signal
+from modules import db_worker,crawler
 
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -24,42 +15,31 @@ logging.config.dictConfig(yaml.load(open('logging.yaml','r').read()))
 logger = logging.getLogger('panacompra')
 logger.info('panacompra started')
 
-db_url = os.environ['panacompra_db']
-
-#psql setup
-engine = create_engine(db_url,  encoding='latin-1',echo=False)
-session_maker = sessionmaker(bind=engine)
-session = session_maker()
 
 def parse_args():
   parser = argparse.ArgumentParser(description='Dataminer for Panacompra')
   parser.add_argument('--update', dest='update', action='store_const',const="True", default=False, help="only scrape first page of every category")
-  parser.add_argument('--reparse', dest='reparse', action='store_const',const="True", default=False, help="reparse db")
-  parser.add_argument('--revisit', dest='revisit', action='store_const',const="True", default=False, help="revisit db")
-  parser.add_argument('--pending', dest='pending', action='store_const',const="True", default=False, help="process pending compras in db")
+  parser.add_argument('--reparse', dest='reparse', action='store_const',const="True", default=False, help="set parsed to False and parse")
+  parser.add_argument('--revisit', dest='revisit', action='store_const',const="True", default=False, help="set visited to False and visit")
+  parser.add_argument('--visit', dest='visit', action='store_const',const="True", default=False, help="get html for compras where visited is False")
+  parser.add_argument('--pending', dest='pending', action='store_const',const="True", default=False, help="process compras where visited is True and Parsed is False")
   return parser.parse_args()
 
 args = parse_args()
 
-def sanitize_db():
-  session.query(Compra).filter(Compra.acto == None).delete()
-  session.query(Compra).filter(Compra.acto == unicode('empty')).delete()
-
 if args.update:
-  crawler = PanaCrawler(engine)
   crawler.run(True)
-  db_worker.process_pending(engine)
+  db_worker.process_pending()
+elif args.visit:
+  crawler.visit_pending()
 elif args.revisit:
-  crawler = PanaCrawler(engine)
   crawler.revisit()
 elif args.reparse:
-  db_worker.reparse(engine)
+  db_worker.reparse()
 elif args.pending:
-  db_worker.process_pending(engine)
+  db_worker.process_pending()
 else:
-  crawler = PanaCrawler(engine)
   crawler.run()
-  db_worker.process_pending(session_maker)
-  del crawler
+  db_worker.process_pending()
 
 logger.info("panacompra FINISHED!!!!")

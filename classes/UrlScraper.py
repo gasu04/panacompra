@@ -1,13 +1,9 @@
-import httplib, urllib
+import urllib
 import re
 import logging
-import json
 import urlparse
 import threading
-from socket import timeout
-from time import sleep
 from bs4 import BeautifulSoup, SoupStrainer
-from sqlalchemy.sql import exists
 from classes.Compra import Compra
 from random import shuffle
 
@@ -57,11 +53,10 @@ class UrlScraperThread(threading.Thread):
         self.set_page(current_page)
         self.eat_urls_for_category(self.category)
       except Exception as e:
-        print e
         self.pages.append(current_page)
         self.logger.debug('%s from %s', str(e),str(self))
         continue
-    self.logger.info('%s dying', str(self))
+    self.logger.debug('%s dying', str(self))
     return
 
   def eat_urls_for_category(self,category):

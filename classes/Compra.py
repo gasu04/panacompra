@@ -8,68 +8,33 @@ from datetime import datetime
 from decimal import Decimal
 
 Base = declarative_base()
-
-def parse_date(date):
-  try:
-    date = date.replace('.','').upper()
-    date = datetime.strptime(date,"%d-%m-%Y %I:%M %p") 
-  except:
-    date= None
-  return date
-
-def parse_precio(precio):
-  precio = re.sub(r'[^\d.]', '',precio) #remove non digits
-  precio = re.sub(r'^.', '',precio) #remove leading period
-  if not precio == "":
-    precio = Decimal(precio)
-  else:
-    precio = Decimal(0) 
-  return precio
-
-def sanitize(string):
-  no_quotes_or_newlines = string.replace('"', '').replace("'","").replace('\n',' ').replace('\r',' ').strip() 
-  return re.sub(' +',' ', no_quotes_or_newlines) #no repeated spaces
-
-def parse_and_sanitize(string,name):
-  string = sanitize(string)
-  if name == "fecha":
-    string = parse_date(string)
-  elif name == 'precio' or name == 'precio_cd':
-    string = parse_precio(string)
-  elif name == 'proponente':
-    string = sanitize(string[:199])
-  elif name == 'telefono_contacto':
-    string = string[:14]
-  return string
-
 class Compra(Base):
   __tablename__ = 'compras'
   
   id = Column(Integer, Sequence('compras_id_seq'))
   url = Column(String(200), primary_key=True)
   html = deferred(Column(UnicodeText))
-  visited = Column(Boolean)
-  parsed = Column(Boolean)
-  category_id = Column(Integer(3))
-  compra_type = Column(Unicode(100))
-  entidad = Column(Unicode(200))
-  dependencia = Column(Unicode(200))
-  nombre_contacto = Column(Unicode(40))
-  telefono_contacto = Column(Unicode(15))
-  objeto = Column(Unicode(200))
-  modalidad = Column(Unicode(200))
-  correo_contacto = Column(Unicode(200))
-  unidad = Column(Unicode(200))
-  provincia = Column(Unicode(50))
-  precio = Column(Numeric(15,2))
-  precio_cd = Column(Numeric(15,2))
-  proponente = Column(Unicode(200),default=unicode('empty'))
+  visited = deferred(Column(Boolean))
+  parsed = deferred(Column(Boolean))
+  category_id = deferred(Column(Integer(3)))
+  compra_type = deferred(Column(Unicode(100)))
+  entidad = deferred(Column(Unicode(200)))
+  dependencia = deferred(Column(Unicode(200)))
+  nombre_contacto = deferred(Column(Unicode(40)))
+  telefono_contacto = deferred(Column(Unicode(15)))
+  objeto = deferred(Column(Unicode(200)))
+  modalidad = deferred(Column(Unicode(200)))
+  correo_contacto = deferred(Column(Unicode(200)))
+  unidad = deferred(Column(Unicode(200)))
+  provincia = deferred(Column(Unicode(50)))
+  precio = deferred(Column(Numeric(15,2)))
+  precio_cd = deferred(Column(Numeric(15,2)))
+  proponente = deferred(Column(Unicode(200),default=unicode('empty')))
   description = deferred(Column(UnicodeText))
-  acto = Column(Unicode(200))
-  fecha = Column(DateTime)
-  created_at = Column(Date, default=datetime.now)
-  updated_at = Column(Date, default=datetime.now, onupdate=datetime.now)
-
+  acto = deferred(Column(Unicode(200)))
+  fecha = deferred(Column(DateTime))
+  created_at = deferred(Column(Date, default=datetime.now))
+  updated_at = deferred(Column(Date, default=datetime.now, onupdate=datetime.now))
 
   def __init__(self,url,category):
     self.url = url
@@ -107,5 +72,5 @@ class Compra(Base):
     return getattr(self, key)
 
   def __str__(self):
-    return "Compra(%s)" % (self.url)
+    return "Compra(%s)" % (self.acto)
 
