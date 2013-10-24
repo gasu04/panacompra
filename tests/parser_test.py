@@ -59,16 +59,5 @@ class TestParser(unittest.TestCase):
     def test_proponente(self):
         self.assertEqual(parser.extract_proponente(self.soup), unicode("Roberto Peralta"))
 
-#
-#    def test_choice(self):
-#        element = random.choice(self.seq)
-#        self.assertTrue(element in self.seq)
-#
-#    def test_sample(self):
-#        with self.assertRaises(ValueError):
-#            random.sample(self.seq, 20)
-#        for element in random.sample(self.seq, 5):
-#            self.assertTrue(element in self.seq)
-
 if __name__ == '__main__':
     unittest.main()
