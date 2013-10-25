@@ -14,7 +14,7 @@ import itertools
 import os
 
 logger = logging.getLogger('DB')
-CHUNK_SIZE=1000
+CHUNK_SIZE=3000
 
 #psql setup
 db_url = os.environ['panacompra_db']
@@ -56,10 +56,12 @@ def process_compra(compra):
 def process_pending():
   logger.info("%i compras pending", session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).count())
   query = session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).options(undefer('html')).limit(CHUNK_SIZE)
-  pool = Pool(processes=cpu_count()-1)
+  pool = Pool(processes=4)
   while query.count() > 0:
     cache = query.all()
-    query.merge_result(pool.map(process_compra, cache, CHUNK_SIZE/(cpu_count()-1)))
+    result = pool.map(process_compra, cache, CHUNK_SIZE/4)
+    logger.info("done processing %i chunck", len(cache))
+    query.merge_result(result)
     session.commit()
   logger.info("compras added to db")
 
