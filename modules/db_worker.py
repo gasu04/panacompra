@@ -84,11 +84,11 @@ def reset_visited():
 def process_compras_queue(compras_queue,urls):
     while compras_queue.qsize() > 0:
         compra = compras_queue.get()
+        compras_queue.task_done()
         if compra.url not in urls: 
             session.add(compra) 
             urls.add(compra.url)
-        compras_queue.task_done()
-    session.commit()
+            session.commit()
 
 def get_all_urls():
     try:
