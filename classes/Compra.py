@@ -59,7 +59,6 @@ class Compra(Base):
       finally:
         setattr(self,name,val)
     self.parsed = True
-    del self.html
     return self
   
   def __hash__(self):
