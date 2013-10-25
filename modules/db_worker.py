@@ -59,9 +59,8 @@ def process_pending():
   pool = Pool(processes=4)
   while query.count() > 0:
     cache = query.all()
-    result = pool.map(process_compra, cache, CHUNK_SIZE/4)
-    logger.info("done processing %i chunck", len(cache))
-    query.merge_result(result)
+    results = pool.imap_unordered(process_compra, cache, len(cache)/4)
+    for compra in results: session.merge(compra)
     session.commit()
   logger.info("compras added to db")
 
