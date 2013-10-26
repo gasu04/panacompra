@@ -18,46 +18,46 @@ class TestParser(unittest.TestCase):
         self.assertEqual(parser.extract_precio(self.soup_directa), 1459500.00)
 
     def test_description(self):
-        self.assertEqual(parser.extract_description(self.soup), unicode("SERVICIO DE ARBITRAJE EN LIGA DE BOLA SUAVE."))
+        self.assertEqual(parser.extract_description(self.soup), str("SERVICIO DE ARBITRAJE EN LIGA DE BOLA SUAVE."))
         
     def test_compra_type(self):
-        self.assertEqual(parser.extract_compra_type(self.soup), unicode("Compra Menor hasta B/. 3,000"))
+        self.assertEqual(parser.extract_compra_type(self.soup), str("Compra Menor hasta B/. 3,000"))
 
     def test_dependencia(self):
-        self.assertEqual(parser.extract_dependencia(self.soup), unicode("SEDE"))
+        self.assertEqual(parser.extract_dependencia(self.soup), str("SEDE"))
         
     def test_unidad(self):
-        self.assertEqual(parser.extract_unidad(self.soup), unicode("COMPRAS Y PROVEEDURIA"))
+        self.assertEqual(parser.extract_unidad(self.soup), str("COMPRAS Y PROVEEDURIA"))
         
     def test_objeto(self):
-        self.assertEqual(parser.extract_objeto(self.soup), unicode("Servicio"))
+        self.assertEqual(parser.extract_objeto(self.soup), str("Servicio"))
         
     def test_modalidad(self):
-        self.assertEqual(parser.extract_modalidad(self.soup), unicode("Global"))
+        self.assertEqual(parser.extract_modalidad(self.soup), str("Global"))
         
     def test_provincia(self):
-        self.assertEqual(parser.extract_provincia(self.soup), unicode("PANAMA"))
+        self.assertEqual(parser.extract_provincia(self.soup), str("PANAMA"))
         
     def test_correo_contacto(self):
-        self.assertEqual(parser.extract_correo_contacto(self.soup), unicode("Cotizador1@asamblea.gob.pa"))
+        self.assertEqual(parser.extract_correo_contacto(self.soup), str("Cotizador1@asamblea.gob.pa"))
         
     def test_nombre_contacto(self):
-        self.assertEqual(parser.extract_nombre_contacto(self.soup), unicode("ANTONIO DAVIS"))
+        self.assertEqual(parser.extract_nombre_contacto(self.soup), str("ANTONIO DAVIS"))
         
     def test_telefono_contacto(self):
-        self.assertEqual(parser.extract_telefono_contacto(self.soup), unicode("512-8090"))
+        self.assertEqual(parser.extract_telefono_contacto(self.soup), str("512-8090"))
 
     def test_fecha(self):
         self.assertEqual(parser.extract_fecha(self.soup), datetime.strptime("17-02-2012 12:23 PM","%d-%m-%Y %I:%M %p"))
 
     def test_acto(self):
-        self.assertEqual(parser.extract_acto(self.soup), unicode("2012-0-01-0-08-CM-002791"))
+        self.assertEqual(parser.extract_acto(self.soup), str("2012-0-01-0-08-CM-002791"))
         
     def test_entidad(self):
-        self.assertEqual(parser.extract_entidad(self.soup), unicode("ASAMBLEA NACIONAL"))
+        self.assertEqual(parser.extract_entidad(self.soup), str("ASAMBLEA NACIONAL"))
         
     def test_proponente(self):
-        self.assertEqual(parser.extract_proponente(self.soup), unicode("Roberto Peralta"))
+        self.assertEqual(parser.extract_proponente(self.soup), str("Roberto Peralta"))
 
 if __name__ == '__main__':
     unittest.main()
