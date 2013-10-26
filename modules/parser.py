@@ -1,13 +1,26 @@
 import re
 from decimal import Decimal
 from datetime import datetime
+from bs4 import BeautifulSoup,SoupStrainer
+
+def parse_html(compra,methods):
+    soup = BeautifulSoup(compra.html,'html.parser',parse_only=SoupStrainer('tr'))
+    for name,method in methods.items():
+        try:
+            val = method(soup)
+        except:
+            val = None
+        finally:
+            setattr(compra,name,val)
+    compra.parsed = True
+    return compra 
 
 def parse_date(date):
   try:
     date = date.replace('.','').upper()
     date = datetime.strptime(date,"%d-%m-%Y %I:%M %p") 
   except Exception as e:
-    print e
+    print(e)
     date= None
   return date
 
@@ -22,7 +35,7 @@ def parse_precio(precio):
 
 def sanitize(string):
   no_quotes_or_newlines = string.replace('"', '').replace("'","").replace('\n',' ').replace('\r',' ').strip() 
-  return unicode(re.sub(' +',' ', no_quotes_or_newlines)) #no repeated spaces
+  return str(re.sub(' +',' ', no_quotes_or_newlines)) #no repeated spaces
 
 def parse_and_sanitize(string,name):
   string = sanitize(string)

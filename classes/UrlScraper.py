@@ -1,7 +1,7 @@
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import re
 import logging
-import urlparse
+import urllib.parse
 import threading
 from bs4 import BeautifulSoup, SoupStrainer
 from classes.Compra import Compra
@@ -20,10 +20,10 @@ class UrlScraperThread(threading.Thread):
   def __init__(self, category, compras_queue, connection, urls, update=False):
     threading.Thread.__init__(self)
     self.update = update
-    self.data = dict(urlparse.parse_qsl(open('form.data').read()))
+    self.data = dict(urllib.parse.parse_qsl(open('form.data').read()))
     self.category = category
-    self.pages_regex = re.compile("(?:TotalPaginas\">)([0-9]*)")
-    self.current_regex= re.compile("(?:PaginaActual\">)([0-9]*)")
+    self.pages_regex = re.compile(b"(?:TotalPaginas\">)([0-9]*)")
+    self.current_regex= re.compile(b"(?:PaginaActual\">)([0-9]*)")
     self.logger = logging.getLogger('UrlScraper')
     self.connection = connection
     self.urls = urls
@@ -72,7 +72,7 @@ class UrlScraperThread(threading.Thread):
   def parse_category_page(self,html):
     soup = BeautifulSoup(html, "html.parser", parse_only=SoupStrainer('a'))
     links = soup.find_all(href=re.compile("VistaPreviaCP.aspx\?NumLc"))
-    links = [link.get('href') for link in links if link.get('href') not in self.urls]
+    links = [link.get('href').lower() for link in links if link.get('href').lower() not in self.urls]
     return links
 
   def parse_max_pages(self):
@@ -80,7 +80,7 @@ class UrlScraperThread(threading.Thread):
       pages = 1 
     else:
       html = self.get_category_page()
-      pages = self.pages_regex.findall(html)[0].decode('latin-1', 'ignore')
+      pages = self.pages_regex.findall(html)[0]
     self.pages = [i + 1 for i in range(int(pages))]
   
   def __str__(self):
@@ -98,4 +98,4 @@ class UrlScraperThread(threading.Thread):
         data = response.data
     except Exception as e:
         self.logger.debug('%s from %s',str(e) ,str(self))
-    return data.decode('latin-1', 'ignore')
+    return data

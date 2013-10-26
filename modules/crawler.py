@@ -3,7 +3,7 @@ import urllib3
 from random import shuffle
 import re
 import logging
-from Queue import Queue
+from queue import Queue
 from classes.UrlScraper import UrlScraperThread
 from classes.CompraScraper import CompraScraperThread
 from modules import db_worker
@@ -35,7 +35,7 @@ def get_categories_html():
 
 def spawn_scrapers(categories,compras_queue,connection_pool,urls,n,update=False):
     scrapers = []
-    for i in xrange(n):
+    for i in range(n):
         try:
             t = UrlScraperThread(categories.pop(),compras_queue,connection_pool,urls,update)
             t.setDaemon(True)
@@ -49,9 +49,9 @@ def spawn_compra_scrapers(compras):
     compra_scrapers = []
     threads = THREADS - active_count() + 1
     while True:
-        for i in xrange(threads):
+        for i in range(threads):
             try:
-                t = CompraScraperThread(compras.next(),connection_pool)
+                t = CompraScraperThread(next(compras),connection_pool)
                 t.setDaemon(True)
                 compra_scrapers.append(t)
                 t.start()
@@ -61,7 +61,7 @@ def spawn_compra_scrapers(compras):
 
 def join_threads(threads):
     while any([thread.is_alive() for thread in threads]):
-        sleep(2)
+        sleep(1)
     return threads
 
 def run(update=False):

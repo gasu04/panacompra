@@ -10,13 +10,13 @@ from sqlalchemy import create_engine
 from classes.Compra import Compra,Base
 from multiprocessing import Pool,cpu_count,Lock
 from modules import parser
+from math import ceil
 import itertools
 import os
 
 logger = logging.getLogger('DB')
 CHUNK_SIZE=3000
 
-#psql setup
 db_url = os.environ['panacompra_db']
 engine = create_engine(db_url,  encoding='latin-1',echo=False)
 Base.metadata.create_all(engine)
@@ -25,12 +25,12 @@ session = session_maker()
 
 def query_chunks(q, n):
   """ Yield successive n-sized chunks from query object."""
-  for i in xrange(0, q.count(), n):
+  for i in range(0, q.count(), n):
     yield list(itertools.islice(q, 0, n))
 
 def chunks(l, n):
     """ return n-sized chunks from l."""
-    for i in xrange(0, len(l), n):
+    for i in range(0, len(l), n):
         yield l[i:i+n]
 
 def process_compra(compra):
@@ -51,24 +51,33 @@ def process_compra(compra):
     'entidad': parser.extract_entidad,
     'proponente': parser.extract_proponente
   }
-  return compra.parse_html(modules)
+  compra = parser.parse_html(compra,modules)
+  return compra
 
 def process_pending():
-  logger.info("%i compras pending", session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).count())
-  query = session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).options(undefer('html')).limit(CHUNK_SIZE)
-  pool = Pool(processes=4)
-  while query.count() > 0:
+    query = session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).options(undefer('html')).limit(CHUNK_SIZE)
+    logger.info("%i compras pending", query.count())
+    pool = Pool(processes=4)
+    while query.count() > 0:
+        results = process_query(query,pool)
+        merge_results(results)
+    logger.info("compras added to db")
+
+def process_query(query,pool):
     cache = query.all()
-    results = pool.imap_unordered(process_compra, cache, len(cache)/4)
-    for compra in results: session.merge(compra)
+    results = pool.imap_unordered(process_compra, cache, int(ceil(len(cache)/4)))
+    return results
+
+def merge_results(results):
+    for compra in results: 
+        session.merge(compra)
     session.commit()
-  logger.info("compras added to db")
 
 def reparse():
-  logger.info("Setting parsed to FALSE and parsing again")
-  session.query(Compra).update({'parsed':False})
-  session.commit()
-  process_pending()
+    logger.info("Setting parsed to FALSE and parsing again")
+    session.query(Compra).update({'parsed':False})
+    session.commit()
+    process_pending()
 
 def query_not_visited():
     return session.query(Compra).filter(Compra.visited == False).limit(CHUNK_SIZE)
@@ -87,17 +96,14 @@ def process_compras_queue(compras_queue,urls):
         if compra.url not in urls: 
             session.add(compra) 
             urls.add(compra.url)
-            session.commit()
+    session.commit()
 
 def get_all_urls():
     try:
-        return set(zip(*session.query(Compra.url).all())[0])
+        urls = list(zip(*session.query(Compra.url).all()))[0]
+        return {item.lower() for item in urls}
     except:
         return set()
-
-def sanitize_db():
-    session.query(Compra).filter(Compra.acto == None).delete()
-    session.query(Compra).filter(Compra.acto == unicode('empty')).delete()
 
 def merge_query(query,result):
     query.merge_result(result)

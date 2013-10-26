@@ -1,18 +1,15 @@
-import re
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import *
+from sqlalchemy import Column, Integer, Date, Sequence, Boolean, Numeric, DateTime
 from sqlalchemy.orm import deferred
 from sqlalchemy.types import Unicode, UnicodeText
-from bs4 import BeautifulSoup,SoupStrainer
 from datetime import datetime
-from decimal import Decimal
 
 Base = declarative_base()
 class Compra(Base):
   __tablename__ = 'compras'
   
   id = Column(Integer, Sequence('compras_id_seq'))
-  url = Column(String(200), primary_key=True)
+  url = Column(Unicode(200), primary_key=True)
   html = deferred(Column(UnicodeText))
   visited = deferred(Column(Boolean))
   parsed = deferred(Column(Boolean))
@@ -29,7 +26,7 @@ class Compra(Base):
   provincia = deferred(Column(Unicode(50)))
   precio = deferred(Column(Numeric(15,2)))
   precio_cd = deferred(Column(Numeric(15,2)))
-  proponente = deferred(Column(Unicode(200),default=unicode('empty')))
+  proponente = deferred(Column(Unicode(200),default='empty'))
   description = deferred(Column(UnicodeText))
   acto = deferred(Column(Unicode(200)))
   fecha = deferred(Column(DateTime))
@@ -43,24 +40,6 @@ class Compra(Base):
     self.visited = False
     self.parsed = False
 
-  def convert(self, obj):
-    for key,val in obj.iteritems():
-      if val != None and (key == 'entidad' or key == 'proponente' or key == 'description'):
-        obj[key] = val.encode('latin-1', 'ignore')
-    return obj
-
-  def parse_html(self,methods):
-    soup = BeautifulSoup(self.html,'html.parser',parse_only=SoupStrainer('tr'))
-    for name,method in methods.iteritems():
-      try:
-        val = method(soup)
-      except:
-        val = None
-      finally:
-        setattr(self,name,val)
-    self.parsed = True
-    return self
-  
   def __hash__(self):
     return hash(self.url)
 

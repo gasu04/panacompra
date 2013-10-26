@@ -1,6 +1,6 @@
 import logging
 import threading
-from Queue import Empty
+from queue import Empty
 
 class CompraScraperThread(threading.Thread):
 
@@ -33,4 +33,4 @@ class CompraScraperThread(threading.Thread):
             data = response.data
         except Exception as e:
             self.logger.debug('%s from %s',str(e) ,str(self))
-        return data.decode('latin-1', 'ignore')
+        return data

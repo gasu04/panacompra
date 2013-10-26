@@ -1,4 +1,4 @@
-#!/usr/bin/python2.7
+#!/usr/bin/python3.3
 import argparse
 import logging
 import yaml
@@ -9,12 +9,9 @@ from modules import db_worker,crawler
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
 os.chdir(dname)
-
 # create logger
 logging.config.dictConfig(yaml.load(open('logging.yaml','r').read()))
 logger = logging.getLogger('panacompra')
-logger.info('panacompra started')
-
 
 def parse_args():
   parser = argparse.ArgumentParser(description='Dataminer for Panacompra')
@@ -25,21 +22,21 @@ def parse_args():
   parser.add_argument('--pending', dest='pending', action='store_const',const="True", default=False, help="process compras where visited is True and Parsed is False")
   return parser.parse_args()
 
-args = parse_args()
-
-if args.update:
-  crawler.run(True)
-  db_worker.process_pending()
-elif args.visit:
-  crawler.visit_pending()
-elif args.revisit:
-  crawler.revisit()
-elif args.reparse:
-  db_worker.reparse()
-elif args.pending:
-  db_worker.process_pending()
-else:
-  crawler.run()
-  db_worker.process_pending()
-
-logger.info("panacompra FINISHED!!!!")
+if __name__ == "__main__":
+    logger.info('panacompra started')
+    args = parse_args()
+    if args.update:
+      crawler.run(True)
+      db_worker.process_pending()
+    elif args.visit:
+      crawler.visit_pending()
+    elif args.revisit:
+      crawler.revisit()
+    elif args.reparse:
+      db_worker.reparse()
+    elif args.pending:
+      db_worker.process_pending()
+    else:
+      crawler.run()
+      db_worker.process_pending()
+    logger.info("panacompra FINISHED!!!!")
