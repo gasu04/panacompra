@@ -6,12 +6,8 @@ from bs4 import BeautifulSoup,SoupStrainer
 def parse_html(compra,methods):
     soup = BeautifulSoup(compra.html,'html.parser',parse_only=SoupStrainer('tr'))
     for name,method in methods.items():
-        try:
-            val = method(soup)
-        except:
-            val = None
-        finally:
-            setattr(compra,name,val)
+        val = method(soup)
+        setattr(compra,name,val)
     compra.parsed = True
     return compra 
 
@@ -53,12 +49,12 @@ def extract_precio(soup):
     try:
         precio = soup.find('td',text='Precio Referencia:').find_next_sibling('td').string
     except AttributeError:
-        precio = soup.find('td',text=re.compile('Monto de la Contrataci.n:')).find_next_sibling('td').string 
+        precio = soup.find('td',text=re.compile('Monto de la Contrataci.')).find_next_sibling('td').string 
     finally:
         return parse_precio(precio)
     
 def extract_description(soup):
-    return sanitize(soup.find('td',text=re.compile('Descripci.n:')).find_next_sibling('td').string)
+    return sanitize(soup.find('td',text=re.compile('Descripci.')).find_next_sibling('td').string)
 
 def extract_compra_type(soup):
     return sanitize(soup.find('td',text='Tipo de Procedimiento:').find_next_sibling('td').string)
@@ -73,10 +69,16 @@ def extract_objeto(soup):
     return sanitize(soup.find('td',text='Objeto Contractual:').find_next_sibling('td').string)
     
 def extract_modalidad(soup):
-    return sanitize(soup.find('td',text=re.compile('Modalidad de adjudicaci.n:')).find_next_sibling('td').string)
+    modalidad = soup.find('td',text=re.compile('Modalidad.'))
+    if modalidad is not None:
+        return sanitize(modalidad.find_next_sibling('td').string)
+    return None
     
 def extract_provincia(soup):
-    return sanitize(soup.find('td',text='Provincia de Entrega:').find_next_sibling('td').string)
+    provincia = soup.find('td',text='Provincia de Entrega:')
+    if provincia is not None:
+        return sanitize(provincia.find_next_sibling('td').string)
+    return None
     
 def extract_correo_contacto(soup):
     return sanitize(soup.find('td',text='Datos de Contacto').parent.find_next_sibling('tr').find_next_sibling('tr').find_next_sibling('tr').find_next_sibling('tr').find('td').find_next_sibling('td').string)
@@ -91,11 +93,14 @@ def extract_fecha(soup):
     return parse_date(soup.find('td',text=re.compile('Fecha de Pub.*')).find_next_sibling('td').string)
     
 def extract_acto(soup):
-    return sanitize(soup.find('td',text=re.compile('N.mero de Acto:')).find_next_sibling('td').string)
-    
+    return sanitize(soup.find('td',text=re.compile('.Acto.')).find_next_sibling('td').string)
+
 def extract_entidad(soup):
     return sanitize(soup.find('td',text='Entidad:').find_next_sibling('td').string)
     
 def extract_proponente(soup):
-    return sanitize(soup.find('td',text='Proponente Seleccionado').parent.find_next_sibling('tr').find('td').find_next_sibling('td').string)
+    proponente = soup.find('td',text='Proponente Seleccionado')
+    if proponente is not None:
+        return sanitize(proponente.parent.find_next_sibling('tr').find('td').find_next_sibling('td').string)
+    return None
 

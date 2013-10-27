@@ -1,17 +1,23 @@
 import random
 import unittest
 from modules import parser
+from classes.Compra import Compra
 from bs4 import BeautifulSoup,SoupStrainer
 from decimal import Decimal
 from datetime import datetime
+import urllib.request
+compra_html = urllib.request.urlopen('http://panamacompra.gob.pa/AmbientePublico/VistaPreviaCP.aspx?NumLc=2012-0-01-0-08-CM-002791&esap=1&nnc=0&it=1').read()
+soup = BeautifulSoup(compra_html,'html.parser',parse_only=SoupStrainer('tr'))
+compra_directa = open('tests/compra_directa.html')
+soup_directa = BeautifulSoup(compra_directa,'html.parser',parse_only=SoupStrainer('tr'))
 
 class TestParser(unittest.TestCase):
 
     def setUp(self):
-        self.compra = open('tests/compra.html').read()
-        self.compra_directa = open('tests/compra_directa.html').read()
-        self.soup = BeautifulSoup(self.compra,'html.parser',parse_only=SoupStrainer('tr'))
-        self.soup_directa = BeautifulSoup(self.compra_directa,'html.parser',parse_only=SoupStrainer('tr'))
+        self.compra = compra_html
+        self.compra_directa = compra_directa
+        self.soup = soup
+        self.soup_directa = soup_directa
 
     def test_precio(self):
         self.assertEqual(parser.extract_precio(self.soup), 999.00)
@@ -36,7 +42,7 @@ class TestParser(unittest.TestCase):
         self.assertEqual(parser.extract_modalidad(self.soup), str("Global"))
         
     def test_provincia(self):
-        self.assertEqual(parser.extract_provincia(self.soup), str("PANAMA"))
+        self.assertEqual(parser.extract_provincia(self.soup), str("PANAMÁ"))
         
     def test_correo_contacto(self):
         self.assertEqual(parser.extract_correo_contacto(self.soup), str("Cotizador1@asamblea.gob.pa"))
@@ -58,6 +64,12 @@ class TestParser(unittest.TestCase):
         
     def test_proponente(self):
         self.assertEqual(parser.extract_proponente(self.soup), str("Roberto Peralta"))
+
+    def test_parse_html(self):
+        compra = Compra('url',1)
+        compra.html =  compra_html
+        acto = "2012-0-01-0-08-CM-002791"
+        self.assertEqual(parser.parse_html(compra,{'acto':parser.extract_acto}).acto,acto) 
 
 if __name__ == '__main__':
     unittest.main()
