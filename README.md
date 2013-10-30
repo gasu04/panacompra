@@ -12,38 +12,25 @@ Dependencies
 * sqlalchemy 
 * pyyaml
 * requests 
-* python 2.7
-
-Database Setup
---------------
-1. configurar db_url en panacompra.py para usar un db existente que sea [compatible con sqlalchemy](http://docs.sqlalchemy.org/en/rel_0_8/core/engines.html#database-urls "SqlAlchemy")
-
-To-Do
--------
-* collect more data (more regex)
-* get new via pgsql
-* handle updates
+* urllib3
+* python3
 
 
 usage
 ------
 ```bash
-python panacompra.py --help
-
-usage: panacompra.py [-h] [--send] [--update] [--sync] [--revisit] [--reparse]
-                     [--pending] [--url URL]
+usage: panacompra.py [-h] [--update] [--reparse] [--revisit] [--visit]
+                     [--pending]
 
 Dataminer for Panacompra
 
 optional arguments:
   -h, --help  show this help message and exit
-  --send      send bulk compras to rails
   --update    only scrape first page of every category
-  --sync      sync db to rails app
-  --revisit   revisit db
-  --reparse   reparse db
-  --pending   process pending compras in db
-  --url URL
+  --reparse   set parsed to False and parse
+  --revisit   set visited to False and visit
+  --visit     get html for compras where visited is False
+  --pending   process compras where visited is True and Parsed is False
 ```
 
 
