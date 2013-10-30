@@ -26,7 +26,7 @@ class Compra(Base):
   provincia = deferred(Column(Unicode(50)))
   precio = deferred(Column(Numeric(15,2)))
   precio_cd = deferred(Column(Numeric(15,2)))
-  proponente = deferred(Column(Unicode(200),default='empty'))
+  proponente = deferred(Column(Unicode(200)))
   description = deferred(Column(UnicodeText))
   acto = deferred(Column(Unicode(200)))
   fecha = deferred(Column(DateTime))
@@ -34,7 +34,7 @@ class Compra(Base):
   updated_at = deferred(Column(Date, default=datetime.now, onupdate=datetime.now))
 
   def __init__(self,url,category):
-    self.url = url
+    self.url = str(url)
     self.category_id = category
     self.html = None
     self.visited = False

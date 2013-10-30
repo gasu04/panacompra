@@ -18,7 +18,7 @@ logger = logging.getLogger('DB')
 CHUNK_SIZE=3000
 
 db_url = os.environ['panacompra_db']
-engine = create_engine(db_url,  encoding='latin-1',echo=False)
+engine = create_engine(db_url, convert_unicode=True)
 Base.metadata.create_all(engine)
 session_maker = sessionmaker(bind=engine)
 session = session_maker()

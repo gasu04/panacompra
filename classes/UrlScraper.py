@@ -98,4 +98,4 @@ class UrlScraperThread(threading.Thread):
         data = response.data
     except Exception as e:
         self.logger.debug('%s from %s',str(e) ,str(self))
-    return data
+    return data.decode('ISO-8859-1','ignore')

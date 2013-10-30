@@ -4,7 +4,7 @@ from datetime import datetime
 from bs4 import BeautifulSoup,SoupStrainer
 
 def parse_html(compra,methods):
-    soup = BeautifulSoup(compra.html,'html.parser',parse_only=SoupStrainer('tr'))
+    soup = BeautifulSoup(compra.html,'html.parser',parse_only=SoupStrainer('tr'), from_encoding='ISO-8859-1')
     for name,method in methods.items():
         val = method(soup)
         setattr(compra,name,val)
@@ -30,8 +30,7 @@ def parse_precio(precio):
   return precio
 
 def sanitize(string):
-  no_quotes_or_newlines = string.replace('"', '').replace("'","").replace('\n',' ').replace('\r',' ').strip() 
-  return str(re.sub(' +',' ', no_quotes_or_newlines)) #no repeated spaces
+  return str(re.sub(' +',' ', string)) #no repeated spaces
 
 def parse_and_sanitize(string,name):
   string = sanitize(string)
@@ -54,7 +53,8 @@ def extract_precio(soup):
         return parse_precio(precio)
     
 def extract_description(soup):
-    return sanitize(soup.find('td',text=re.compile('Descripci.')).find_next_sibling('td').string)
+    a = sanitize(soup.find('td',text=re.compile('Descripci.')).find_next_sibling('td').string)
+    return a
 
 def extract_compra_type(soup):
     return sanitize(soup.find('td',text='Tipo de Procedimiento:').find_next_sibling('td').string)

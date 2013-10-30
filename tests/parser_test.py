@@ -5,9 +5,13 @@ from classes.Compra import Compra
 from bs4 import BeautifulSoup,SoupStrainer
 from decimal import Decimal
 from datetime import datetime
-import urllib.request
-compra_html = urllib.request.urlopen('http://panamacompra.gob.pa/AmbientePublico/VistaPreviaCP.aspx?NumLc=2012-0-01-0-08-CM-002791&esap=1&nnc=0&it=1').read()
-soup = BeautifulSoup(compra_html,'html.parser',parse_only=SoupStrainer('tr'))
+import urllib3
+
+conn = urllib3.HTTPConnectionPool('201.227.172.42', maxsize=15)
+url = '/AmbientePublico/VistaPreviaCP.aspx?NumLc=2012-0-01-0-08-CM-002791&esap=1&nnc=0&it=1'
+response = conn.request("GET", url)
+compra_html = response.data
+soup = BeautifulSoup(compra_html,'html.parser',parse_only=SoupStrainer('tr'), from_encoding='ISO-8859-1')
 compra_directa = open('tests/compra_directa.html')
 soup_directa = BeautifulSoup(compra_directa,'html.parser',parse_only=SoupStrainer('tr'))
 
@@ -70,6 +74,11 @@ class TestParser(unittest.TestCase):
         compra.html =  compra_html
         acto = "2012-0-01-0-08-CM-002791"
         self.assertEqual(parser.parse_html(compra,{'acto':parser.extract_acto}).acto,acto) 
+
+    def test_unicode(self):
+        self.assertTrue(isinstance(parser.extract_description(self.soup),str))
+        self.assertTrue(isinstance(parser.extract_entidad(self.soup),str))
+        self.assertTrue(isinstance(parser.extract_proponente(self.soup),str))
 
 if __name__ == '__main__':
     unittest.main()
