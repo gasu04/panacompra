@@ -16,8 +16,6 @@ compra_html_decoded = compra_html_raw.decode('ISO-8859-1','ignore')
 with open('form.data') as har:
     har_dict = dict(urllib.parse.parse_qsl(har.read()))
 
-
-
 class TestParser(unittest.TestCase):
 
     def setUp(self):
@@ -30,6 +28,20 @@ class TestParser(unittest.TestCase):
     def test_parse_har(self):
         self.assertIsNotNone(self.thread.data)
         self.assertEqual(self.thread.data,har_dict)
+
+    def test_get_page(self):
+        page = self.thread.get_page()
+        self.assertEqual(page,5)
+
+    def test_reset_page(self):
+        self.thread.reset_page()
+        page = self.thread.get_page()
+        self.assertEqual(page, 1)
+
+    def test_set_page(self):
+        page = self.thread.set_page(989)
+        page = self.thread.get_page()
+        self.assertEqual(page, 989)
 
     def test_get_compra_html(self):
         html = self.thread.get_compra_html(url)
