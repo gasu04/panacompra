@@ -57,7 +57,7 @@ def process_compra(compra):
 def process_pending():
     query = session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).options(undefer('html')).limit(CHUNK_SIZE)
     logger.info("%i compras pending", query.count())
-    pool = Pool(processes=4)
+    pool = Pool(processes=cpu_count())
     while query.count() > 0:
         results = process_query(query,pool)
         merge_results(results)
@@ -65,7 +65,7 @@ def process_pending():
 
 def process_query(query,pool):
     cache = query.all()
-    results = pool.imap_unordered(process_compra, cache, int(ceil(len(cache)/4)))
+    results = pool.imap_unordered(process_compra, cache, int(ceil(len(cache)/cpu_count())))
     return results
 
 def merge_results(results):
