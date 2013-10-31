@@ -20,7 +20,6 @@ class UrlScraperThread(threading.Thread):
   def __init__(self, category, compras_queue, connection, urls, update=False):
     threading.Thread.__init__(self)
     self.update = update
-    self.data = dict(urllib.parse.parse_qsl(open('form.data').read()))
     self.category = category
     self.pages_regex = re.compile(b"(?:TotalPaginas\">)([0-9]*)")
     self.current_regex= re.compile(b"(?:PaginaActual\">)([0-9]*)")
@@ -29,6 +28,11 @@ class UrlScraperThread(threading.Thread):
     self.urls = urls
     self.compras_queue = compras_queue
     self.base_url = "/AmbientePublico/AP_Busquedaavanzada.aspx?BusquedaRubros=true&IdRubro="
+    self.parse_har()
+
+  def parse_har(self):
+    with open('form.data') as har:
+        self.data = dict(urllib.parse.parse_qsl(har.read()))
 
   def reset_page(self):
     self.data['ctl00$ContentPlaceHolder1$ControlPaginacion$hidNumeroPagina'] = 1
