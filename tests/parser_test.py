@@ -10,7 +10,7 @@ import urllib3
 conn = urllib3.HTTPConnectionPool('201.227.172.42', maxsize=15)
 url = '/AmbientePublico/VistaPreviaCP.aspx?NumLc=2012-0-01-0-08-CM-002791&esap=1&nnc=0&it=1'
 response = conn.request("GET", url)
-compra_html = response.data
+compra_html = response.data.decode('ISO-8859-1','ignore')
 soup = BeautifulSoup(compra_html,'html.parser',parse_only=SoupStrainer('tr'), from_encoding='ISO-8859-1')
 compra_directa = open('tests/compra_directa.html')
 soup_directa = BeautifulSoup(compra_directa,'html.parser',parse_only=SoupStrainer('tr'))
