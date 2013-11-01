@@ -15,7 +15,8 @@ logger = logging.getLogger('panacompra')
 
 def parse_args():
   parser = argparse.ArgumentParser(description='Dataminer for Panacompra')
-  parser.add_argument('--update', dest='update', action='store_const',const="True", default=False, help="only scrape first page of every category")
+  parser.add_argument('--update', dest='update', action='store_const',const="True", default=False, help="scrape first page of every category")
+  parser.add_argument('--sync', dest='sync', action='store_const',const="True", default=False, help="update and process pending")
   parser.add_argument('--reparse', dest='reparse', action='store_const',const="True", default=False, help="set parsed to False and parse")
   parser.add_argument('--revisit', dest='revisit', action='store_const',const="True", default=False, help="set visited to False and visit")
   parser.add_argument('--visit', dest='visit', action='store_const',const="True", default=False, help="get html for compras where visited is False")
@@ -26,6 +27,8 @@ if __name__ == "__main__":
     logger.info('panacompra started')
     args = parse_args()
     if args.update:
+      crawler.run(True)
+    elif args.sync:
       crawler.run(True)
       db_worker.process_pending()
     elif args.visit:
@@ -38,5 +41,4 @@ if __name__ == "__main__":
       db_worker.process_pending()
     else:
       crawler.run()
-      db_worker.process_pending()
     logger.info("panacompra FINISHED!!!!")
