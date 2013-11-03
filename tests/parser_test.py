@@ -9,11 +9,14 @@ import urllib3
 
 conn = urllib3.HTTPConnectionPool('201.227.172.42', maxsize=15)
 url = '/AmbientePublico/VistaPreviaCP.aspx?NumLc=2012-0-01-0-08-CM-002791&esap=1&nnc=0&it=1'
-response = conn.request("GET", url)
-compra_html = response.data.decode('ISO-8859-1','ignore')
+url_directa = '/AmbientePublico/VistaPreviaCP.aspx?NumLc=2013-1-01-0-08-CD-007275&esap=1&nnc=0&it=1'
+url_error = '/AmbientePublico/vistapreviacp.aspx?numlc=2013-1-40-0-08-cm-003718&esap=1&nnc=0&it=1'
+compra_html = conn.request("GET", url).data.decode('ISO-8859-1','ignore')
+compra_directa = conn.request("GET", url_directa).data.decode('ISO-8859-1','ignore')
+error_html = conn.request("GET", url_error).data.decode('ISO-8859-1','ignore')
 soup = BeautifulSoup(compra_html,'html.parser',parse_only=SoupStrainer('tr'), from_encoding='ISO-8859-1')
-compra_directa = open('tests/compra_directa.html')
-soup_directa = BeautifulSoup(compra_directa,'html.parser',parse_only=SoupStrainer('tr'))
+soup_error =  BeautifulSoup(error_html,'html.parser',parse_only=SoupStrainer('tr'), from_encoding='ISO-8859-1')
+soup_directa = BeautifulSoup(compra_directa,'html.parser',parse_only=SoupStrainer('tr'), from_encoding='ISO-8859-1')
 
 class TestParser(unittest.TestCase):
 
@@ -22,6 +25,10 @@ class TestParser(unittest.TestCase):
         self.compra_directa = compra_directa
         self.soup = soup
         self.soup_directa = soup_directa
+
+    def test_error(self):
+        self.assertTrue(parser.is_error_page(soup_error))
+        self.assertFalse(parser.is_error_page(soup))
 
     def test_precio(self):
         self.assertEqual(parser.extract_precio(self.soup), 999.00)

@@ -3,11 +3,18 @@ from decimal import Decimal
 from datetime import datetime
 from bs4 import BeautifulSoup,SoupStrainer
 
+def is_error_page(soup):
+    error = soup.find(text=re.compile("unhandled exception"))
+    if error or len(soup) == 0:
+        return True
+    return False
+
 def parse_html(compra,methods):
     soup = BeautifulSoup(compra.html,'html.parser',parse_only=SoupStrainer('tr'), from_encoding='ISO-8859-1')
-    for name,method in methods.items():
-        val = method(soup)
-        setattr(compra,name,val)
+    if not is_error_page(soup):
+        for name,method in methods.items():
+            val = method(soup)
+            setattr(compra,name,val)
     compra.parsed = True
     return compra 
 
