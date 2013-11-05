@@ -15,7 +15,7 @@ import itertools
 import os
 
 logger = logging.getLogger('DB')
-CHUNK_SIZE=3000
+CHUNK_SIZE=400
 
 db_url = os.environ['panacompra_db']
 engine = create_engine(db_url, convert_unicode=True)
@@ -55,10 +55,11 @@ def process_compra(compra):
   return compra
 
 def process_pending():
+    count_query = session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True)
     query = session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).options(undefer('html')).limit(CHUNK_SIZE)
-    logger.info("%i compras pending", query.count())
     pool = Pool(processes=cpu_count())
     while query.count() > 0:
+        logger.info("%i compras pending", count_query.count())
         results = process_query(query,pool)
         merge_results(results)
     logger.info("compras added to db")
