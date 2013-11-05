@@ -13,8 +13,11 @@ def parse_html(compra,methods):
     soup = BeautifulSoup(compra.html,'html.parser',parse_only=SoupStrainer('tr'), from_encoding='ISO-8859-1')
     if not is_error_page(soup):
         for name,method in methods.items():
-            val = method(soup)
-            setattr(compra,name,val)
+            try:
+                val = method(soup)
+                setattr(compra,name,val)
+            except Exception as e:
+                print(e)
     compra.parsed = True
     return compra 
 
