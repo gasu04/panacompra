@@ -15,7 +15,7 @@ import itertools
 import os
 
 logger = logging.getLogger('DB')
-CHUNK_SIZE=400
+CHUNK_SIZE=1600
 
 db_url = os.environ['panacompra_db']
 engine = create_engine(db_url, convert_unicode=True)
@@ -95,6 +95,7 @@ def process_compras_queue(compras_queue,urls):
         compra = compras_queue.get()
         compras_queue.task_done()
         if compra.url not in urls: 
+            compra = process_compra(compra)
             session.add(compra) 
             urls.add(compra.url)
     session.commit()
