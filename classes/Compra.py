@@ -8,8 +8,8 @@ Base = declarative_base()
 class Compra(Base):
   __tablename__ = 'compras'
   
-  id = Column(Integer, Sequence('compras_id_seq'))
-  url = Column(Unicode(200), primary_key=True)
+  id = Column(Integer, Sequence('compras_id_seq'), primary_key=True)
+  url = Column(Unicode(200), unique=True)
   html = deferred(Column(UnicodeText))
   visited = deferred(Column(Boolean))
   parsed = deferred(Column(Boolean))
@@ -28,7 +28,7 @@ class Compra(Base):
   precio_cd = deferred(Column(Numeric(15,2)))
   proponente = deferred(Column(Unicode(200)))
   description = deferred(Column(UnicodeText))
-  acto = deferred(Column(Unicode(200)))
+  acto = deferred(Column(Unicode(200), unique=True))
   fecha = deferred(Column(DateTime))
   created_at = deferred(Column(Date, default=datetime.now))
   updated_at = deferred(Column(Date, default=datetime.now, onupdate=datetime.now))
