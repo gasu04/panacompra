@@ -97,7 +97,7 @@ def extract_nombre_contacto(soup):
     return sanitize(soup.find('td',text='Datos de Contacto').parent.find_next_sibling('tr').find('td').find_next_sibling('td').string)
     
 def extract_telefono_contacto(soup):
-    return sanitize(soup.find('td',text='Datos de Contacto').parent.find_next_sibling('tr').find_next_sibling('tr').find_next_sibling('tr').find('td').find_next_sibling('td').string)
+    return sanitize(soup.find('td',text='Datos de Contacto').parent.find_next_sibling('tr').find_next_sibling('tr').find_next_sibling('tr').find('td').find_next_sibling('td').string[:14])
 
 def extract_fecha(soup):
     return parse_date(soup.find('td',text=re.compile('Fecha de Pub.*')).find_next_sibling('td').string)
