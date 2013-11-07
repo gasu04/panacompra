@@ -15,7 +15,7 @@ import itertools
 import os
 
 logger = logging.getLogger('DB')
-CHUNK_SIZE=1600
+CHUNK_SIZE=800
 
 db_url = os.environ['panacompra_db']
 engine = create_engine(db_url, convert_unicode=True)
@@ -61,18 +61,18 @@ def process_pending():
     while query.count() > 0:
         logger.info("%i compras pending", count_query.count())
         results = process_query(query,pool)
-        merge_results(results)
+        merge_query(query,results)
     logger.info("compras added to db")
+
+def merge_result(results):
+    for compra in results:
+        session.merge(compra)
+        session.commit()
 
 def process_query(query,pool):
     cache = query.all()
     results = pool.imap_unordered(process_compra, cache, int(ceil(len(cache)/cpu_count())))
     return results
-
-def merge_results(results):
-    for compra in results: 
-        session.merge(compra)
-    session.commit()
 
 def reparse():
     logger.info("Setting parsed to FALSE and parsing again")
@@ -95,7 +95,6 @@ def process_compras_queue(compras_queue,urls):
         compra = compras_queue.get()
         compras_queue.task_done()
         if compra.url not in urls: 
-            compra = process_compra(compra)
             session.add(compra) 
             urls.add(compra.url)
     session.commit()
