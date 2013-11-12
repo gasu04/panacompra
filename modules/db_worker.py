@@ -109,3 +109,6 @@ def get_all_urls():
 def merge_query(query,result):
     query.merge_result(result)
     session.commit()
+
+def query_css_minsa():
+    return session.query(Compra).filter(Compra.category_id == 95).options(undefer('description'),undefer('precio')).limit(300)
