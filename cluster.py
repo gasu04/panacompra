@@ -9,7 +9,7 @@ import nltk
 from time import sleep
  
 stemmer_func = nltk.stem.snowball.SpanishStemmer().stem
-stopwords = set(nltk.corpus.stopwords.words('spanish'))
+stopwords = set(nltk.corpus.stopwords.words('spanish')).union({'de','para','la','en','y','con','par'})
  
 @decorators.memoize
 def normalize_word(word):
@@ -26,29 +26,35 @@ def vectorspaced(document):
  
 if __name__ == '__main__':
  
+    nclusters = 15
     query = db_worker.query_css_minsa()
     compras,documents = zip(*[(compra,compra.description) for compra in query.all()])
     print('got docs')
     words = get_words(documents)
     print('got words')
 
-    cluster = KMeansClusterer(15, euclidean_distance)
-#    cluster = GAAClusterer(10)
+    cluster = KMeansClusterer(nclusters, euclidean_distance)
+#    cluster = GAAClusterer(nclusters)
     cluster.cluster_vectorspace([vectorspaced(document) for document in documents if document])
     classified_examples = [(compra,cluster.classify(vectorspaced(document))) for compra,document in zip(compras,documents)]
 
 
     ## dict of { cluster:sum(price of compras in cluster) for cluster in cluster }
-    clusters = { i:0 for i in range(15) }
+    clusters = { i:{'price':0} for i in range(nclusters) }
     for compra,cluster_id in classified_examples:
-        clusters[cluster_id] = clusters[cluster_id] + compra.precio
+        clusters[cluster_id]['price'] = clusters[cluster_id]['price'] + compra.precio
 
 
-    m = max(clusters.keys(),key=lambda x: clusters[x]) #get max price cluster
+    #m = max(clusters.keys(),key=lambda x: clusters[x]) #get max price cluster
     #print freqdist > 4
-    dist = []
-    for compra,cluster in filter(lambda x: x[1] == m,classified_examples):
-        dist.extend([normalize_word(word) for word in compra.description.split() if word not in stopwords])
-    for f,w in FreqDist(dist).items():
-        if w > 4:
-            print(f,w)
+    for m in range(nclusters):
+        dist = []
+        for compra,cluster in filter(lambda x: x[1] == m,classified_examples):
+            dist.extend([normalize_word(word) for word in compra.description.split() if word not in stopwords and normalize_word(word) not in stopwords])
+        clusters[m]['dist'] = FreqDist(dist)
+
+    for key in clusters.keys():
+        print("cluster: %i (%d)" % (key, clusters[key]['price']))
+        for w,f in clusters[key]['dist'].items():
+            if f > 4:
+                print('\t',w,f)
