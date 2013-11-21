@@ -1,4 +1,5 @@
 import re
+from sqlalchemy import func
 import logging
 from datetime import datetime
 from time import sleep
@@ -18,6 +19,7 @@ logger = logging.getLogger('DB')
 CHUNK_SIZE=800
 
 db_url = os.environ['panacompra_db']
+db_url = "postgres://tcixoyjoepgpyi:BNLpWudAaZKshSptz3bDXx0CuK@ec2-54-221-204-17.compute-1.amazonaws.com:5432/d2trc2b2csosqf"
 engine = create_engine(db_url, convert_unicode=True)
 Base.metadata.create_all(engine)
 session_maker = sessionmaker(bind=engine)
@@ -95,6 +97,7 @@ def process_compras_queue(compras_queue,urls):
         compra = compras_queue.get()
         compras_queue.task_done()
         if compra.url not in urls: 
+            compra = process_compra(compra)
             session.add(compra) 
             urls.add(compra.url)
     session.commit()
@@ -111,4 +114,7 @@ def merge_query(query,result):
     session.commit()
 
 def query_css_minsa():
-    return session.query(Compra).filter(Compra.category_id == 95).options(undefer('description'),undefer('precio')).limit(300)
+    return session.query(Compra).filter(Compra.category_id == 95).filter(Compra.parsed == True).options(undefer('entidad'),undefer('precio'),undefer('fecha'))
+
+def hospitales():
+    return session.query(Compra.unidad, func.sum(Compra.precio)).filter(Compra.category_id == 95).group_by(Compra.unidad)
