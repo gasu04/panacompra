@@ -19,11 +19,10 @@ logger = logging.getLogger('DB')
 CHUNK_SIZE=800
 
 db_url = os.environ['panacompra_db']
-db_url = "postgres://tcixoyjoepgpyi:BNLpWudAaZKshSptz3bDXx0CuK@ec2-54-221-204-17.compute-1.amazonaws.com:5432/d2trc2b2csosqf"
-engine = create_engine(db_url, convert_unicode=True)
+engine = create_engine(db_url, convert_unicode=True, echo=True)
 Base.metadata.create_all(engine)
 session_maker = sessionmaker(bind=engine)
-session = session_maker()
+logger.info('db_worker loaded with db_url %s', db_url)
 
 def query_chunks(q, n):
   """ Yield successive n-sized chunks from query object."""
@@ -57,19 +56,16 @@ def process_compra(compra):
   return compra
 
 def process_pending():
+    session = session_maker()
     count_query = session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True)
     query = session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).options(undefer('html')).limit(CHUNK_SIZE)
     pool = Pool(processes=cpu_count())
     while query.count() > 0:
         logger.info("%i compras pending", count_query.count())
         results = process_query(query,pool)
-        merge_query(query,results)
-    logger.info("compras added to db")
-
-def merge_result(results):
-    for compra in results:
-        session.merge(compra)
+        query.merge_result(results)
         session.commit()
+    logger.info("compras added to db")
 
 def process_query(query,pool):
     cache = query.all()
@@ -77,22 +73,27 @@ def process_query(query,pool):
     return results
 
 def reparse():
+    session = session_maker()
     logger.info("Setting parsed to FALSE and parsing again")
     session.query(Compra).update({'parsed':False})
     session.commit()
     process_pending()
 
 def query_not_visited():
+    session = session_maker()
     return session.query(Compra).filter(Compra.visited == False).limit(CHUNK_SIZE)
 
 def count_not_visited():
+    session = session_maker()
     return session.query(Compra).filter(Compra.visited == False).count()
 
 def reset_visited():
+    session = session_maker()
     session.query(Compra.Compra).update({'visited':False})
     session.commit()
 
 def process_compras_queue(compras_queue,urls):
+    session = session_maker()
     while compras_queue.qsize() > 0:
         compra = compras_queue.get()
         compras_queue.task_done()
@@ -100,21 +101,21 @@ def process_compras_queue(compras_queue,urls):
             compra = process_compra(compra)
             session.add(compra) 
             urls.add(compra.url)
-    session.commit()
+            session.commit()
+            logger.info('got new compra %s', compra.acto)
 
 def get_all_urls():
+    session = session_maker()
     try:
         urls = list(zip(*session.query(Compra.url).all()))[0]
         return {item.lower() for item in urls}
     except:
         return set()
 
-def merge_query(query,result):
-    query.merge_result(result)
-    session.commit()
-
 def query_css_minsa():
+    session = session_maker()
     return session.query(Compra).filter(Compra.category_id == 95).filter(Compra.parsed == True).options(undefer('entidad'),undefer('precio'),undefer('fecha'))
 
 def hospitales():
+    session = session_maker()
     return session.query(Compra.unidad, func.sum(Compra.precio)).filter(Compra.category_id == 95).group_by(Compra.unidad)
