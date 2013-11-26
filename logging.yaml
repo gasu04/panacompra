@@ -39,6 +39,10 @@ loggers:
     level: DEBUG
     handlers: [file,console]
     propagate: no
+  worker:
+    level: INFO 
+    handlers: [file,console]
+    propagate: no
   db_worker:
     level: INFO 
     handlers: [file,console]

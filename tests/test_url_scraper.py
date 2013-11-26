@@ -48,9 +48,9 @@ class TestParser(unittest.TestCase):
         self.assertEqual(html,compra_html_decoded)
         self.assertNotEqual(html,compra_html_raw)
 
-    def test_eat_compra(self):
+    def test_visit_compra(self):
         self.assertIsNone(self.compra.html)
-        compra = self.thread.eat_compra(self.compra)
+        compra = self.thread.visit_compra(self.compra)
         self.assertIs(compra,self.compra)
         self.assertTrue(compra.visited)
         self.assertIsNotNone(compra.html)

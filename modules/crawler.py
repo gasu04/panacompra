@@ -5,6 +5,7 @@ import re
 import logging
 from queue import Queue
 from classes.UrlScraper import UrlScraperThread
+from classes.Worker import Worker
 from classes.CompraScraper import CompraScraperThread
 from modules import db_worker
 from time import sleep
@@ -23,7 +24,7 @@ def get_categories():
 
 def parse_categories_html(html):
     """returns an array of ints (category ids) from html"""
-    soup = BeautifulSoup(html, parse_only=SoupStrainer('a'))
+    soup = BeautifulSoup(html, 'lxml', parse_only=SoupStrainer('a'))
     links = soup.find_all(href=re.compile("VerDetalleRubro"))
     logger.info('compras on site: %i',(sum([int(link.string) for link in links])))
     return [re.match(r"(?:.*Rubro\()([0-9]*)",link.get('href')).group(1) for link in links]
@@ -68,18 +69,22 @@ def join_threads(threads):
     return threads
 
 def run(update=False):
+    scrapers = []
+    compras_queue = Queue()
     categories = get_categories() #scrape and store list of categories
     urls = db_worker.get_all_urls()
     logger.info('cached %i urls', len(urls))
-    compras_queue = Queue()
-    scrapers = []
-    logger.info('spawning %i UrlScraperThreads', THREADS)
+    worker = spawn_worker(compras_queue,urls,scrapers)
     while len(categories) > 0:
-        scrapers.extend(spawn_scrapers(categories,compras_queue,connection_pool,urls,THREADS - active_count() + 1,update))
-        db_worker.process_compras_queue(compras_queue,urls)
+        scrapers.extend(spawn_scrapers(categories,compras_queue,connection_pool,urls,THREADS + 2 - active_count(),update))
         sleep(0.1)
     join_threads(scrapers)
-    db_worker.process_compras_queue(compras_queue,urls)
+
+def spawn_worker(html_queue,urls,scrapers):
+    thread = Worker(html_queue,urls,scrapers)
+    thread.setDaemon(True)
+    thread.start()
+    return thread
 
 def visit_pending():
     query = db_worker.query_not_visited()
