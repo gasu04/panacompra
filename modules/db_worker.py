@@ -15,14 +15,14 @@ from math import ceil
 import itertools
 import os
 
-logger = logging.getLogger('DB')
+logger = logging.getLogger('db_worker')
 CHUNK_SIZE=800
 
 db_url = os.environ['panacompra_db']
-engine = create_engine(db_url, convert_unicode=True, echo=True)
+logger.info('loading %s', db_url)
+engine = create_engine(db_url, convert_unicode=True, echo=False)
 Base.metadata.create_all(engine)
 session_maker = sessionmaker(bind=engine)
-logger.info('db_worker loaded with db_url %s', db_url)
 
 def query_chunks(q, n):
   """ Yield successive n-sized chunks from query object."""
@@ -101,8 +101,8 @@ def process_compras_queue(compras_queue,urls):
             compra = process_compra(compra)
             session.add(compra) 
             urls.add(compra.url)
-            session.commit()
             logger.info('got new compra %s', compra.acto)
+            session.commit()
 
 def get_all_urls():
     session = session_maker()

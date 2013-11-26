@@ -25,6 +25,7 @@ def parse_categories_html(html):
     """returns an array of ints (category ids) from html"""
     soup = BeautifulSoup(html, parse_only=SoupStrainer('a'))
     links = soup.find_all(href=re.compile("VerDetalleRubro"))
+    logger.info('compras on site: %i',(sum([int(link.string) for link in links])))
     return [re.match(r"(?:.*Rubro\()([0-9]*)",link.get('href')).group(1) for link in links]
 
 def get_categories_html():
@@ -42,6 +43,7 @@ def spawn_scrapers(categories,compras_queue,connection_pool,urls,n,update=False)
             scrapers.append(t)
             t.start()
         except IndexError:
+            logger.info('exahusted categories')
             break 
     return scrapers
 
@@ -56,6 +58,7 @@ def spawn_compra_scrapers(compras):
                 compra_scrapers.append(t)
                 t.start()
             except StopIteration:
+               logger.info('exahusted compras')
                return join_threads(compra_scrapers)
         sleep(0.1)
 
@@ -67,6 +70,7 @@ def join_threads(threads):
 def run(update=False):
     categories = get_categories() #scrape and store list of categories
     urls = db_worker.get_all_urls()
+    logger.info('cached %i urls', len(urls))
     compras_queue = Queue()
     scrapers = []
     logger.info('spawning %i UrlScraperThreads', THREADS)

@@ -31,11 +31,15 @@ loggers:
     level: DEBUG
     handlers: [file]
     propagate: no
+  Parser:
+    level: DEBUG
+    handlers: [file,console]
+    propagate: no
   UrlScraper:
     level: DEBUG
     handlers: [file,console]
     propagate: no
-  DB:
+  db_worker:
     level: INFO 
     handlers: [file,console]
     propagate: no
