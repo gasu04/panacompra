@@ -34,8 +34,9 @@ class UrlScraperThread(threading.Thread):
     with open('form.data') as har:
         self.data = dict(urllib.parse.parse_qsl(har.read()))
 
-  def reset_page(self):
+  def reset_page(self,pages):
     self.data['ctl00$ContentPlaceHolder1$ControlPaginacion$hidNumeroPagina'] = 1
+    self.data['ctl00$ContentPlaceHolder1$ControlPaginacion$hidTotalPaginas'] = int(pages)
   
   def increment_page(self):
     self.data['ctl00$ContentPlaceHolder1$ControlPaginacion$hidNumeroPagina'] = 1 + int(self.data['ctl00$ContentPlaceHolder1$ControlPaginacion$hidNumeroPagina'])
@@ -47,13 +48,15 @@ class UrlScraperThread(threading.Thread):
     return int(self.data['ctl00$ContentPlaceHolder1$ControlPaginacion$hidNumeroPagina'])
 
   def run(self):
-    self.reset_page()
-    self.parse_max_pages()
+    pages = self.parse_max_pages()
+    self.reset_page(pages)
     shuffle(self.pages)
     self.logger.debug('starting category %s [%s pages]',self.category,len(self.pages))
     while self.pages:
       try:
         current_page = self.pages.pop()
+        progress = int((pages - len(self.pages))/pages*100) 
+        if progress % 25 == 0: self.logger.debug('category %i at %i%%', int(self.category), progress) 
         self.set_page(current_page)
         self.eat_urls_for_category(self.category)
       except Exception as e:
@@ -86,6 +89,7 @@ class UrlScraperThread(threading.Thread):
       html = self.get_category_page()
       pages = self.pages_regex.findall(html)[0]
     self.pages = [i + 1 for i in range(int(pages))]
+    return len(self.pages)
   
   def __str__(self):
     return "<(UrlScraper: category[%i], pending[%i])>" % (int(self.category), (len(self.pages)))
@@ -100,7 +104,7 @@ class UrlScraperThread(threading.Thread):
     try:
         response = self.connection.request("GET", url)
         data = response.data
+        return data.decode('ISO-8859-1','ignore')
     except Exception as e:
         self.logger.debug('%s from %s',str(e) ,str(self))
-    self.logger.info('got new compra')
-    return data.decode('ISO-8859-1','ignore')
+    
