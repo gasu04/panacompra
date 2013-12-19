@@ -82,8 +82,8 @@ class UrlScraperThread(threading.Thread):
     else:
       html = self.get_category_page()
       pages = self.pages_regex.findall(html)[0]
-    self.pages = [i + 1 for i in range(int(pages))]
-    self.reset_page(len(pages))
+    self.pages = list(range(1,int(pages) + 1))
+    self.reset_page(len(self.pages))
 
   def visit_compra(self,compra):
     url_path = "/AmbientePublico/" + compra.url #append path

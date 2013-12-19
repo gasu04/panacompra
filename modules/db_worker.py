@@ -1,6 +1,8 @@
 import re
+from sqlalchemy import or_
 from sqlalchemy import func
 import logging
+from scipy import stats
 from datetime import datetime
 from time import sleep
 from time import strptime
@@ -8,6 +10,8 @@ from time import strftime
 from sqlalchemy.sql import exists
 from sqlalchemy.orm import sessionmaker,undefer
 from sqlalchemy import create_engine
+from sqlalchemy import Date, cast
+from datetime import date
 from classes.Compra import Compra,Base
 from multiprocessing import Pool,cpu_count,Lock
 from modules import parser
@@ -16,7 +20,7 @@ import itertools
 import os
 
 logger = logging.getLogger('db_worker')
-CHUNK_SIZE=800
+CHUNK_SIZE=3800
 
 db_url = os.environ['panacompra_db']
 logger.info('loading %s', db_url)
@@ -38,7 +42,7 @@ def process_pending():
     session = session_maker()
     count_query = session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True)
     query = session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).options(undefer('html')).limit(CHUNK_SIZE)
-    pool = Pool(processes=cpu_count())
+    pool = Pool(processes=1)
     while query.count() > 0:
         logger.info("%i compras pending", count_query.count())
         results = process_query(query,pool)
@@ -46,9 +50,30 @@ def process_pending():
         session.commit()
     logger.info("compras added to db")
 
+def process_compra(compra):
+  modules = {
+    'precio': parser.extract_precio,
+    'description': parser.extract_description,
+    'compra_type': parser.extract_compra_type,
+    'dependencia': parser.extract_dependencia,
+    'unidad': parser.extract_unidad,
+    'objeto': parser.extract_objeto,
+    'modalidad': parser.extract_modalidad,
+    'provincia': parser.extract_provincia,
+    'correo_contacto': parser.extract_correo_contacto,
+    'nombre_contacto': parser.extract_nombre_contacto,
+    'telefono_contacto': parser.extract_telefono_contacto,
+    'fecha': parser.extract_fecha,
+    'acto': parser.extract_acto,
+    'entidad': parser.extract_entidad,
+    'proponente': parser.extract_proponente
+  }
+  compra = parser.parse_html(compra,modules)
+  return compra
+
 def process_query(query,pool):
     cache = query.all()
-    results = pool.imap_unordered(process_compra, cache, int(ceil(len(cache)/cpu_count())))
+    results = pool.imap_unordered(process_compra, cache, int(ceil(len(cache)/1)))
     return results
 
 def reparse():
@@ -60,7 +85,9 @@ def reparse():
 
 def query_not_visited():
     session = session_maker()
-    return session.query(Compra).filter(Compra.visited == False).limit(CHUNK_SIZE)
+    cache = list(session.query(Compra).filter(Compra.visited == False))
+    session.close()
+    return cache
 
 def count_not_visited():
     session = session_maker()
@@ -85,9 +112,28 @@ def get_all_urls():
     except:
         return set()
 
+def query_all():
+    session = session_maker()
+    return session.query(Compra).filter(Compra.parsed == True).filter(Compra.precio > 0).filter(Compra.fecha != None)
+
+def mode_price():
+    session = session_maker()
+    maxes = session.query(func.max(Compra.precio)).group_by(cast(Compra.fecha,Date)).all()
+    return stats.mode(list(filter(None,[m[0] for m in maxes])))
+
+def history_price():
+    session = session_maker()
+    history = session.query(Compra.entidad,func.sum(Compra.precio),func.date_trunc('month', Compra.fecha)).group_by(Compra.entidad,func.date_trunc('month',Compra.fecha)).order_by(func.date_trunc('month',Compra.fecha)).filter(Compra.entidad.startswith('MINISTERIO')).all()
+    return history
+
+def query_frequency():
+    session = session_maker()
+    return session.query(Compra.entidad,func.count(),func.date_trunc('week',Compra.fecha,)).filter(Compra.precio > 0).filter(Compra.fecha != None).group_by(Compra.entidad,func.date_trunc('week',Compra.fecha)).order_by(func.date_trunc('week',Compra.fecha)).filter(Compra.entidad.startswith('MINISTERIO')).all()
+
+
 def query_css_minsa():
     session = session_maker()
-    return session.query(Compra).filter(Compra.category_id == 95).filter(Compra.parsed == True).options(undefer('entidad'),undefer('precio'),undefer('fecha'))
+    return session.query(Compra).filter(or_(Compra.entidad == 'CAJA DE SEGURO SOCIAL', Compra.entidad == 'MINISTERIO DE SALUD')).filter(Compra.parsed == True)
 
 def hospitales():
     session = session_maker()

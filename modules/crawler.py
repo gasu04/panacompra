@@ -48,20 +48,19 @@ def spawn_scrapers(categories,compras_queue,connection_pool,urls,n,update=False)
             break 
     return scrapers
 
-def spawn_compra_scrapers(compras):
+def spawn_compra_scrapers(compras,compras_queue):
     compra_scrapers = []
-    threads = THREADS - active_count() + 1
-    while True:
-        for i in range(threads):
-            try:
-                t = CompraScraperThread(next(compras),connection_pool)
-                t.setDaemon(True)
-                compra_scrapers.append(t)
-                t.start()
-            except StopIteration:
-               logger.info('exahusted compras')
-               return join_threads(compra_scrapers)
-        sleep(0.1)
+    threads = THREADS + 2 - active_count()
+    for i in range(threads):
+        try:
+            t = CompraScraperThread(compras.pop(),compras_queue,connection_pool)
+            t.setDaemon(True)
+            compra_scrapers.append(t)
+            t.start()
+        except IndexError:
+           logger.info('exahusted compras')
+           break
+    return compra_scrapers
 
 def join_threads(threads):
     while any([thread.is_alive() for thread in threads]):
@@ -81,20 +80,22 @@ def run(update=False):
     join_threads(scrapers)
 
 def spawn_worker(html_queue,urls,scrapers):
-    thread = Worker(html_queue,urls,scrapers)
+    thread = Worker(html_queue,scrapers)
     thread.setDaemon(True)
     thread.start()
     return thread
 
 def visit_pending():
-    query = db_worker.query_not_visited()
+    compras_queue = Queue()
+    scrapers = []
     logger.info('%i compras pending', db_worker.count_not_visited())
     logger.info('spawning %i CompraScraperThreads', THREADS)
-    while query.count() > 0:
-        cache = query.all()
-        spawn_compra_scrapers(iter(cache))
-        db_worker.merge_query(query,cache)
-        del cache
+    urls = db_worker.get_all_urls()
+    cache = db_worker.query_not_visited()
+    worker = spawn_worker(compras_queue,urls,scrapers)
+    while len(cache) > 0: 
+        scrapers.extend(spawn_compra_scrapers(cache,compras_queue))
+        sleep(0.1)
 
 def revisit():
     db_worker.reset_visited()

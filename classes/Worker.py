@@ -30,10 +30,9 @@ def process_compra(compra):
   return compra
 
 class Worker(Thread): 
-    def __init__(self,html_queue,urls,scrapers): 
+    def __init__(self,html_queue,scrapers): 
         Thread.__init__(self) 
         self.html_queue = html_queue 
-        self.urls = urls
         self.scrapers = scrapers
  
     def run(self): 
@@ -41,9 +40,7 @@ class Worker(Thread):
             try: 
                 compra = self.html_queue.get(timeout=20) 
                 self.html_queue.task_done() 
-                if compra.url not in self.urls:
-                    compra = process_compra(compra) 
-                    self.urls.add(compra.url)
+                compra = process_compra(compra) 
             except Empty: 
                 if not any([scraper.is_alive() for scraper in self.scrapers]):
                     raise Exception('worker is dead') 

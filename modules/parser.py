@@ -47,29 +47,21 @@ def parse_precio(precio):
 def sanitize(string):
   return str(re.sub(' +',' ', string)) #no repeated spaces
 
-def parse_and_sanitize(string,name):
-  string = sanitize(string)
-  if name == "fecha":
-    string = parse_date(string)
-  elif name == 'precio' or name == 'precio_cd':
-    string = parse_precio(string)
-  elif name == 'proponente':
-    string = sanitize(string[:199])
-  elif name == 'telefono_contacto':
-    string = string[:14]
-  return string
-
 def extract_precio(soup):
-    try:
-        precio = soup.find('td',text='Precio Referencia:').find_next_sibling('td').string
-    except AttributeError:
-        precio = soup.find('td',text='Monto de la Contratación:').find_next_sibling('td').string 
-    finally:
-        return parse_precio(precio)
+    precio = soup.find(text='Precio Referencia:')
+    precio_d = soup.find(text='Monto de la Contratación:')
+    if precio:
+        return parse_precio(precio.parent.find_next_sibling('td').string)
+    elif precio_d:
+        return parse_precio(precio_d.parent.find_next_sibling('td').string)
+    else:
+        return Decimal(0)
     
 def extract_description(soup):
-    a = sanitize(soup.find('td',text='Descripción:').find_next_sibling('td').string)
-    return a
+    a = soup.find(text='Descripción:')
+    if a is not None and a.string is not None:
+        return sanitize(a.parent.find_next_sibling('td').string)
+    return None
 
 def extract_compra_type(soup):
     return sanitize(soup.find('td',text='Tipo de Procedimiento:').find_next_sibling('td').string)
