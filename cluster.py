@@ -1,5 +1,5 @@
 from modules import db_worker
-
+from sqlalchemy.orm import undefer
 import numpy
 from nltk.cluster import KMeansClusterer, GAAClusterer, euclidean_distance
 from nltk import FreqDist
@@ -21,21 +21,21 @@ def get_words(documents):
  
 @decorators.memoize
 def vectorspaced(document):
-    document_components = [normalize_word(word) for word in document.split()]
+    document_components = [normalize_word(word) for word in document.split() if word not in stopwords]
     return numpy.array([word in document_components and not word in stopwords for word in words], numpy.short)
  
 if __name__ == '__main__':
  
     nclusters = 15
-    query = db_worker.query_css_minsa()
+    query = db_worker.query_css_minsa().options(undefer('description')).limit(3000)
     compras,documents = zip(*[(compra,compra.description) for compra in query.all()])
     print('got docs')
     words = get_words(documents)
     print('got words')
 
-    cluster = KMeansClusterer(nclusters, euclidean_distance)
-#    cluster = GAAClusterer(nclusters)
-    cluster.cluster_vectorspace([vectorspaced(document) for document in documents if document])
+#    cluster = KMeansClusterer(nclusters, euclidean_distance)
+    cluster = GAAClusterer(nclusters)
+    cluster.cluster([vectorspaced(document) for document in documents if document])
     classified_examples = [(compra,cluster.classify(vectorspaced(document))) for compra,document in zip(compras,documents)]
 
 
