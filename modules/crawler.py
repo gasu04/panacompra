@@ -80,7 +80,7 @@ def run(update=False):
     join_threads(scrapers)
 
 def spawn_worker(html_queue,urls,scrapers):
-    thread = Worker(html_queue,scrapers)
+    thread = Worker(html_queue,urls,scrapers)
     thread.setDaemon(True)
     thread.start()
     return thread
