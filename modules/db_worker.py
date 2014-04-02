@@ -18,6 +18,7 @@ from modules import parser
 from math import ceil
 import itertools
 import os
+import random
 
 logger = logging.getLogger('db_worker')
 CHUNK_SIZE=3800
@@ -151,7 +152,9 @@ def url_brute():
     visited = get_all_urls()
     session = session_maker()
     cache = session.execute("select distinct(split_part(acto,'-',2),split_part(acto,'-',3),split_part(acto,'-',4),split_part(acto,'-',5),split_part(acto,'-',6)) acto_ ,max(split_part(acto,'-',7)),min(split_part(acto,'-',7)) from compras group by acto_ limit 100")
-    for row in cache.fetchall():
+    cache = cache.fetchall()
+    random.shuffle(cache)
+    for row in cache:
         try:
             for i in range(int(row[2]),(int(row[1])+1)):
                 for year in [2012,2013]:
