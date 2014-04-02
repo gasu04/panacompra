@@ -54,7 +54,7 @@ def spawn_compra_scrapers(compras,compras_queue):
     threads = THREADS + 2 - active_count()
     for i in range(threads):
         try:
-            t = CompraScraperThread(compras.pop(),compras_queue,connection_pool)
+            t = CompraScraperThread(next(compras),compras_queue,connection_pool)
             t.setDaemon(True)
             compra_scrapers.append(t)
             t.start()
@@ -95,7 +95,7 @@ def visit_pending():
     cache = db_worker.query_not_visited()
     worker = spawn_worker(compras_queue,urls,scrapers)
     while len(cache) > 0: 
-        scrapers.extend(spawn_compra_scrapers(cache,compras_queue))
+        scrapers.extend(spawn_compra_scrapers(iter(cache),compras_queue))
         sleep(0.1)
 
 def revisit():
@@ -109,8 +109,8 @@ def bruteforce():
     logger.info('spawning %i CompraScraperThreads', THREADS)
     urls = db_worker.get_all_urls()
     cache = db_worker.url_brute()
-    logger.info('initializing brute with %i urls', len(cache))
+    logger.info('initializing brute')
     worker = spawn_worker(compras_queue,urls,scrapers)
-    while len(cache) > 0: 
+    while True:
         scrapers.extend(spawn_compra_scrapers(cache,compras_queue))
-        sleep(0.1)
+        sleep(0.2)

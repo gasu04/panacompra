@@ -151,15 +151,13 @@ def url_brute():
     visited = get_all_urls()
     session = session_maker()
     cache = session.execute("select distinct(split_part(acto,'-',2),split_part(acto,'-',3),split_part(acto,'-',4),split_part(acto,'-',5),split_part(acto,'-',6)) acto_ ,max(split_part(acto,'-',7)),min(split_part(acto,'-',7)) from compras group by acto_ limit 100")
-    compras = []
     for row in cache.fetchall():
         try:
             for i in range(int(row[2]),(int(row[1])+1)):
                 for year in [2012,2013]:
                         url = build_url(year,row[0],i)
                         if url not in visited:
-                                compras.append(Compra(url,0))
+                                yield Compra(url,0)
         except Exception as e:
             print(e)
             continue
-    return list(compras)
