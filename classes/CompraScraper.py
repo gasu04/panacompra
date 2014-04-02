@@ -14,7 +14,8 @@ class CompraScraperThread(threading.Thread):
     def run(self):
       try:
         compra = self.visit_compra(self.compra)
-        self.compras_queue.put(compra)
+        if compra:
+            self.compras_queue.put(compra)
       except Empty:
         return
       except Exception as e:
@@ -31,4 +32,7 @@ class CompraScraperThread(threading.Thread):
 
     def get_compra_html(self,url):
         response = self.connection.request("GET", url)
-        return response.data.decode('ISO-8859-1','ignore')
+        if response.status == 200:
+            return response.data.decode('ISO-8859-1','ignore')
+        else:
+            return None
