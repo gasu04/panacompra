@@ -14,6 +14,8 @@ from datetime import date
 import random
 import pprint
 import locale
+import re
+from classes.Compra import Compra,Base
 from datetime_truncate import truncate as trunc
 
 query = db_worker.query_css_minsa()
@@ -85,17 +87,17 @@ def scatter(cache,key,limit=1000000000):
     cache = list(cache)
     db = cache_to_dict(cache,key,limit)
     plt.figure(figsize=(11,7))
-    plt.subplot(111)
+    ax = plt.subplot(111)
     price,time,color = cache_to_list(cache,key,limit)
     colormap,legends = colormap_for_key(color)
     plt.scatter(list(time),list(price),c=colormap,alpha=0.8,edgecolors='None')
-    if limit > 10000: 
-        plt.yscale('log', style='plain')
-        plt.yticks(list([10**i for i in range(0,10)]))
+##    if limit > 10000: 
+##        plt.yscale('log', style='plain')
+##        plt.yticks(list([10**i for i in range(0,10)]))
     legend,name = zip(*legends)
-    plt.legend(legend, name, loc=2, prop={'size':8})
-    plt.savefig('output_scatter.png',orientation='landscape')
+    lgd = ax.legend(legend, name, loc='upper center', prop={'size':8},bbox_to_anchor=(0.5,-0.1))
     plt.tight_layout()
+    plt.savefig('output_scatter.png',bbox_extra_artists=(lgd,),bbox_inches='tight',orientation='landscape')
     return plt
 
 def cache_to_list(cache,key,limit):
@@ -170,20 +172,20 @@ def plot_css_mins(cache):
     plt.plot(t_css,css,'ro',t_minsa,minsa,'bs')
     plt.yscale('log')
     plt.show()
-
 #cache = db_worker.history_price()
 #cache = db_worker.query_frequency()
 
+#cache = session.query(Compra).filter(Compra.precio > 260000).filter(Compra.precio < 300000).all()
 #cache = db_worker.query_all().all()
-cache = db_worker.query_css_minsa().all()
+#cache = db_worker.query_css_minsa().all()
+
 
 #cache = filter(lambda x: 'ministerio' in x.entidad.lower(),cache)
-print('got cache')
-l = lambda x: x.entidad
-#p = scatter(cache,l,1000)
+#l = lambda x: x.entidad
+#p = scatter(cache,l)
 #p = plot_key_freq(cache,l,3000)
 #p = plot_key_mag(cache,l,3000)
-p = pie(cache,l,3000)
+#p = pie(cache,l,3000)
 #p.show()
 #plt.ylabel('Price in USD', fontdict=font)
 #p.savefig('all_l.png',orientation='landscape', bbox_inches=0,dpi=200)
