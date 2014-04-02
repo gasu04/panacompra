@@ -22,7 +22,7 @@ import os
 logger = logging.getLogger('db_worker')
 CHUNK_SIZE=3800
 
-db_url = os.environ['panacompra_db']
+db_url = os.environ['panadata_db']
 logger.info('loading %s', db_url)
 engine = create_engine(db_url, convert_unicode=True, echo=False)
 Base.metadata.create_all(engine)
