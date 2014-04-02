@@ -7,6 +7,7 @@ from queue import Queue
 from classes.UrlScraper import UrlScraperThread
 from classes.Worker import Worker
 from classes.CompraScraper import CompraScraperThread
+from classes.Compra import Compra
 from modules import db_worker
 from time import sleep
 from threading import active_count
@@ -100,3 +101,16 @@ def visit_pending():
 def revisit():
     db_worker.reset_visited()
     visit_pending()
+
+
+def bruteforce():
+    compras_queue = Queue()
+    scrapers = []
+    logger.info('spawning %i CompraScraperThreads', THREADS)
+    urls = db_worker.get_all_urls()
+    cache = db_worker.url_brute()
+    logger.info('initializing brute with %i urls', len(cache))
+    worker = spawn_worker(compras_queue,urls,scrapers)
+    while len(cache) > 0: 
+        scrapers.extend(spawn_compra_scrapers(cache,compras_queue))
+        sleep(0.1)

@@ -29,23 +29,23 @@ def process_compra(compra):
   db_worker.create_compra(compra)
   return compra
 
-class Worker(Thread): 
-    def __init__(self,html_queue,urls,scrapers): 
-        Thread.__init__(self) 
-        self.html_queue = html_queue 
+class Worker(Thread):
+    def __init__(self,html_queue,urls,scrapers):
+        Thread.__init__(self)
+        self.html_queue = html_queue
         self.urls = urls
         self.scrapers = scrapers
- 
-    def run(self): 
-        while True: 
-            try: 
-                compra = self.html_queue.get(timeout=20) 
-                self.html_queue.task_done() 
+
+    def run(self):
+        while True:
+            try:
+                compra = self.html_queue.get(timeout=20)
+                self.html_queue.task_done()
                 if compra.url not in self.urls:
-                    compra = process_compra(compra) 
+                    compra = process_compra(compra)
                     self.urls.add(compra.url)
-            except Empty: 
+            except Empty:
                 if not any([scraper.is_alive() for scraper in self.scrapers]):
-                    raise Exception('worker is dead') 
-                    return 
+                    raise Exception('worker is dead')
+                    return
 

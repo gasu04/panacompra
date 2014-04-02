@@ -7,14 +7,14 @@ from datetime import datetime
 Base = declarative_base()
 class Compra(Base):
   __tablename__ = 'compras'
-  
+
   id = Column(Integer, Sequence('compras_id_seq'), primary_key=True)
   url = Column(Unicode(200), unique=True)
   html = deferred(Column(UnicodeText))
   description = deferred(Column(UnicodeText))
   visited = Column(Boolean)
   parsed = Column(Boolean)
-  category_id = Column(Integer(3))
+  category_id = Column(Integer)
   compra_type = Column(Unicode(100))
   entidad = Column(Unicode(200))
   dependencia = Column(Unicode(200))
@@ -45,7 +45,7 @@ class Compra(Base):
 
   def __eq__(self, other):
     return self.url == other.url
-    
+
   def __getitem__(self,key):
     return getattr(self, key)
 

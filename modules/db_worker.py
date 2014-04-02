@@ -138,3 +138,28 @@ def query_css_minsa():
 def hospitales():
     session = session_maker()
     return session.query(Compra.unidad, func.sum(Compra.precio)).filter(Compra.category_id == 95).group_by(Compra.unidad)
+
+def parse_acto(acto):
+        return '-'.join(re.sub(r'\(|\)','',acto.lower()).split(','))
+
+def build_url(year,acto,i):
+    base = 'vistapreviacp.aspx?numlc=%s&esap=1&nnc=0&it=1'
+    acto = '-'.join([str(year),parse_acto(acto),"%06d" % (i,)])
+    return base % acto
+
+def url_brute():
+    visited = get_all_urls()
+    session = session_maker()
+    cache = session.execute("select distinct(split_part(acto,'-',2),split_part(acto,'-',3),split_part(acto,'-',4),split_part(acto,'-',5),split_part(acto,'-',6)) acto_ ,max(split_part(acto,'-',7)),min(split_part(acto,'-',7)) from compras group by acto_")
+    compras = []
+    for row in cache.fetchall():
+        try:
+            for i in range(int(row[2]),(int(row[1])+1)):
+                for year in [2012,2013]:
+                        url = build_url(year,row[0],i)
+                        if url not in visited:
+                                compras.append(Compra(url,0))
+        except Exception as e:
+            print(e)
+            continue
+    return list(compras)
