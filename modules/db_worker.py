@@ -83,6 +83,7 @@ def reparse():
     session.query(Compra).update({'parsed':False})
     session.commit()
     process_pending()
+    session.close()
 
 def query_not_visited():
     session = session_maker()
@@ -92,30 +93,38 @@ def query_not_visited():
 
 def count_not_visited():
     session = session_maker()
-    return session.query(Compra).filter(Compra.visited == False).count()
+    count = session.query(Compra).filter(Compra.visited == False).count()
+    session.close()
+    return count
 
 def reset_visited():
     session = session_maker()
     session.query(Compra.Compra).update({'visited':False})
     session.commit()
+    session.close()
 
 def create_compra(compra):
     session = session_maker()
-    session.add(compra) 
+    session.add(compra)
     logger.info('got new compra %s', compra.acto)
     session.commit()
+    session.close()
 
 def get_all_urls():
     session = session_maker()
     try:
         urls = list(zip(*session.query(Compra.url).all()))[0]
+        session.close()
         return {item.lower() for item in urls}
     except:
+        session.close()
         return set()
 
 def query_all():
     session = session_maker()
-    return session.query(Compra).filter(Compra.parsed == True).filter(Compra.precio > 0).filter(Compra.fecha != None)
+    compras = session.query(Compra).filter(Compra.parsed == True).filter(Compra.precio > 0).filter(Compra.fecha != None)
+    session.close()
+    return compras
 
 def mode_price():
     session = session_maker()
@@ -153,6 +162,7 @@ def url_brute():
     session = session_maker()
     cache = session.execute("select distinct(split_part(acto,'-',2),split_part(acto,'-',3),split_part(acto,'-',4),split_part(acto,'-',5),split_part(acto,'-',6)) acto_ ,max(split_part(acto,'-',7)),min(split_part(acto,'-',7)) from compras group by acto_ limit 100")
     cache = cache.fetchall()
+    session.close()
     random.shuffle(cache)
     for row in cache:
         try:
