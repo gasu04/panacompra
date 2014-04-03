@@ -112,6 +112,6 @@ def bruteforce():
     logger.info('initializing brute')
     worker = spawn_worker(compras_queue,urls,scrapers)
     while True:
+        scrapers = list(filter(lambda x: x.is_alive(),scrapers))
         scrapers.extend(spawn_compra_scrapers(cache,compras_queue))
         sleep(0.2)
-        scrapers = list(filter(lambda x: x.is_alive(),scrapers))
