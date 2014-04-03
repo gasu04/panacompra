@@ -114,3 +114,4 @@ def bruteforce():
     while True:
         scrapers.extend(spawn_compra_scrapers(cache,compras_queue))
         sleep(0.2)
+        scrapers = list(filter(lambda x: x.is_alive(),scrapers))
