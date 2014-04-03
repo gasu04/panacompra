@@ -162,7 +162,7 @@ def build_url(year,acto,i):
 def url_brute():
     visited = get_all_urls()
     session = session_maker()
-    cache = session.execute("select distinct(split_part(acto,'-',2),split_part(acto,'-',3),split_part(acto,'-',4),split_part(acto,'-',5),split_part(acto,'-',6)) acto_ ,max(split_part(acto,'-',7)),min(split_part(acto,'-',7)) from compras group by acto_ limit 100")
+    cache = session.execute("select distinct(split_part(acto,'-',2),split_part(acto,'-',3),split_part(acto,'-',4),split_part(acto,'-',5),split_part(acto,'-',6)) acto_ ,max(split_part(acto,'-',7)),min(split_part(acto,'-',7)) from compras group by acto_")
     cache = cache.fetchall()
     session.close()
     random.shuffle(cache)
