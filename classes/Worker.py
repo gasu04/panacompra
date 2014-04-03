@@ -26,7 +26,6 @@ def process_compra(compra):
     'proponente': parser.extract_proponente
   }
   compra = parser.parse_html(compra,modules)
-  db_worker.create_compra(compra)
   return compra
 
 class Worker(Thread):
@@ -44,6 +43,7 @@ class Worker(Thread):
                 if compra.url not in self.urls:
                     compra = process_compra(compra)
                     self.urls.add(compra.url)
+                    db_worker.create_compra(compra)
             except Empty:
                 if not any([scraper.is_alive() for scraper in self.scrapers]):
                     raise Exception('worker is dead')
