@@ -108,7 +108,9 @@ def create_compra(compra):
     session.add(compra)
     logger.info('got new compra %s', compra.acto)
     session.commit()
+    session.expunge(compra)
     session.close()
+    return compra
 
 def get_all_urls():
     session = session_maker()
