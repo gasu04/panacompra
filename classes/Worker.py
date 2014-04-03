@@ -42,7 +42,6 @@ class Worker(Thread):
                 self.html_queue.task_done()
                 if compra.url not in self.urls:
                     compra = process_compra(compra)
-                    self.urls.add(compra.url)
                     db_worker.create_compra(compra)
             except Empty:
                 if not any([scraper.is_alive() for scraper in self.scrapers]):
