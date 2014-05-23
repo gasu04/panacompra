@@ -10,7 +10,7 @@ library(grid)
 library(reshape2)
 df <- read.csv('data.csv', sep='\t')
 df$date <- as.Date(df$fecha, "%Y-%m-%d %H:%M:%s")
-df$year <- format(df$date, "%y")
+df$year <- format(df$date, "%Y")
 df$mon <- format(df$date, "%m")
 
 # Aggregar data y sumar precios
