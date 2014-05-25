@@ -8,7 +8,7 @@ Base = declarative_base()
 class Compra(Base):
   __tablename__ = 'compras'
 
-  id = Column(Integer, Sequence('compras_id_seq'), primary_key=True)
+  acto = Column(Unicode(200), primary_key=True)
   url = Column(Unicode(200), unique=True)
   html = deferred(Column(UnicodeText))
   description = deferred(Column(UnicodeText))
@@ -28,7 +28,6 @@ class Compra(Base):
   precio = Column(Numeric(15,2))
   precio_cd = Column(Numeric(15,2))
   proponente = Column(Unicode(200))
-  acto = Column(Unicode(200), unique=True)
   fecha = Column(DateTime)
   created_at = Column(Date, default=datetime.now)
   updated_at = Column(Date, default=datetime.now, onupdate=datetime.now)
@@ -44,7 +43,7 @@ class Compra(Base):
     return hash(self.url)
 
   def __eq__(self, other):
-    return self.url == other.url
+    return self.acto == other.acto
 
   def __getitem__(self,key):
     return getattr(self, key)
