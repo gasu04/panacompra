@@ -89,7 +89,8 @@ def revisit():
 def crawl_urls_from_file(urlfile):
     with open(urlfile) as f:
         urls = f.read().splitlines()
-    crawl_urls((Compra(url,0) for url in urls))
+    old_urls = db_worker.get_all_urls()
+    crawl_urls((Compra(url,0) for url in urls if url not in old_urls))
 
 def bruteforce():
     crawl_urls(db_worker.url_brute())
