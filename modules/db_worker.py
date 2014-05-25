@@ -82,8 +82,8 @@ def reparse():
     logger.info("Setting parsed to FALSE and parsing again")
     session.query(Compra).update({'parsed':False})
     session.commit()
-    process_pending()
     session.close()
+    process_pending()
 
 def query_not_visited():
     session = session_maker()
