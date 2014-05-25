@@ -14,9 +14,9 @@ url_error = '/AmbientePublico/vistapreviacp.aspx?numlc=2013-1-40-0-08-cm-003718&
 compra_html = conn.request("GET", url).data.decode('ISO-8859-1','ignore')
 compra_directa = conn.request("GET", url_directa).data.decode('ISO-8859-1','ignore')
 error_html = conn.request("GET", url_error).data.decode('ISO-8859-1','ignore')
-soup = BeautifulSoup(compra_html,'html.parser')
-soup_error =  BeautifulSoup(error_html,'html.parser')
-soup_directa = BeautifulSoup(compra_directa,'html.parser')
+soup = BeautifulSoup(compra_html,'lxml')
+soup_error =  BeautifulSoup(error_html,'lxml')
+soup_directa = BeautifulSoup(compra_directa,'lxml')
 
 class TestParser(unittest.TestCase):
 
@@ -35,31 +35,31 @@ class TestParser(unittest.TestCase):
         self.assertEqual(parser.extract_precio(self.soup_directa), 1459500.00)
 
     def test_description(self):
-        self.assertEqual(parser.extract_description(self.soup), str("SERVICIO DE ARBITRAJE EN LIGA DE BOLA SUAVE."))
+        self.assertEqual(parser.extract_description(self.soup), str("servicio de arbitraje en liga de bola suave."))
         
     def test_compra_type(self):
-        self.assertEqual(parser.extract_compra_type(self.soup), str("Compra Menor hasta B/. 3,000"))
+        self.assertEqual(parser.extract_compra_type(self.soup), str("compra menor hasta b/. 3,000"))
 
     def test_dependencia(self):
-        self.assertEqual(parser.extract_dependencia(self.soup), str("SEDE"))
+        self.assertEqual(parser.extract_dependencia(self.soup), str("sede"))
         
     def test_unidad(self):
-        self.assertEqual(parser.extract_unidad(self.soup), str("COMPRAS Y PROVEEDURIA"))
+        self.assertEqual(parser.extract_unidad(self.soup), str("compras y proveeduria"))
         
     def test_objeto(self):
-        self.assertEqual(parser.extract_objeto(self.soup), str("Servicio"))
+        self.assertEqual(parser.extract_objeto(self.soup), str("servicio"))
         
     def test_modalidad(self):
-        self.assertEqual(parser.extract_modalidad(self.soup), str("Global"))
+        self.assertEqual(parser.extract_modalidad(self.soup), str("global"))
         
     def test_provincia(self):
-        self.assertEqual(parser.extract_provincia(self.soup), str("PANAMÁ"))
+        self.assertEqual(parser.extract_provincia(self.soup), str("panamá"))
         
     def test_correo_contacto(self):
-        self.assertEqual(parser.extract_correo_contacto(self.soup), str("Cotizador1@asamblea.gob.pa"))
+        self.assertEqual(parser.extract_correo_contacto(self.soup), str("cotizador1@asamblea.gob.pa"))
         
     def test_nombre_contacto(self):
-        self.assertEqual(parser.extract_nombre_contacto(self.soup), str("ANTONIO DAVIS"))
+        self.assertEqual(parser.extract_nombre_contacto(self.soup), str("antonio davis"))
         
     def test_telefono_contacto(self):
         self.assertEqual(parser.extract_telefono_contacto(self.soup), str("512-8090"))
@@ -68,18 +68,18 @@ class TestParser(unittest.TestCase):
         self.assertEqual(parser.extract_fecha(self.soup), datetime.strptime("17-02-2012 12:23 PM","%d-%m-%Y %I:%M %p"))
 
     def test_acto(self):
-        self.assertEqual(parser.extract_acto(self.soup), str("2012-0-01-0-08-CM-002791"))
+        self.assertEqual(parser.extract_acto(self.soup), str("2012-0-01-0-08-cm-002791"))
         
     def test_entidad(self):
-        self.assertEqual(parser.extract_entidad(self.soup), str("ASAMBLEA NACIONAL"))
+        self.assertEqual(parser.extract_entidad(self.soup), str("asamblea nacional"))
         
     def test_proponente(self):
-        self.assertEqual(parser.extract_proponente(self.soup), str("Roberto Peralta"))
+        self.assertEqual(parser.extract_proponente(self.soup), str("roberto peralta"))
 
     def test_parse_html(self):
         compra = Compra('url',1)
         compra.html =  compra_html
-        acto = "2012-0-01-0-08-CM-002791"
+        acto = "2012-0-01-0-08-cm-002791"
         self.assertEqual(parser.parse_html(compra,{'acto':parser.extract_acto}).acto,acto) 
 
     def test_unicode(self):

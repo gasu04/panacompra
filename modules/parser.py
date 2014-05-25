@@ -14,7 +14,7 @@ def is_error_page(soup):
     return False
 
 def parse_html(compra,methods):
-    soup = BeautifulSoup(compra.html,'html.parser')
+    soup = BeautifulSoup(compra.html,'lxml')
     if not is_error_page(soup):
         for name,method in methods.items():
             try:
