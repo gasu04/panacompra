@@ -21,7 +21,7 @@ import os
 import random
 
 logger = logging.getLogger('db_worker')
-CHUNK_SIZE=3800
+CHUNK_SIZE=1000
 
 db_url = os.environ['panadata_db']
 logger.info('loading %s', db_url)
@@ -43,10 +43,10 @@ def process_pending():
     session = session_maker()
     count_query = session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True)
     query = session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).options(undefer('html')).limit(CHUNK_SIZE)
-    pool = Pool(processes=1)
+#    pool = Pool(processes=1)
     while query.count() > 0:
         logger.info("%i compras pending", count_query.count())
-        results = process_query(query,pool)
+        results = [process_compra(c) for c in cache]
         query.merge_result(results)
         session.commit()
     logger.info("compras added to db")
