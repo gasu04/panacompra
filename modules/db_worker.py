@@ -6,7 +6,7 @@ from scipy import stats
 from datetime import datetime
 from time import sleep
 from time import strptime
-from time import strftime 
+from time import strftime
 from sqlalchemy.sql import exists
 from sqlalchemy.orm import sessionmaker,undefer
 from sqlalchemy import create_engine
@@ -105,11 +105,15 @@ def reset_visited():
 
 def create_compra(compra):
     session = session_maker()
-    session.add(compra)
-    logger.info('got new compra %s', compra.acto)
-    session.commit()
-    session.expunge(compra)
-    session.close()
+    try:
+        session.add(compra)
+        logger.info('got new compra %s', compra.acto)
+        session.commit()
+        session.expunge(compra)
+    except:
+        session.rollback()
+    finally:
+        session.close()
     return compra
 
 def get_all_urls():
@@ -124,7 +128,7 @@ def get_all_urls():
 
 def query_all():
     session = session_maker()
-    compras = session.query(Compra).filter(Compra.parsed == True).filter(Compra.precio > 0).filter(Compra.fecha != None)
+    compras = session.query(Compra).filter(Compra.parsed == True).filter(Compra.precio > 0).filter(Compra.fecha != None).filter(Compra.proponente == "Editora Panamá América S.A.").all()
     session.close()
     return compras
 
@@ -176,3 +180,18 @@ def url_brute():
         except Exception as e:
             print(e)
             continue
+
+
+def distinct_proponentes():
+    session = session_maker()
+    cache = session.execute("select distinct(proponente) from compras")
+    cache = cache.fetchall()
+    session.close()
+    return { x[0] for x in cache }
+
+def count_sum_per_day():
+    session = session_maker()
+    cache = session.execute("select count(*),sum(cast(precio as integer)),date(fecha) from compras group by date(fecha) order by date(fecha)")
+    cache = cache.fetchall()
+    session.close()
+    return cache

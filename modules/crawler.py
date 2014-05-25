@@ -12,13 +12,13 @@ from modules import db_worker
 from time import sleep
 from threading import active_count
 
-THREADS = 15
-connection_pool = urllib3.HTTPConnectionPool('201.227.172.42',maxsize=THREADS) 
+THREADS = 8
+connection_pool = urllib3.HTTPConnectionPool('201.227.172.42',maxsize=THREADS)
 logger = logging.getLogger('PanaCrawler')
 
 def get_categories():
     """Build a list of categories by scraping site"""
-    html = get_categories_html() 
+    html = get_categories_html()
     categories = parse_categories_html(html)
     shuffle(categories)
     return categories
@@ -46,22 +46,17 @@ def spawn_scrapers(categories,compras_queue,connection_pool,urls,n,update=False)
             t.start()
         except IndexError:
             logger.info('exahusted categories')
-            break 
+            break
     return scrapers
 
-def spawn_compra_scrapers(compras,compras_queue):
-    compra_scrapers = []
+def spawn_compra_scrapers(compras,compras_queue,scrapers):
     threads = THREADS + 2 - active_count()
     for i in range(threads):
-        try:
-            t = CompraScraperThread(next(compras),compras_queue,connection_pool)
-            t.setDaemon(True)
-            compra_scrapers.append(t)
-            t.start()
-        except IndexError:
-           logger.info('exahusted compras')
-           break
-    return compra_scrapers
+        compra = next(compras)
+        t = CompraScraperThread(compra,compras_queue,connection_pool)
+        t.setDaemon(True)
+        scrapers.append(t)
+        t.start()
 
 def join_threads(threads):
     while any([thread.is_alive() for thread in threads]):
@@ -74,44 +69,41 @@ def run(update=False):
     categories = get_categories() #scrape and store list of categories
     urls = db_worker.get_all_urls()
     logger.info('cached %i urls', len(urls))
-    worker = spawn_worker(compras_queue,urls,scrapers)
+    worker = spawn_worker(compras_queue,scrapers)
     while len(categories) > 0:
         scrapers.extend(spawn_scrapers(categories,compras_queue,connection_pool,urls,THREADS + 2 - active_count(),update))
         sleep(0.1)
     join_threads(scrapers)
 
-def spawn_worker(html_queue,urls,scrapers):
-    thread = Worker(html_queue,urls,scrapers)
+def spawn_worker(html_queue,scrapers):
+    thread = Worker(html_queue,scrapers)
     thread.setDaemon(True)
     thread.start()
     return thread
 
-def visit_pending():
-    compras_queue = Queue()
-    scrapers = []
-    logger.info('%i compras pending', db_worker.count_not_visited())
-    logger.info('spawning %i CompraScraperThreads', THREADS)
-    urls = db_worker.get_all_urls()
-    cache = db_worker.query_not_visited()
-    worker = spawn_worker(compras_queue,urls,scrapers)
-    while len(cache) > 0: 
-        scrapers.extend(spawn_compra_scrapers(iter(cache),compras_queue))
-        sleep(0.1)
-
 def revisit():
     db_worker.reset_visited()
-    visit_pending()
+    cache = db_worker.query_not_visited()
+    crawl_urls(iter(cache))
 
+def crawl_urls_from_file(urlfile):
+    with open(urlfile) as f:
+        urls = f.read().splitlines()
+    crawl_urls((Compra(url,0) for url in urls))
 
 def bruteforce():
+    crawl_urls(db_worker.url_brute())
+
+def crawl_urls(cache):
     compras_queue = Queue()
     scrapers = []
     logger.info('spawning %i CompraScraperThreads', THREADS)
-    urls = db_worker.get_all_urls()
-    cache = db_worker.url_brute()
-    logger.info('initializing brute')
-    worker = spawn_worker(compras_queue,urls,scrapers)
+    worker = spawn_worker(compras_queue,scrapers)
     while True:
         scrapers = list(filter(lambda x: x.is_alive(),scrapers))
-        scrapers.extend(spawn_compra_scrapers(cache,compras_queue))
+        try:
+            spawn_compra_scrapers(cache,compras_queue,scrapers)
+        except StopIteration:
+            break
         sleep(0.2)
+    join_threads(scrapers)

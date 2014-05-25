@@ -36,10 +36,10 @@ class UrlScraperThread(threading.Thread):
   def reset_page(self,pages):
     self.data['ctl00$ContentPlaceHolder1$ControlPaginacion$hidNumeroPagina'] = 1
     self.data['ctl00$ContentPlaceHolder1$ControlPaginacion$hidTotalPaginas'] = int(pages)
-  
+
   def increment_page(self):
     self.data['ctl00$ContentPlaceHolder1$ControlPaginacion$hidNumeroPagina'] = 1 + int(self.data['ctl00$ContentPlaceHolder1$ControlPaginacion$hidNumeroPagina'])
-  
+
   def set_page(self,page):
     self.data['ctl00$ContentPlaceHolder1$ControlPaginacion$hidNumeroPagina'] = int(page)
 
@@ -78,7 +78,7 @@ class UrlScraperThread(threading.Thread):
 
   def parse_max_pages(self):
     if self.update:
-      pages = 1 
+      pages = 1
     else:
       html = self.get_category_page()
       pages = self.pages_regex.findall(html)[0]
@@ -94,7 +94,6 @@ class UrlScraperThread(threading.Thread):
   def get_compra_html(self,url):
     response = self.connection.request("GET", url)
     return response.data.decode('ISO-8859-1','ignore')
-  
+
   def __str__(self):
     return "<(UrlScraper: category[%i])>" % (int(self.category))
-

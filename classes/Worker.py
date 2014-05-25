@@ -29,18 +29,18 @@ def process_compra(compra):
   return compra
 
 class Worker(Thread):
-    def __init__(self,html_queue,urls,scrapers):
+    def __init__(self,html_queue,scrapers):
         Thread.__init__(self)
         self.html_queue = html_queue
-        self.urls = urls
         self.scrapers = scrapers
 
     def run(self):
+        urls = db_worker.get_all_urls()
         while True:
             try:
-                compra = self.html_queue.get(timeout=20)
+                compra = self.html_queue.get(timeout=2000000)
                 self.html_queue.task_done()
-                if compra.url not in self.urls:
+                if compra.url not in urls:
                     compra = process_compra(compra)
                     db_worker.create_compra(compra)
             except Empty:

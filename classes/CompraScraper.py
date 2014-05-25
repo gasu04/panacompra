@@ -17,7 +17,8 @@ class CompraScraperThread(threading.Thread):
       except Empty:
         return
       except Exception as e:
-        self.logger.debug('%s from %s', str(e),str(self))
+        print(e)
+        self.logger.error('%s from %s', str(e),str(self))
 
     def __str__(self):
         return "<(CompraScraper: %s)>" % self.compra

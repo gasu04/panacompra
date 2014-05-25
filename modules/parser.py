@@ -45,7 +45,7 @@ def parse_precio(precio):
   return precio
 
 def sanitize(string):
-  return str(re.sub(' +',' ', string)) #no repeated spaces
+  return str(re.sub(' +',' ', string)).lower() #no repeated spaces
 
 def extract_precio(soup):
     precio = soup.find(text='Precio Referencia:')

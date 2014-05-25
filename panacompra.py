@@ -16,6 +16,7 @@ logger = logging.getLogger('panacompra')
 def parse_args():
   parser = argparse.ArgumentParser(description='Dataminer for Panacompra')
   parser.add_argument('--update', dest='update', action='store_const',const="True", default=False, help="scrape first page of every category")
+  parser.add_argument('--import', dest='import_urls', help="import urls from file")
   parser.add_argument('--sync', dest='sync', action='store_const',const="True", default=False, help="update and process pending")
   parser.add_argument('--reparse', dest='reparse', action='store_const',const="True", default=False, help="set parsed to False and parse")
   parser.add_argument('--revisit', dest='revisit', action='store_const',const="True", default=False, help="set visited to False and visit")
@@ -23,6 +24,7 @@ def parse_args():
   parser.add_argument('--pending', dest='pending', action='store_const',const="True", default=False, help="process compras where visited is True and Parsed is False")
   parser.add_argument('--bruteforce', dest='bruteforce',action='store_const',const="True", default=False,help="generate url space andbrute")
   return parser.parse_args()
+
 
 if __name__ == "__main__":
     logger.info('panacompra started')
@@ -36,6 +38,8 @@ if __name__ == "__main__":
       crawler.visit_pending()
     elif args.revisit:
       crawler.revisit()
+    elif args.import_urls:
+      crawler.crawl_urls_from_file(args.import_urls)
     elif args.reparse:
       db_worker.reparse()
     elif args.pending:
