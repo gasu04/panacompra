@@ -43,10 +43,12 @@ def process_pending():
     session = session_maker()
     count_query = session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True)
     query = session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).options(undefer('html')).limit(CHUNK_SIZE)
-#    pool = Pool(processes=1)
+    pool = Pool(processes=cpu_count()-1)
     while query.count() > 0:
         logger.info("%i compras pending", count_query.count())
-        results = [process_compra(c) for c in cache]
+#        results = [process_compra(c) for c in query.all()]
+        cache = query.all()
+        results = pool.map(process_compra, cache, int(ceil(len(cache)/(cpu_count()-1))))
         query.merge_result(results)
         session.commit()
     logger.info("compras added to db")
