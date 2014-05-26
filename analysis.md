@@ -149,6 +149,7 @@ qplot(mon,precio,data=na.omit(ministerios), geom='bar',facets=entidad~year, stat
     theme(axis.title.x=element_text(vjust=-2)) +    
     theme(axis.title.y=element_text(angle=90, vjust=-0.5)) +    
     theme(plot.title=element_text(size=20, vjust=3)) +    
+    theme(strip.text.y = element_text(size = 12, angle = 90)) +
     theme(plot.margin = unit(c(1,1,1,1), "cm"))
 ```
 
@@ -181,7 +182,7 @@ qplot(mon,precio,data=na.omit(autoridades), geom='bar',facets=entidad~year, stat
     theme(axis.title.x=element_text(vjust=-2)) +    
     theme(axis.title.y=element_text(angle=90, vjust=-0.5)) +    
     theme(plot.title=element_text(size=20, vjust=3)) +    
-    theme(strip.text.y = element_text(size = 20, angle = 90)) +
+    theme(strip.text.y = element_text(size = 12, angle = 90)) +
     theme(plot.margin = unit(c(1,1,1,1), "cm"))
 ```
 
@@ -219,6 +220,7 @@ qplot(mon,precio,data=na.omit(municipios), geom='bar',facets=entidad~year, stat=
     theme(axis.title.x=element_text(vjust=-2)) +    
     theme(axis.title.y=element_text(angle=90, vjust=-0.5)) +    
     theme(plot.title=element_text(size=20, vjust=3)) +    
+    theme(strip.text.y = element_text(size = 12, angle = 90)) +
     theme(plot.margin = unit(c(1,1,1,1), "cm"))
 ```
 
@@ -236,6 +238,7 @@ qplot(mon,precio,data=na.omit(otros), geom='bar',facets=entidad~year, stat="iden
     theme(axis.title.x=element_text(vjust=-2)) +    
     theme(axis.title.y=element_text(angle=90, vjust=-0.5)) +    
     theme(plot.title=element_text(size=20, vjust=3)) +    
+    theme(strip.text.y = element_text(size = 12, angle = 90)) +
     theme(plot.margin = unit(c(1,1,1,1), "cm"))
 ```
 
