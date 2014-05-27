@@ -1,6 +1,9 @@
 # Gasto Mensual de Licitaciones Publicas en Panamá
-Utilizando la data de panadata.net se puede hacer un analisis del gasto mensual por año en licitaciones publicas.
-Solo se cuenta con la data del 2012, 2013 y 2014.
+Este proyecto se ha dedicado a extraer data de la pagina [www.panamacompra.gob.pa](http://www.panamacompra.gob.pa) desde hace abril 2013.
+La data se almacena en [panadata.net](http://panadata.net). Este sitio cuenta con una herramienta de busqueda.
+
+Los datos y graficas de este analisis fueron confeccionados con [la data en formato csv](http://static.panadata.net/licitaciones.csv) de panadata.net
+Solo se cuenta con la data del 2012, 2013 y 2014. Ya que antes de esto el gobierno usaba otro sistema.
 
 ## Cargar archivo y procesar data
 
