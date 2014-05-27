@@ -136,7 +136,7 @@ qplot(mon,precio,data=na.omit(municipios), geom='bar',facets=.~year, stat="ident
 ### Resultados por Institutos 
 
 ```{r institutos ,echo=FALSE, fig.width=12, fig.height=6}
-qplot(mon,precio,data=na.omit(universidades), geom='bar',facets=.~year, stat="identity") +  
+qplot(mon,precio,data=na.omit(institutos), geom='bar',facets=.~year, stat="identity") +  
     ggtitle("Gasto Mensual en Licitaciones Publicas (Institutos)") +    
     scale_y_continuous(name="Gasto por Mes", labels = comma) +    
     scale_x_discrete(name="Mes del Año") +    
