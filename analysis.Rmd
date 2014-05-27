@@ -9,34 +9,31 @@ library(scales)
 library(grid)
 library(reshape2)
 library(RCurl)
+library(gridExtra)
+options("scipen"=100, "digits"=4)
 
 #data de panadata.net
-#data <- getURL("http://static.panadata.net/licitaciones.csv")
-data <- getURL("http://localhost/licitaciones.csv")
+data <- getURL("http://static.panadata.net/licitaciones.csv")
+#data <- getURL("http://localhost/licitaciones.csv")
 
 #leer y procesar
-df <- read.csv(text = data, sep = "\t", fileEncoding="UTF-8")
+df <- read.csv(text = data, sep = "\t", fileEncoding="latin1")
 df$date <- as.Date(df$fecha, "%Y-%m-%d %H:%M:%s")
 df$year <- format(df$date, "%Y")
 df$mon <- format(df$date, "%m")
+
+#reshape
 df_melt <- melt(df, id = c("year","mon","entidad","proponente","compra_type"))
+
+#subset precios
 precios <- df_melt[df_melt$variable == "precio",]
 precios$value <- as.numeric(precios$value)
-
-# Aggregar data y sumar precios
-gasto_mensual <- dcast(precios, year + mon ~ variable, sum)
-gasto_entidades <- dcast(precios, year + mon + entidad ~ variable, sum)
-
-#subsets
-ministerios <- gasto_entidades[grep("minist", gasto_entidades$entidad),]
-autoridades <- gasto_entidades[grep("autor", gasto_entidades$entidad),]
-municipios <- gasto_entidades[grep("munic", gasto_entidades$entidad),]
-otros <- gasto_entidades[grep("munic|minist|autor", gasto_entidades$entidad, invert=TRUE),]
 ```
 
 ## Licitaciones por Mes
 La siguiente grafica muestra la cantidad de licitaciones por mes en cada año.
-```{r licitacionespormes,results="hide",  fig.width=12, fig.height=8,tidy=FALSE}
+
+```{r licitacionespormes,echo=FALSE,  fig.width=12, fig.height=5}
 qplot(mon,data=df[!is.na(df$year),],facets=.~year) +
     ggtitle("Cantidad de licitaciones por Mes") +    
     scale_y_continuous(name="Licitaciones por Mes", labels = comma) +    
@@ -47,8 +44,16 @@ qplot(mon,data=df[!is.na(df$year),],facets=.~year) +
     theme(strip.text.x = element_text(size = 20)) +
     theme(plot.margin = unit(c(1,1,1,1), "cm"))
 ```
+
 ## Gasto por Mes
-```{r gastomensual,results="hide",  fig.width=12, fig.height=8,tidy=FALSE}
+Para calcular el gasto total por mes y año hay que agregar la data.
+```{r}
+#Aggregar data por mes y año y sumar precios
+gasto_mensual <- dcast(precios, year + mon ~ variable, sum)
+```
+
+Esta grafica muestra el precio sumado de las licitaciones por mes en cada año.
+```{r gastomensual,echo=FALSE, fig.width=12, fig.height=5}
 qplot(mon,precio,data=na.omit(gasto_mensual), geom='bar',facets=.~year, stat="identity") +  
     ggtitle("Gasto Mensual en Licitaciones Publicas por Año") +    
     scale_y_continuous(name="Gasto por Mes", labels = comma) +    
@@ -59,50 +64,32 @@ qplot(mon,precio,data=na.omit(gasto_mensual), geom='bar',facets=.~year, stat="id
     theme(strip.text.x = element_text(size = 20)) +
     theme(plot.margin = unit(c(1,1,1,1), "cm"))
 ```
-## Licitaciones por Top 10 Proponentes
 
-Para generar estas graficas hay que calcular la frecuencia de los proponentes y escoger los 10 mas frecuentes.
-La primera grafica muestra la cantidad de licictaciones por mes y proponente.
-La segundo grafica muestra la suma del precio de cada licitacion por mes y proponente.
-
-```{r  prepare-proponentes,results="hide", tidy=FALSE}
-top_proponentes <- names(sort(table(df[df$proponente != "",]$proponente), decreasing=TRUE)[0:10]) #top 10
-t_prop <- df[df$proponente %in% top_proponentes,]
-#agregar y sumar
-proponente_precio <- precios[precios$proponente %in% top_proponentes,]
-df_proponentes <- dcast(proponente_precio, year + mon + proponente ~ variable, sum)
-```
-```{r proponentes,results="hide",  fig.width=18, fig.height=45,tidy=FALSE}
-qplot(mon,data=t_prop[!is.na(t_prop$year),],facets=proponente~year) +  
-    ggtitle("Cantidad de Licitaciones de los Top 10 Proponentes") +
-    scale_y_continuous(name="Gasto por Mes", labels = comma) +    
-    scale_x_discrete(name="Mes del Año") +    
-    facet_grid(proponente~year, scales='free_y') + 
-    theme(axis.title.x=element_text(size=18, vjust=-2)) +    
-    theme(axis.title.y=element_text(size=18, angle=90, vjust=-0.5)) +    
-    theme(plot.title=element_text(size=20, vjust=3)) +    
-    theme(strip.text.y = element_text(size = 20, angle = 90)) +
-    theme(plot.margin = unit(c(1,1,1,1), "cm"))
+## Entidades
+Calcular cuanto dinero ha licitado cada entidad gubernamental y mostrar los top 25.
+```{r entidades_prepare,comment=NA, fig.width=12, fig.height=8,tidy=FALSE}
+e <- dcast(precios, entidad ~ variable, sum)
+grid.table(head(e[with(e, order(precio, decreasing=TRUE)),c(1,2)],25),row.names = FALSE)
 ```
 
-```{r gastoproponentes,results="hide",  fig.width=18, fig.height=45,tidy=FALSE}
-qplot(mon,precio,data=na.omit(df_proponentes), geom='bar',stat="identity") +  
-    ggtitle("Gasto Mensual de los Top 10 Proponentes") +
-    scale_y_continuous(name="Gasto por Mes", labels = comma) +    
-    scale_x_discrete(name="Mes del Año") +    
-    facet_grid(proponente~year, scales='free_y') + 
-    theme(axis.title.x=element_text(vjust=-2)) +    
-    theme(axis.title.y=element_text(angle=90, vjust=-0.5)) +    
-    theme(plot.title=element_text(size=20, vjust=3)) +    
-    theme(strip.text.y = element_text(size = 20, angle = 90)) +
-    theme(plot.margin = unit(c(1,1,1,1), "cm"))
+Agregar y dividir por tipo de entidad
+```{r}
+#Agregar data por mes, año y entidad y sumar precios
+gasto_entidades <- dcast(precios, year + mon + entidad ~ variable, sum)
+
+#crear subsets por ministerio, autoridad, muncipio y otros.
+ministerios <- gasto_entidades[grep("minist", gasto_entidades$entidad),]
+autoridades <- gasto_entidades[grep("autor", gasto_entidades$entidad),]
+municipios <- gasto_entidades[grep("munic", gasto_entidades$entidad),]
+universidades <- gasto_entidades[grep("univ", gasto_entidades$entidad),]
+institutos <- gasto_entidades[grep("instit", gasto_entidades$entidad),]
+otros <- gasto_entidades[grep("munic|minist|autor|univ|instit", gasto_entidades$entidad),]
 ```
 
-
-## Resultados por Ministerio
-```{r ministerios,results="hide",  fig.width=12, fig.height=6,tidy=FALSE}
+### Resultados por Ministerio
+```{r ministerios,echo=FALSE,  fig.width=12, fig.height=6}
 qplot(mon,precio,data=na.omit(ministerios), geom='bar',facets=.~year, stat="identity") +  
-    ggtitle("Gasto Mensual en Licitaciones Publicas por Año y Ministerio") +    
+    ggtitle("Gasto Mensual en Licitaciones Publicas por Año (Ministerios)") +    
     scale_y_continuous(name="Gasto por Mes", labels = comma) +    
     scale_x_discrete(name="Mes del Año") +    
     facet_grid(~year, scales='free_y') + 
@@ -113,47 +100,24 @@ qplot(mon,precio,data=na.omit(ministerios), geom='bar',facets=.~year, stat="iden
     theme(plot.margin = unit(c(1,1,1,1), "cm"))
 ```
 
-A continuacion un desglose por Ministrerio:
-```{r ministeriosgasto,results="hide",  fig.width=12, fig.height=55,tidy=FALSE}
-qplot(mon,precio,data=na.omit(ministerios), geom='bar',facets=entidad~year, stat="identity") +  
-    ggtitle("Gasto Mensual en Licitaciones Publicas por Año y Ministerio") +    
-    scale_y_continuous(name="Gasto por Mes", labels = comma) +    
-    scale_x_discrete(name="Mes del Año") +    
-    facet_grid(entidad~year, scales='free_y') + 
-    theme(axis.title.x=element_text(vjust=-2)) +    
-    theme(axis.title.y=element_text(angle=90, vjust=-0.5)) +    
-    theme(plot.title=element_text(size=20, vjust=3)) +    
-    theme(strip.text.y = element_text(size = 12, angle = 90)) +
-    theme(plot.margin = unit(c(1,1,1,1), "cm"))
-```
-
-## Resultados por Autoridades
-```{r autoridades-resumen,results="hide",  fig.width=12, fig.height=50,tidy=FALSE}
+### Resultados por Autoridades Gubernamentales
+```{r autoridades-resumen,echo=FALSE,  fig.width=12, fig.height=6}
 qplot(mon,precio,data=na.omit(autoridades), geom='bar',facets=.~year, stat="identity") +  
     ggtitle("Gasto Mensual en Licitaciones Publicas (Autoridades Gubernamentales)") +    
     scale_y_continuous(name="Gasto por Mes", labels = comma) +    
     scale_x_discrete(name="Mes del Año") +    
-    facet_grid(entidad~year, scales='free_y') + 
+    facet_grid(.~year, scales='free_y') + 
     theme(axis.title.x=element_text(vjust=-2)) +    
     theme(axis.title.y=element_text(angle=90, vjust=-0.5)) +    
     theme(plot.title=element_text(size=20, vjust=3)) +    
-    theme(plot.margin = unit(c(1,1,1,1), "cm"))
-```
-```{r autoridades,results="hide",  fig.width=12, fig.height=50,tidy=FALSE}
-qplot(mon,precio,data=na.omit(autoridades), geom='bar',facets=entidad~year, stat="identity") +  
-    ggtitle("Gasto Mensual en Licitaciones Publicas por Autoridad Gubernamental") +    
-    scale_y_continuous(name="Gasto por Mes", labels = comma) +    
-    scale_x_discrete(name="Mes del Año") +    
-    facet_grid(entidad~year, scales='free_y') + 
-    theme(axis.title.x=element_text(vjust=-2)) +    
-    theme(axis.title.y=element_text(angle=90, vjust=-0.5)) +    
-    theme(plot.title=element_text(size=20, vjust=3)) +    
-    theme(strip.text.y = element_text(size = 12, angle = 90)) +
     theme(plot.margin = unit(c(1,1,1,1), "cm"))
 ```
 
-## Resultados por Municipios
-```{r municipios,results="hide",  fig.width=12, fig.height=6,tidy=FALSE}
+### Resultados por Municipios
+Por algun motivo desconocido existe una tendencia en los municipios de gastar la mayoria de su presupuesto entre los meses de Septiembre 2013 y Mayo 2014.
+A continuacion un desglose por Municipio:
+
+```{r municipios,echo=FALSE, fig.width=12, fig.height=6}
 qplot(mon,precio,data=na.omit(municipios), geom='bar',facets=.~year, stat="identity") +  
     ggtitle("Gasto Mensual en Licitaciones Publicas (Municipios)") +    
     scale_y_continuous(name="Gasto por Mes", labels = comma) +    
@@ -165,37 +129,84 @@ qplot(mon,precio,data=na.omit(municipios), geom='bar',facets=.~year, stat="ident
     theme(strip.text.y = element_text(size = 20, angle = 90)) +
     theme(plot.margin = unit(c(1,1,1,1), "cm"))
 ```
-Por algun motivo desconocido existe una tendencia en los municipios de gastar la mayoria de su presupuesto entre los meses de Septiembre 2013 y Mayo 2014.
-A continuacion un desglose por Municipio:
 
-```{r municipiosgasto,results="hide",  fig.width=12, fig.height=150,tidy=FALSE}
+### Resultados por Institutos 
 
-qplot(mon,precio,data=na.omit(municipios), geom='bar',facets=entidad~year, stat="identity") +  
-    ggtitle("Gasto Mensual en Licitaciones Publicas por Municipio") +    
+```{r institutos ,echo=FALSE, fig.width=12, fig.height=6}
+qplot(mon,precio,data=na.omit(universidades), geom='bar',facets=.~year, stat="identity") +  
+    ggtitle("Gasto Mensual en Licitaciones Publicas (Institutos)") +    
     scale_y_continuous(name="Gasto por Mes", labels = comma) +    
     scale_x_discrete(name="Mes del Año") +    
-    facet_grid(entidad~year, scales='free_y') + 
+    facet_grid(.~year, scales='free_y') + 
     theme(axis.title.x=element_text(vjust=-2)) +    
     theme(axis.title.y=element_text(angle=90, vjust=-0.5)) +    
     theme(plot.title=element_text(size=20, vjust=3)) +    
-    theme(strip.text.y = element_text(size = 12, angle = 90)) +
+    theme(strip.text.y = element_text(size = 20, angle = 90)) +
     theme(plot.margin = unit(c(1,1,1,1), "cm"))
 ```
 
-## Resultados por Otras Entidades
-```{r otros,results="hide",  fig.width=12, fig.height=170,tidy=FALSE}
-qplot(mon,precio,data=na.omit(otros), geom='bar',facets=entidad~year, stat="identity") +  
+### Resultados por Universidades 
+
+```{r universidades,echo=FALSE, fig.width=12, fig.height=6}
+qplot(mon,precio,data=na.omit(universidades), geom='bar',facets=.~year, stat="identity") +  
+    ggtitle("Gasto Mensual en Licitaciones Publicas (Universidades)") +    
+    scale_y_continuous(name="Gasto por Mes", labels = comma) +    
+    scale_x_discrete(name="Mes del Año") +    
+    facet_grid(.~year, scales='free_y') + 
+    theme(axis.title.x=element_text(vjust=-2)) +    
+    theme(axis.title.y=element_text(angle=90, vjust=-0.5)) +    
+    theme(plot.title=element_text(size=20, vjust=3)) +    
+    theme(strip.text.y = element_text(size = 20, angle = 90)) +
+    theme(plot.margin = unit(c(1,1,1,1), "cm"))
+```
+### Resultados por Otros Tipos de Entidades
+
+```{r otros,echo=FALSE, fig.width=12, fig.height=6}
+qplot(mon,precio,data=na.omit(otros), geom='bar',facets=.~year, stat="identity") +  
     ggtitle("Gasto Mensual en Licitaciones Publicas (Otras Entidades)") +    
     scale_y_continuous(name="Gasto por Mes", labels = comma) +    
     scale_x_discrete(name="Mes del Año") +    
-    facet_grid(entidad~year, scales='free_y') + 
+    facet_grid(.~year, scales='free_y') + 
     theme(axis.title.x=element_text(vjust=-2)) +    
     theme(axis.title.y=element_text(angle=90, vjust=-0.5)) +    
     theme(plot.title=element_text(size=20, vjust=3)) +    
-    theme(strip.text.y = element_text(size = 12, angle = 90)) +
+    theme(strip.text.y = element_text(size = 20, angle = 90)) +
     theme(plot.margin = unit(c(1,1,1,1), "cm"))
 ```
 
 
+## Proponentes
+Calcular cuanto dinero ha recibido cada proponente y mostrar los top 25.
+El espacio en blanco pertenece a las licitaciones en las cuales no se ha reportado un proponente seleccionado.
+```{r proponentes_prepare,comment=NA,  fig.width=12, fig.height=8,tidy=FALSE}
+p <- dcast(precios, proponente ~ variable, sum)
+grid.table(head(p[with(p, order(precio, decreasing=TRUE)),c(1,2)],25),row.names = FALSE)
+```
+
+## Licitaciones por Top 10 Proponentes
+Para generar estas graficas hay que calcular la frecuencia de los proponentes y escoger los 5 mas frecuentes.
+
+```{r  prepare-proponentes,results="hide", tidy=FALSE}
+top_proponentes <- names(sort(table(df[df$proponente != "",]$proponente), decreasing=TRUE)[0:5]) #top 5
+t_prop <- df[df$proponente %in% top_proponentes,]
+#agregar y sumar
+proponente_precio <- precios[precios$proponente %in% top_proponentes,]
+df_proponentes <- dcast(proponente_precio, year + mon + proponente ~ variable, sum)
+```
+
+La grafica muestra la cantidad de licictaciones por mes y proponente.
+
+```{r proponentes,",echo=FALSE,  fig.width=18, fig.height=25,tidy=FALSE}
+qplot(mon,data=t_prop[!is.na(t_prop$year),],facets=proponente~year) +  
+    ggtitle("Cantidad de Licitaciones de los Top 10 Proponentes") +
+    scale_y_continuous(name="Gasto por Mes", labels = comma) +    
+    scale_x_discrete(name="Mes del Año") +    
+    facet_grid(proponente~year, scales='free_y') + 
+    theme(axis.title.x=element_text(size=18, vjust=-2)) +    
+    theme(axis.title.y=element_text(size=18, angle=90, vjust=-0.5)) +    
+    theme(plot.title=element_text(size=20, vjust=3)) +    
+    theme(strip.text.y = element_text(size = 20, angle = 90)) +
+    theme(plot.margin = unit(c(1,1,1,1), "cm"))
+```
 
 
