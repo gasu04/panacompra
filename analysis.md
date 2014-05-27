@@ -1,5 +1,5 @@
 # Gasto Mensual de Licitaciones Publicas en Panamá
-Este proyecto se ha dedicado a extraer data de la pagina [www.panamacompra.gob.pa](http://www.panamacompra.gob.pa) desde hace abril 2013.
+Este proyecto se ha dedicado a extraer data de la pagina [www.panamacompra.gob.pa](http://www.panamacompra.gob.pa) desde abril 2013.
 La data se almacena en [panadata.net](http://panadata.net). Este sitio cuenta con una herramienta de busqueda.
 
 Los datos y graficas de este analisis fueron confeccionados con [la data en formato csv](http://static.panadata.net/licitaciones.csv) de panadata.net
