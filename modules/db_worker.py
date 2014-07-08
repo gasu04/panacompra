@@ -21,7 +21,7 @@ import os
 import random
 
 logger = logging.getLogger('db_worker')
-CHUNK_SIZE=1000
+CHUNK_SIZE=7000
 
 db_url = os.environ['panadata_db']
 logger.info('loading %s', db_url)
@@ -112,7 +112,8 @@ def create_compra(compra):
         logger.info('got new compra %s', compra.acto)
         session.commit()
         session.expunge(compra)
-    except:
+    except Exception as e:
+        logger.error(e)
         session.rollback()
     finally:
         session.close()
