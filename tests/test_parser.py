@@ -14,8 +14,8 @@ url_error = '/AmbientePublico/vistapreviacp.aspx?numlc=2013-1-40-0-08-cm-003718&
 compra_html = conn.request("GET", url).data.decode('ISO-8859-1','ignore')
 compra_directa = conn.request("GET", url_directa).data.decode('ISO-8859-1','ignore')
 error_html = conn.request("GET", url_error).data.decode('ISO-8859-1','ignore')
-soup = BeautifulSoup(compra_html,'lxml')
 soup_error =  BeautifulSoup(error_html,'lxml')
+soup = BeautifulSoup(compra_html,'lxml')
 soup_directa = BeautifulSoup(compra_directa,'lxml')
 
 class TestParser(unittest.TestCase):
@@ -88,4 +88,5 @@ class TestParser(unittest.TestCase):
         self.assertTrue(isinstance(parser.extract_proponente(self.soup),str))
 
 if __name__ == '__main__':
-    unittest.main()
+    for i in range(100):
+        unittest.main()
