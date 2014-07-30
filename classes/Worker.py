@@ -23,7 +23,8 @@ def process_compra(compra):
     'fecha': parser.extract_fecha,
     'acto': parser.extract_acto,
     'entidad': parser.extract_entidad,
-    'proponente': parser.extract_proponente
+    'proponente': parser.extract_proponente,
+    'proveedor': parser.extract_proponente
   }
   compra = parser.parse_html(compra,modules)
   return compra

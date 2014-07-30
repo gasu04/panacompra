@@ -1,5 +1,7 @@
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, Date, Sequence, Boolean, Numeric, DateTime
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import relationship,backref
 from sqlalchemy.orm import deferred
 from sqlalchemy.types import Unicode, UnicodeText
 from datetime import datetime
@@ -29,6 +31,8 @@ class Compra(Base):
   precio_cd = Column(Numeric(15,2))
   proponente = Column(Unicode(200))
   fecha = Column(DateTime)
+  proveedor_id = Column(Integer, ForeignKey('proveedores.id'))
+
   created_at = Column(Date, default=datetime.now)
   updated_at = Column(Date, default=datetime.now, onupdate=datetime.now)
 
@@ -51,3 +55,16 @@ class Compra(Base):
   def __str__(self):
     return "Compra(%s)" % (self.acto)
 
+class Proveedor(Base):
+  __tablename__ = 'proveedores'
+
+  id = Column(Integer, primary_key=True)
+  nombre = Column(Unicode, unique=True)
+  compras = relationship(Compra)
+  created_at = Column(Date, default=datetime.now)
+  updated_at = Column(Date, default=datetime.now, onupdate=datetime.now)
+  created_at = Column(Date, default=datetime.now)
+  updated_at = Column(Date, default=datetime.now, onupdate=datetime.now)
+
+  def __init__(self,nombre):
+    self.nombre = nombre

@@ -12,7 +12,7 @@ from sqlalchemy.orm import sessionmaker,undefer
 from sqlalchemy import create_engine
 from sqlalchemy import Date, cast
 from datetime import date
-from classes.Compra import Compra,Base
+from classes.Compra import Compra,Base,Proveedor
 from multiprocessing import Pool,cpu_count,Lock
 from modules import parser
 from math import ceil
@@ -105,12 +105,24 @@ def reset_visited():
     session.commit()
     session.close()
 
+def find_or_create_proveedor(proveedor,session):
+    instance = session.query(Proveedor).filter(Proveedor.nombre == proveedor).first()
+    if instance:
+       return instance
+    else:
+        p = Proveedor(proveedor)
+        session.add(p)
+        session.commit()
+        return p
+
 def create_compra(compra):
     session = session_maker()
     try:
+        p = find_or_create_proveedor(compra.proveedor,session)
+        compra.proveedor_id = p.id
         session.add(compra)
-        logger.info('got new compra %s', compra.acto)
         session.commit()
+        logger.info('got new compra %s', compra.acto)
         session.expunge(compra)
     except Exception as e:
         logger.error(e)
