@@ -118,8 +118,9 @@ def find_or_create_proveedor(proveedor,session):
 def create_compra(compra):
     session = session_maker()
     try:
-        p = find_or_create_proveedor(compra.proveedor,session)
-        compra.proveedor_id = p.id
+        if compra.proponente and compra.proponente != '':
+            p = find_or_create_proveedor(compra.proveedor,session)
+            compra.proveedor_id = p.id
         session.add(compra)
         session.commit()
         logger.info('got new compra %s', compra.acto)
