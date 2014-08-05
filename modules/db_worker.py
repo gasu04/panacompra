@@ -12,7 +12,7 @@ from sqlalchemy.orm import sessionmaker,undefer
 from sqlalchemy import create_engine
 from sqlalchemy import Date, cast
 from datetime import date
-from classes.Compra import Compra,Base,Proveedor
+from classes.Compra import Compra,Base,Proveedor,Entidad
 from multiprocessing import Pool,cpu_count,Lock
 from modules import parser
 from math import ceil
@@ -115,12 +115,25 @@ def find_or_create_proveedor(proveedor,session):
         session.commit()
         return p
 
+def find_or_create_entidad(entidad,session):
+    instance = session.query(Entidad).filter(Entidad.nombre == entidad).first()
+    if instance:
+       return instance
+    else:
+        p = Entidad(entidad)
+        session.add(p)
+        session.commit()
+        return p
+
 def create_compra(compra):
     session = session_maker()
     try:
         if compra.proponente and compra.proponente != '':
             p = find_or_create_proveedor(compra.proveedor,session)
             compra.proveedor_id = p.id
+        if compra.entidad and compra.entidad != '':
+            e = find_or_create_entidad(compra.entidad,session)
+            compra.entidad_id = e.id
         session.add(compra)
         session.commit()
         logger.info('got new compra %s', compra.acto)

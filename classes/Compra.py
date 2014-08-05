@@ -32,9 +32,10 @@ class Compra(Base):
   proponente = Column(Unicode(200))
   fecha = Column(DateTime)
   proveedor_id = Column(Integer, ForeignKey('proveedores.id'))
+  entidad_id = Column(Integer, ForeignKey('entidades.id'))
 
-  created_at = Column(Date, default=datetime.now)
-  updated_at = Column(Date, default=datetime.now, onupdate=datetime.now)
+  created_at = Column(Date, default=datetime.now())
+  updated_at = Column(Date, default=datetime.now(), onupdate=datetime.now())
 
   def __init__(self,url,category):
     self.url = str(url)
@@ -61,10 +62,20 @@ class Proveedor(Base):
   id = Column(Integer, primary_key=True)
   nombre = Column(Unicode, unique=True)
   compras = relationship(Compra)
-  created_at = Column(Date, default=datetime.now)
-  updated_at = Column(Date, default=datetime.now, onupdate=datetime.now)
-  created_at = Column(Date, default=datetime.now)
-  updated_at = Column(Date, default=datetime.now, onupdate=datetime.now)
+  created_at = Column(Date, default=datetime.now())
+  updated_at = Column(Date, default=datetime.now, onupdate=datetime.now())
+
+  def __init__(self,nombre):
+    self.nombre = nombre
+
+class Entidad(Base):
+  __tablename__ = 'entidades'
+
+  id = Column(Integer, primary_key=True)
+  nombre = Column(Unicode, unique=True)
+  compras = relationship(Compra)
+  created_at = Column(Date, default=datetime.now())
+  updated_at = Column(Date, default=datetime.now(), onupdate=datetime.now())
 
   def __init__(self,nombre):
     self.nombre = nombre
