@@ -189,7 +189,7 @@ def url_brute():
     for row in cache:
         try:
             for i in range(int(row[2]),(int(row[1])+1)):
-                for year in [2012,2013]:
+                for year in [2012,2013,2014]:
                         url = build_url(year,row[0],i)
                         if url not in visited:
                                 yield Compra(url,0)
