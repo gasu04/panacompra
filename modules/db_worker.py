@@ -90,7 +90,7 @@ def reparse():
 
 def query_not_visited():
     session = session_maker()
-    cache = list(session.query(Compra).filter(Compra.visited == False))
+    cache = list(session.query(Compra).filter(Compra.visited == False).all())
     session.close()
     return cache
 
