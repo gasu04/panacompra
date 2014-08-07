@@ -86,6 +86,10 @@ def revisit():
     cache = db_worker.query_not_visited()
     crawl_urls(iter(cache))
 
+def visit_pending():
+    cache = db_worker.query_not_visited()
+    crawl_urls(iter(cache))
+
 def crawl_urls_from_file(urlfile):
     with open(urlfile) as f:
         urls = f.read().splitlines()
