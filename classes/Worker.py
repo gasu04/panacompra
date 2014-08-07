@@ -44,6 +44,9 @@ class Worker(Thread):
                 if compra.url not in urls:
                     compra = process_compra(compra)
                     db_worker.create_compra(compra)
+                    urls.add(compra.url)
+                else:
+                    db_worker.del_compra(compra)
             except Empty:
                 if not any([scraper.is_alive() for scraper in self.scrapers]):
                     raise Exception('worker is dead')

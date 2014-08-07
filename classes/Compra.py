@@ -10,7 +10,8 @@ Base = declarative_base()
 class Compra(Base):
   __tablename__ = 'compras'
 
-  acto = Column(Unicode(200), primary_key=True)
+  id = Column(Integer, primary_key=True)
+  acto = Column(Unicode(200), unique=True)
   url = Column(Unicode(200), unique=True)
   html = deferred(Column(UnicodeText))
   description = deferred(Column(UnicodeText))

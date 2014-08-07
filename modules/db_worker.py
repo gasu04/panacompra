@@ -146,6 +146,20 @@ def create_compra(compra):
         session.close()
     return compra
 
+def del_compra(compra):
+    session = session_maker()
+    try:
+        if session.query(Compra.url).filter(Compra.url == compra.url).filter(Compra.id != compra.id).first():
+            session.delete(compra)
+        session.commit()
+        logger.info('deleted compra %s', compra.acto)
+    except Exception as e:
+        logger.error(e)
+        session.rollback()
+    finally:
+        session.close()
+    return compra
+
 def get_all_urls():
     session = session_maker()
     try:
