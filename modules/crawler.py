@@ -14,12 +14,19 @@ from time import sleep
 from threading import active_count
 import asyncio
 import aiohttp
+from itertools import *
 
 THREADS = 8
 connection_pool = urllib3.HTTPConnectionPool('201.227.172.42',maxsize=THREADS)
 logger = logging.getLogger('PanaCrawler')
 
 sem = asyncio.Semaphore(50)
+
+def grouper(iterable, n, fillvalue=None):
+    "Collect data into fixed-length chunks or blocks"
+    # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
+    args = [iter(iterable)] * n
+    return zip_longest(*args, fillvalue=fillvalue)
 
 def get_categories():
     """Build a list of categories by scraping site"""
@@ -124,9 +131,12 @@ def get_compra(compra):
 def crawl_urls(cache):
     scrapers = []
     lock = asyncio.Lock()
-    loop = asyncio.get_event_loop()
-    f = asyncio.wait([get_compra(compra) for compra in cache])
-    loop.run_until_complete(f)
+    in_chunks = filter(None,grouper(cache,10000))
+    while True:
+        chunk = next(in_chunks)
+        loop = asyncio.get_event_loop()
+        f = asyncio.wait([get_compra(compra) for compra in chunk])
+        loop.run_until_complete(f)
 
 def process_compra(compra):
     modules = {
