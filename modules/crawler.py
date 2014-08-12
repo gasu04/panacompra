@@ -122,7 +122,7 @@ def get(*args, **kwargs):
 def get_compra(compra):
     url = "http://panamacompra.gob.pa/AmbientePublico/" + compra.url
     with (yield from sem):
-        html = yield from get(url, compress=True)
+        html = yield from get(url, compress=True, allow_redirects=False)
     if html:
         compra.html = html.decode('ISO-8859-1','ignore')
         compra.visited = True
