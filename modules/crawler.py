@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup, SoupStrainer
 import urllib3
+from urllib3 import make_headers
 from random import shuffle
 import re
 import logging
@@ -8,13 +9,17 @@ from classes.UrlScraper import UrlScraperThread
 from classes.Worker import Worker
 from classes.CompraScraper import CompraScraperThread
 from classes.Compra import Compra
-from modules import db_worker
+from modules import db_worker,parser
 from time import sleep
 from threading import active_count
+import asyncio
+import aiohttp
 
 THREADS = 8
 connection_pool = urllib3.HTTPConnectionPool('201.227.172.42',maxsize=THREADS)
 logger = logging.getLogger('PanaCrawler')
+
+sem = asyncio.Semaphore(50)
 
 def get_categories():
     """Build a list of categories by scraping site"""
@@ -99,16 +104,49 @@ def crawl_urls_from_file(urlfile):
 def bruteforce():
     crawl_urls(db_worker.url_brute())
 
+@asyncio.coroutine
+def get(*args, **kwargs):
+    response = yield from aiohttp.request('GET', *args, **kwargs)
+    if response.status == 200 and 'error' not in response.url:
+        return (yield from response.read())
+    response.close()
+
+@asyncio.coroutine
+def get_compra(compra):
+    url = "http://panamacompra.gob.pa/AmbientePublico/" + compra.url
+    with (yield from sem):
+        html = yield from get(url, compress=True)
+    if html:
+        compra.html = html.decode('ISO-8859-1','ignore')
+        compra.visited = True
+        process_compra(compra)
+
 def crawl_urls(cache):
-    compras_queue = Queue()
     scrapers = []
-    logger.info('spawning %i CompraScraperThreads', THREADS)
-    worker = spawn_worker(compras_queue,scrapers)
-    while True:
-        scrapers = list(filter(lambda x: x.is_alive(),scrapers))
-        try:
-            spawn_compra_scrapers(cache,compras_queue,scrapers)
-        except StopIteration:
-            break
-        sleep(0.2)
-    join_threads(scrapers)
+    lock = asyncio.Lock()
+    loop = asyncio.get_event_loop()
+    f = asyncio.wait([get_compra(compra) for compra in cache])
+    loop.run_until_complete(f)
+
+def process_compra(compra):
+    modules = {
+        'precio': parser.extract_precio,
+        'description': parser.extract_description,
+        'compra_type': parser.extract_compra_type,
+        'dependencia': parser.extract_dependencia,
+        'unidad': parser.extract_unidad,
+        'objeto': parser.extract_objeto,
+        'modalidad': parser.extract_modalidad,
+        'provincia': parser.extract_provincia,
+        'correo_contacto': parser.extract_correo_contacto,
+        'nombre_contacto': parser.extract_nombre_contacto,
+        'telefono_contacto': parser.extract_telefono_contacto,
+        'fecha': parser.extract_fecha,
+        'acto': parser.extract_acto,
+        'entidad': parser.extract_entidad,
+        'proponente': parser.extract_proponente,
+        'proveedor': parser.extract_proponente
+    }
+    compra = parser.parse_html(compra,modules)
+    db_worker.create_compra(compra)
+    return compra
