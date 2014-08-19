@@ -216,7 +216,7 @@ def url_brute():
     random.shuffle(cache)
     for row in cache:
         try:
-            for i in range(int(row[2]),(int(row[1])+1)):
+            for i in range(0,int(row[1])+1000):
                 for year in [2012,2013,2014]:
                         url = build_url(year,row[0],i)
                         if url not in visited:
