@@ -11,6 +11,7 @@ from sqlalchemy.sql import exists
 from sqlalchemy.orm import sessionmaker,undefer
 from sqlalchemy import create_engine
 from sqlalchemy import Date, cast
+from sqlalchemy.exc import IntegrityError
 from datetime import date
 from classes.Compra import Compra,Base,Proveedor,Entidad
 from multiprocessing import Pool,cpu_count,Lock
@@ -139,8 +140,8 @@ def create_compra(compra):
         session.commit()
         logger.info('got new compra %s', compra.acto)
         session.expunge(compra)
-    except Exception as e:
-        logger.error(e)
+    except IntegrityError as e:
+        logger.debug('IntegrityError getting %s', compra.acto)
         session.rollback()
     finally:
         session.close()
@@ -165,8 +166,8 @@ def get_all_urls():
     try:
         urls = list(zip(*session.query(Compra.url).all()))[0]
         session.close()
-        return {item.lower() for item in urls}
-    except:
+        return {item.lower() for item in urls if item}
+    except Exception as e:
         session.close()
         return set()
 
@@ -210,7 +211,7 @@ def build_url(year,acto,i):
 def url_brute():
     visited = get_all_urls()
     session = session_maker()
-    cache = session.execute("select distinct(split_part(acto,'-',2),split_part(acto,'-',3),split_part(acto,'-',4),split_part(acto,'-',5),split_part(acto,'-',6)) acto_ ,max(split_part(acto,'-',7)),min(split_part(acto,'-',7)) from compras group by acto_")
+    cache = session.execute("select distinct(split_part(acto,'-',2),split_part(acto,'-',3),split_part(acto,'-',4),split_part(acto,'-',5),split_part(acto,'-',6)) acto_ ,max(split_part(acto,'-',7)),min(split_part(acto,'-',7)) from compras where entidad like '%micro%'group by acto_")
     cache = cache.fetchall()
     session.close()
     random.shuffle(cache)
@@ -220,7 +221,7 @@ def url_brute():
                 for year in [2012,2013,2014]:
                         url = build_url(year,row[0],i)
                         if url not in visited:
-                                yield Compra(url,0)
+                                yield url
         except Exception as e:
             print(e)
             continue

@@ -38,12 +38,13 @@ class Compra(Base):
   created_at = Column(Date, default=datetime.now())
   updated_at = Column(Date, default=datetime.now(), onupdate=datetime.now())
 
-  def __init__(self,url,category):
-    self.url = str(url)
-    self.category_id = category
+  def __init__(self,kwargs):
     self.html = None
     self.visited = False
     self.parsed = False
+    for k in  kwargs.keys():
+        self.__setattr__(k, kwargs[k])
+
 
   def __hash__(self):
     return hash(self.url)
@@ -80,3 +81,25 @@ class Entidad(Base):
 
   def __init__(self,nombre):
     self.nombre = nombre
+
+class Adquisicion(Base):
+  __tablename__ = 'adquisicion'
+
+  id = Column(Integer, primary_key=True)
+  codigo = Column(Numeric)
+  clasificacion = Column(Unicode)
+  cantidad = Column(Numeric)
+  unidad = Column(Unicode)
+  descripcion= Column(Unicode)
+  ses = Column(Unicode)
+  categoria_1 = Column(Unicode)
+  categoria_2 = Column(Unicode)
+  categoria_3 = Column(Unicode)
+  created_at = Column(Date, default=datetime.now)
+  updated_at = Column(Date, default=datetime.now, onupdate=datetime.now)
+
+  def __init__(self, kwargs):
+    self.html = None
+    for k in  kwargs.keys():
+        self.__setattr__(k, kwargs[k])
+

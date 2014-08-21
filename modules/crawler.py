@@ -15,12 +15,14 @@ from threading import active_count
 import asyncio
 import aiohttp
 from itertools import *
+import urllib
 
 THREADS = 8
 connection_pool = urllib3.HTTPConnectionPool('201.227.172.42',maxsize=THREADS)
 logger = logging.getLogger('PanaCrawler')
 
 sem = asyncio.Semaphore(50)
+lock = asyncio.Lock()
 
 def grouper(iterable, n, fillvalue=None):
     "Collect data into fixed-length chunks or blocks"
@@ -48,50 +50,13 @@ def get_categories_html():
     data = response.data
     return data
 
-def spawn_scrapers(categories,compras_queue,connection_pool,urls,n,update=False):
-    scrapers = []
-    for i in range(n):
-        try:
-            t = UrlScraperThread(categories.pop(),compras_queue,connection_pool,urls,update)
-            t.setDaemon(True)
-            scrapers.append(t)
-            t.start()
-        except IndexError:
-            logger.info('exahusted categories')
-            break
-    return scrapers
-
-def spawn_compra_scrapers(compras,compras_queue,scrapers):
-    threads = THREADS + 2 - active_count()
-    for i in range(threads):
-        compra = next(compras)
-        t = CompraScraperThread(compra,compras_queue,connection_pool)
-        t.setDaemon(True)
-        scrapers.append(t)
-        t.start()
-
-def join_threads(threads):
-    while any([thread.is_alive() for thread in threads]):
-        sleep(1)
-    return threads
-
 def run(update=False):
-    scrapers = []
-    compras_queue = Queue()
     categories = get_categories() #scrape and store list of categories
     urls = db_worker.get_all_urls()
     logger.info('cached %i urls', len(urls))
-    worker = spawn_worker(compras_queue,scrapers)
-    while len(categories) > 0:
-        scrapers.extend(spawn_scrapers(categories,compras_queue,connection_pool,urls,THREADS + 2 - active_count(),update))
-        sleep(0.1)
-    join_threads(scrapers)
-
-def spawn_worker(html_queue,scrapers):
-    thread = Worker(html_queue,scrapers)
-    thread.setDaemon(True)
-    thread.start()
-    return thread
+    loop = asyncio.get_event_loop()
+    f = asyncio.wait([get_compras_for_category(c,urls) for c in categories])
+    loop.run_until_complete(f)
 
 def revisit():
     db_worker.reset_visited()
@@ -101,12 +66,6 @@ def revisit():
 def visit_pending():
     cache = db_worker.query_not_visited()
     crawl_urls(iter(cache))
-
-def crawl_urls_from_file(urlfile):
-    with open(urlfile) as f:
-        urls = f.read().splitlines()
-    old_urls = db_worker.get_all_urls()
-    crawl_urls((Compra(url,0) for url in urls if url not in old_urls))
 
 def bruteforce():
     crawl_urls(db_worker.url_brute())
@@ -119,17 +78,58 @@ def get(*args, **kwargs):
     response.close()
 
 @asyncio.coroutine
-def get_compra(compra):
-    url = "http://panamacompra.gob.pa/AmbientePublico/" + compra.url
+def post(*args, **kwargs):
+    response = yield from aiohttp.request('POST', *args, **kwargs)
+    if 'error' not in response.url:
+        return (yield from response.read())
+    response.close()
+
+@asyncio.coroutine
+def get_compra(url):
+    url = "http://panamacompra.gob.pa/AmbientePublico/" + url
     with (yield from sem):
         html = yield from get(url, compress=True, allow_redirects=False)
     if html:
-        compra.html = html.decode('ISO-8859-1','ignore')
-        compra.visited = True
-        process_compra(compra)
+        html = html.decode('ISO-8859-1','ignore')
+        compra = parser.html_to_compra(html)
+        with (yield from lock):
+            db_worker.create_compra(compra)
+
+def reset_har(har,max_pages):
+    har = har.copy()
+    har['ctl00$ContentPlaceHolder1$ControlPaginacion$hidNumeroPagina'] = 1
+    har['ctl00$ContentPlaceHolder1$ControlPaginacion$hidTotalPaginas'] = int(max_pages)
+    return har
+
+def set_har_page(har,page):
+    har = har.copy()
+    har['ctl00$ContentPlaceHolder1$ControlPaginacion$hidNumeroPagina'] = page
+    return har
+
+@asyncio.coroutine
+def get_compras_for_category(category,urls):
+   for page in (yield from pages_for_category(category)):
+        url = 'http://panamacompra.gob.pa/AmbientePublico/AP_Busquedaavanzada.aspx?BusquedaRubros=true&IdRubro=' + str(category)
+        html = yield from post(url, compress=True, data=page)
+        for url in parser.links_from_category_html(html):
+            if url not in urls:
+                yield from get_compra(url)
+
+@asyncio.coroutine
+def pages_for_category(category):
+    #maxp = yield from get_max_pages(category)
+    maxp=5
+    with open('form.data') as har:
+        har = reset_har(dict(urllib.parse.parse_qsl(har.read())),maxp)
+    return [set_har_page(har,i) for i in range(1,maxp+1)]
+
+@asyncio.coroutine
+def get_max_pages(category):
+    url = 'http://panamacompra.gob.pa/AmbientePublico/AP_Busquedaavanzada.aspx?BusquedaRubros=true&IdRubro=' + str(category)
+    html = yield from get(url)
+    return parser.max_pages_from_html(html)
 
 def crawl_urls(cache):
-    scrapers = []
     lock = asyncio.Lock()
     in_chunks = filter(None,grouper(cache,10000))
     while True:
@@ -137,26 +137,3 @@ def crawl_urls(cache):
         loop = asyncio.get_event_loop()
         f = asyncio.wait([get_compra(compra) for compra in chunk])
         loop.run_until_complete(f)
-
-def process_compra(compra):
-    modules = {
-        'precio': parser.extract_precio,
-        'description': parser.extract_description,
-        'compra_type': parser.extract_compra_type,
-        'dependencia': parser.extract_dependencia,
-        'unidad': parser.extract_unidad,
-        'objeto': parser.extract_objeto,
-        'modalidad': parser.extract_modalidad,
-        'provincia': parser.extract_provincia,
-        'correo_contacto': parser.extract_correo_contacto,
-        'nombre_contacto': parser.extract_nombre_contacto,
-        'telefono_contacto': parser.extract_telefono_contacto,
-        'fecha': parser.extract_fecha,
-        'acto': parser.extract_acto,
-        'entidad': parser.extract_entidad,
-        'proponente': parser.extract_proponente,
-        'proveedor': parser.extract_proponente
-    }
-    compra = parser.parse_html(compra,modules)
-    db_worker.create_compra(compra)
-    return compra
