@@ -83,7 +83,7 @@ class Entidad(Base):
     self.nombre = nombre
 
 class Adquisicion(Base):
-  __tablename__ = 'adquisicion'
+  __tablename__ = 'adquisiciones'
 
   id = Column(Integer, primary_key=True)
   codigo = Column(Numeric)

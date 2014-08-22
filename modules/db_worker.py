@@ -127,7 +127,15 @@ def find_or_create_entidad(entidad,session):
         session.commit()
         return p
 
-def create_compra(compra):
+def create_aquisitions(compra,aquisitions,session):
+    for aq in aquisitions:
+        aq.compra_id = compra.id
+        session.add(aq)
+        session.commit()
+    return aquisitions
+
+
+def create_compra(compra,aquisitions):
     session = session_maker()
     try:
         if compra.proponente and compra.proponente != '':
@@ -138,6 +146,7 @@ def create_compra(compra):
             compra.entidad_id = e.id
         session.add(compra)
         session.commit()
+        create_aquisitions(compra,aquisitions,session)
         logger.info('got new compra %s', compra.acto)
         session.expunge(compra)
     except IntegrityError as e:

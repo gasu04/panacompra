@@ -36,7 +36,8 @@ def parse_compra_html(html,methods):
             except Exception as e:
                 logger.error('error getting %s from %s', name, compra.url)
         compra['parsed'] = True
-        return Compra(compra)
+        aqs = get_aquisitions(soup)
+        return Compra(compra),aqs
 
 def parse_date(date):
   try:
@@ -58,7 +59,8 @@ def parse_precio(precio):
   return precio
 
 def sanitize(string):
-  return str(re.sub(' +',' ', string)).lower() #no repeated spaces
+  string = string.replace('\n', ' ').replace('\r', '').strip().lower()
+  return ' '.join(string.split()) #no repeated spaces
 
 def extract_precio(soup):
     precio = soup.find(text='Precio Referencia:')
@@ -173,5 +175,5 @@ def html_to_compra(html):
         'proponente': extract_proponente,
         'proveedor': extract_proponente
     }
-    compra = parse_compra_html(html,modules)
-    return compra
+    compra,aqs = parse_compra_html(html,modules)
+    return compra,aqs

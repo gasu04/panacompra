@@ -91,9 +91,9 @@ def get_compra(url):
         html = yield from get(url, compress=True, allow_redirects=False)
     if html:
         html = html.decode('ISO-8859-1','ignore')
-        compra = parser.html_to_compra(html)
+        compra,aqs = parser.html_to_compra(html)
         with (yield from lock):
-            db_worker.create_compra(compra)
+            db_worker.create_compra(compra,aqs)
 
 def reset_har(har,max_pages):
     har = har.copy()
