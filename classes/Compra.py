@@ -38,6 +38,8 @@ class Compra(Base):
   created_at = Column(Date, default=datetime.now())
   updated_at = Column(Date, default=datetime.now(), onupdate=datetime.now())
 
+  children = relationship("Adquisicion")
+
   def __init__(self,kwargs):
     self.html = None
     self.visited = False
@@ -97,6 +99,7 @@ class Adquisicion(Base):
   categoria_3 = Column(Unicode)
   created_at = Column(Date, default=datetime.now)
   updated_at = Column(Date, default=datetime.now, onupdate=datetime.now)
+  compra_id = Column(Integer, ForeignKey('compras.id'))
 
   def __init__(self, kwargs):
     self.html = None

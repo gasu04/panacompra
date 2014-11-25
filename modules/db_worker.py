@@ -43,43 +43,28 @@ def chunks(l, n):
 
 def process_pending():
     session = session_maker()
+    session.query(Compra).update({'visited':True})
     count_query = session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True)
     query = session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).options(undefer('html')).limit(CHUNK_SIZE)
     pool = Pool(processes=CPU)
+    logger.info("%i queries pending", query.count())
     while query.count() > 0:
         logger.info("%i compras pending", count_query.count())
 #        results = [process_compra(c) for c in query.all()]
         cache = query.all()
         results = pool.map(process_compra, cache, int(ceil(len(cache)/CPU)))
-        query.merge_result(results)
-        session.commit()
+        # query.merge_result(results)
+        # session.commit()
     logger.info("compras added to db")
 
 def process_compra(compra):
-  modules = {
-    'precio': parser.extract_precio,
-    'description': parser.extract_description,
-    'compra_type': parser.extract_compra_type,
-    'dependencia': parser.extract_dependencia,
-    'unidad': parser.extract_unidad,
-    'objeto': parser.extract_objeto,
-    'modalidad': parser.extract_modalidad,
-    'provincia': parser.extract_provincia,
-    'correo_contacto': parser.extract_correo_contacto,
-    'nombre_contacto': parser.extract_nombre_contacto,
-    'telefono_contacto': parser.extract_telefono_contacto,
-    'fecha': parser.extract_fecha,
-    'acto': parser.extract_acto,
-    'entidad': parser.extract_entidad,
-    'proponente': parser.extract_proponente
-  }
-  compra = parser.parse_html(compra,modules)
-  return compra
+    ncompra,adqs = parser.html_to_compra(compra.html)
+    update_compra(compra, ncompra, adqs)
+    return compra
 
-def process_query(query,pool):
-    cache = query.all()
-    results = pool.imap_unordered(process_compra, cache, int(ceil(len(cache)/1)))
-    return results
+def update_compra(compra, ncompra, adqs):
+    session.delete(compra.adquisicions)
+    create_aquisitions(ncompra, adqs, session)
 
 def reparse():
     session = session_maker()
