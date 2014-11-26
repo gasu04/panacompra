@@ -52,7 +52,9 @@ def process_pending():
         logger.info("%i compras pending", count_query.count())
 #        results = [process_compra(c) for c in query.all()]
         cache = query.all()
-        results = pool.map(process_compra, cache, int(ceil(len(cache)/CPU)))
+        results = []
+        for comp in cache:
+            results.append(process_compra(comp))
         # query.merge_result(results)
         # session.commit()
     logger.info("compras added to db")
