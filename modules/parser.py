@@ -36,6 +36,7 @@ def parse_compra_html(html,methods):
             except Exception as e:
                 logger.error('error getting %s from %s', name, compra.url)
         compra['parsed'] = True
+        compra['html'] = html
         aqs = get_aquisitions(soup)
         return Compra(compra),aqs
 
