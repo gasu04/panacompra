@@ -76,17 +76,5 @@ class TestParser(unittest.TestCase):
     def test_proponente(self):
         self.assertEqual(parser.extract_proponente(self.soup), str("roberto peralta"))
 
-    def test_parse_html(self):
-        compra = Compra('url',1)
-        compra.html =  compra_html
-        acto = "2012-0-01-0-08-cm-002791"
-        self.assertEqual(parser.parse_html(compra,{'acto':parser.extract_acto}).acto,acto) 
-
-    def test_unicode(self):
-        self.assertTrue(isinstance(parser.extract_description(self.soup),str))
-        self.assertTrue(isinstance(parser.extract_entidad(self.soup),str))
-        self.assertTrue(isinstance(parser.extract_proponente(self.soup),str))
-
 if __name__ == '__main__':
-    for i in range(100):
-        unittest.main()
+    unittest.main()
