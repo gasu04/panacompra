@@ -34,6 +34,7 @@ class Compra(Base):
   fecha = Column(DateTime)
   proveedor_id = Column(Integer, ForeignKey('proveedores.id'))
   entidad_id = Column(Integer, ForeignKey('entidades.id'))
+  adquisiciones = relationship('Adquisicion')
 
   created_at = Column(Date, default=datetime.now())
   updated_at = Column(Date, default=datetime.now(), onupdate=datetime.now())

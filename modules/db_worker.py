@@ -43,30 +43,44 @@ def chunks(l, n):
 
 def process_pending():
     session = session_maker()
-    session.query(Compra).update({'visited':True})
-    count_query = session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True)
-    query = session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).options(undefer('html')).limit(CHUNK_SIZE)
-    pool = Pool(processes=CPU)
-    logger.info("%i queries pending", query.count())
-    while query.count() > 0:
-        logger.info("%i compras pending", count_query.count())
-#        results = [process_compra(c) for c in query.all()]
-        cache = query.all()
-        results = []
-        for comp in cache:
-            results.append(process_compra(comp))
-        # query.merge_result(results)
-        # session.commit()
+    count_query = session.query(Compra).filter(Compra.parsed == False).filter(Compra.html != None)
+    query = session.query(Compra).filter(Compra.parsed == False).filter(Compra.visited == True).options(undefer('html')).yield_per(5000)
+    logger.info("%i compras pending", count_query.count())
+    for comp in query:
+        process_compra(session,comp)
+    session.commit()
     logger.info("compras added to db")
 
-def process_compra(compra):
+def process_compra(session,compra):
     ncompra,adqs = parser.html_to_compra(compra.html)
-    update_compra(compra, ncompra, adqs)
+    update_compra(session, compra, ncompra, adqs)
     return compra
 
-def update_compra(compra, ncompra, adqs):
-    session.delete(compra.adquisicions)
+def update_compra(session, compra, ncompra, adqs):
+    [session.delete(adq) for adq in compra.adquisiciones]
     create_aquisitions(ncompra, adqs, session)
+    update_compra_fields(compra,ncompra)
+
+def update_compra_fields(compra,ncompra):
+    compra.acto = ncompra.acto
+    compra.url = ncompra.url
+    compra.description = ncompra.description
+    compra.visited = ncompra.visited
+    compra.parsed = ncompra.parsed
+    compra.category_id = ncompra.category_id
+    compra.compra_type = ncompra.compra_type
+    compra.entidad = ncompra.entidad
+    compra.dependencia = ncompra.dependencia
+    compra.nombre_contacto = ncompra.nombre_contacto
+    compra.telefono_contacto = ncompra.telefono_contacto
+    compra.objeto = ncompra.objeto
+    compra.modalidad = ncompra.modalidad
+    compra.correo_contacto = ncompra.correo_contacto
+    compra.unidad = ncompra.unidad
+    compra.provincia = ncompra.provincia
+    compra.precio = ncompra.precio
+    compra.proponente = ncompra.proponente
+    compra.fecha = ncompra.fecha
 
 def reparse():
     session = session_maker()
@@ -118,7 +132,6 @@ def create_aquisitions(compra,aquisitions,session):
     for aq in aquisitions:
         aq.compra_id = compra.id
         session.add(aq)
-        session.commit()
     return aquisitions
 
 
@@ -134,6 +147,7 @@ def create_compra(compra,aquisitions):
         session.add(compra)
         session.commit()
         create_aquisitions(compra,aquisitions,session)
+        session.commit()
         logger.info('got new compra %s', compra.acto)
         session.expunge(compra)
     except IntegrityError as e:
