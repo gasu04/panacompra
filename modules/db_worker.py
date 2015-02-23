@@ -2,7 +2,6 @@ import re
 from sqlalchemy import or_
 from sqlalchemy import func
 import logging
-from scipy import stats
 from datetime import datetime
 from time import sleep
 from time import strptime
@@ -185,29 +184,6 @@ def query_all():
     compras = session.query(Compra).filter(Compra.parsed == True).filter(Compra.precio > 0).filter(Compra.fecha != None).filter(Compra.proponente == "Editora Panamá América S.A.").all()
     session.close()
     return compras
-
-def mode_price():
-    session = session_maker()
-    maxes = session.query(func.max(Compra.precio)).group_by(cast(Compra.fecha,Date)).all()
-    return stats.mode(list(filter(None,[m[0] for m in maxes])))
-
-def history_price():
-    session = session_maker()
-    history = session.query(Compra.entidad,func.sum(Compra.precio),func.date_trunc('month', Compra.fecha)).group_by(Compra.entidad,func.date_trunc('month',Compra.fecha)).order_by(func.date_trunc('month',Compra.fecha)).filter(Compra.entidad.startswith('MINISTERIO')).all()
-    return history
-
-def query_frequency():
-    session = session_maker()
-    return session.query(Compra.entidad,func.count(),func.date_trunc('week',Compra.fecha,)).filter(Compra.precio > 0).filter(Compra.fecha != None).group_by(Compra.entidad,func.date_trunc('week',Compra.fecha)).order_by(func.date_trunc('week',Compra.fecha)).filter(Compra.entidad.startswith('MINISTERIO')).all()
-
-
-def query_css_minsa():
-    session = session_maker()
-    return session.query(Compra).filter(or_(Compra.entidad == 'CAJA DE SEGURO SOCIAL', Compra.entidad == 'MINISTERIO DE SALUD')).filter(Compra.parsed == True)
-
-def hospitales():
-    session = session_maker()
-    return session.query(Compra.unidad, func.sum(Compra.precio)).filter(Compra.category_id == 95).group_by(Compra.unidad)
 
 def parse_acto(acto):
         return '-'.join(re.sub(r'\(|\)','',acto.lower()).split(','))
