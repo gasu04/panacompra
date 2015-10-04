@@ -12,7 +12,7 @@ from sqlalchemy import create_engine
 from sqlalchemy import Date, cast
 from sqlalchemy.exc import IntegrityError
 from datetime import date
-from classes.Compra import Compra,Base,Proveedor,Entidad
+from classes.Compra import Compra,Base,Proveedor,Entidad,CompraHtml
 from multiprocessing import Pool,cpu_count,Lock
 from modules import parser
 from math import ceil
@@ -112,6 +112,7 @@ def find_or_create_proveedor(proveedor,session):
        return instance
     else:
         p = Proveedor(proveedor)
+
         session.add(p)
         session.commit()
         return p
@@ -134,8 +135,15 @@ def create_aquisitions(compra,aquisitions,session):
     return aquisitions
 
 
+def create_compra_html(html,compra,session):
+    ch = CompraHtml({'html':html,'compra_id':compra.id})
+    session.add(ch)
+    session.commit()
+    return ch
+
 def create_compra(compra,aquisitions):
     session = session_maker()
+    html = compra.html
     try:
         if compra.proponente and compra.proponente != '':
             p = find_or_create_proveedor(compra.proveedor,session)
@@ -146,11 +154,14 @@ def create_compra(compra,aquisitions):
         session.add(compra)
         session.commit()
         create_aquisitions(compra,aquisitions,session)
+        create_compra_html(html,compra,session)
         logger.info('got new compra %s', compra.acto)
         session.expunge(compra)
     except IntegrityError as e:
         logger.debug('IntegrityError getting %s', compra.acto)
         session.rollback()
+    except Exception as e:
+        logger.error(e)
     finally:
         session.close()
     return compra
