@@ -39,7 +39,7 @@ if __name__ == "__main__":
     elif args.revisit:
       crawler.revisit()
     elif args.import_urls:
-      crawler.crawl_urls_from_file(args.import_urls)
+      crawler.from_file(args.import_urls)
     elif args.reparse:
       db_worker.reparse()
     elif args.pending:

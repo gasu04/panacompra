@@ -21,7 +21,7 @@ THREADS = 8
 connection_pool = urllib3.HTTPConnectionPool('201.227.172.42',maxsize=THREADS)
 logger = logging.getLogger('PanaCrawler')
 
-sem = asyncio.Semaphore(50)
+sem = asyncio.Semaphore(5)
 lock = asyncio.Lock()
 
 def grouper(iterable, n, fillvalue=None):
@@ -56,6 +56,14 @@ def run(update=False):
     logger.info('cached %i urls', len(urls))
     loop = asyncio.get_event_loop()
     f = asyncio.wait([get_compras_for_category(c,urls) for c in categories])
+    loop.run_until_complete(f)
+
+def from_file(url_file):
+    with open(url_file) as f:
+        urls = [line.rstrip('\n') for line in f]
+    logger.info('cached %i urls', len(urls))
+    loop = asyncio.get_event_loop()
+    f = asyncio.wait([get_compra(u) for u in urls])
     loop.run_until_complete(f)
 
 def revisit():
