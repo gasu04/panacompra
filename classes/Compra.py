@@ -31,6 +31,7 @@ class Compra(Base):
   precio_cd = Column(Numeric(15,2))
   proponente = Column(Unicode(200))
   fecha = Column(DateTime)
+  adquisiciones = relationship("Adquisicion")
   proveedor_id = Column(Integer, ForeignKey('proveedores.id'))
   entidad_id = Column(Integer, ForeignKey('entidades.id'))
   htmls = relationship("CompraHtml")
@@ -95,8 +96,9 @@ class Adquisicion(Base):
   categoria_1 = Column(Unicode)
   categoria_2 = Column(Unicode)
   categoria_3 = Column(Unicode)
-  created_at = Column(Date, default=datetime.now)
-  updated_at = Column(Date, default=datetime.now, onupdate=datetime.now)
+  compra_id = Column(Integer, ForeignKey('compras.id'))
+  created_at = Column(Date, default=datetime.now())
+  updated_at = Column(Date, default=datetime.now, onupdate=datetime.now())
 
   def __init__(self, kwargs):
     for k in  kwargs.keys():
