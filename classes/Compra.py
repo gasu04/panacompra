@@ -13,7 +13,6 @@ class Compra(Base):
   id = Column(Integer, primary_key=True)
   acto = Column(Unicode(200), unique=True)
   url = Column(Unicode(200), unique=True)
-  html = deferred(Column(UnicodeText))
   description = deferred(Column(UnicodeText))
   visited = Column(Boolean)
   parsed = Column(Boolean)
@@ -34,12 +33,13 @@ class Compra(Base):
   fecha = Column(DateTime)
   proveedor_id = Column(Integer, ForeignKey('proveedores.id'))
   entidad_id = Column(Integer, ForeignKey('entidades.id'))
+  htmls = relationship("CompraHtml")
 
   created_at = Column(Date, default=datetime.now())
   updated_at = Column(Date, default=datetime.now(), onupdate=datetime.now())
 
+
   def __init__(self,kwargs):
-    self.html = None
     self.visited = False
     self.parsed = False
     for k in  kwargs.keys():
@@ -99,7 +99,19 @@ class Adquisicion(Base):
   updated_at = Column(Date, default=datetime.now, onupdate=datetime.now)
 
   def __init__(self, kwargs):
-    self.html = None
+    for k in  kwargs.keys():
+        self.__setattr__(k, kwargs[k])
+
+class CompraHtml(Base):
+  __tablename__ = 'compra_htmls'
+
+  id = Column(Integer, primary_key=True)
+  html = deferred(Column(UnicodeText))
+  compra_id = Column(Integer, ForeignKey('compras.id'))
+  created_at = Column(Date, default=datetime.now)
+  updated_at = Column(Date, default=datetime.now, onupdate=datetime.now)
+
+  def __init__(self, kwargs):
     for k in  kwargs.keys():
         self.__setattr__(k, kwargs[k])
 
